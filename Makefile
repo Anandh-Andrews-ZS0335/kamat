@@ -1,8 +1,11 @@
-.PHONY: setup seed up prod docker-up bank engine run evaluate test lint clean-runs
+.PHONY: setup users seed up prod docker-up bank engine run evaluate test lint clean-runs
 
 setup:        ## install Python 3.11 and all dependencies
 	uv sync
 	@test -f .env || cp .env.example .env
+
+users:        ## create admin / manager / guest accounts with random passwords (paste output into .env)
+	uv run python -m lastmile.api.auth users
 
 seed:         ## regenerate the synthetic credit union (bank data + sealed truth)
 	uv run python -m bank_api seed

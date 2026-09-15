@@ -23,6 +23,20 @@ make seed       # generate the synthetic credit union (≈1s)
 make up         # bank API :8001 + engine & consoles :8000
 ```
 
+### Sign-in
+
+Every console and API call requires a login. `make users` creates three accounts with random passwords and prints
+the `LASTMILE_USERS` / `LASTMILE_SESSION_SECRET` lines for `.env` (restart to apply):
+
+| Role | Can do |
+|---|---|
+| `admin` | everything, including saving configuration |
+| `manager` | team, runs, approve / edit / reject, release, close the day; reads configuration |
+| `guest` | read-only |
+
+Approvals, releases, team changes, day closures and configuration saves are recorded under the signed-in username.
+Serve it over HTTPS when it leaves your machine: passwords and the session cookie must not travel in clear text.
+
 For a client or first-time viewer open **http://127.0.0.1:8000/guide**: eight short chapters, a live or replayed run narrated in
 plain language, one member's journey, the honest results, and live checks of each governance promise.
 For operators open `/admin` or `/manager` (or `/demo`), press **Run Pipeline**, and watch the agents work (~10s).

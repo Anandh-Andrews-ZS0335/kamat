@@ -7,10 +7,10 @@ A day moves through five steps, all started by the collections manager:
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from lastmile.api import services
+from lastmile.api import auth, services
 from lastmile.config.resolve import resolve
 from lastmile.config.schema import Collector, Roster
 from lastmile.governance import audit
@@ -81,7 +81,6 @@ def day_status():
 # ------------------------------------------------------------------------------------------ roster
 class RosterIn(BaseModel):
     collectors: list[Collector] = Field(min_length=1)
-    saved_by: str = "manager.demo"
     note: str | None = None
 
 
@@ -94,15 +93,16 @@ def get_roster(roster_date: str):
 
 
 @router.put("/api/roster/{roster_date}")
-def save_roster(roster_date: str, body: RosterIn):
+def save_roster(roster_date: str, body: RosterIn, request: Request):
     cfg = resolve()
+    saved_by = auth.actor(request)
     try:
         Roster(roster_date=roster_date, collectors=body.collectors)   # same validation the engine applies
     except ValueError as e:
         raise HTTPException(422, str(e)) from e
     before = rosters.for_date(roster_date, cfg.institution)
-    team = rosters.save(roster_date, body.collectors, body.saved_by, body.note)
-    audit.append(None, "roster.saved", body.saved_by, {
+    team = rosters.save(roster_date, body.collectors, saved_by, body.note)
+    audit.append(None, "roster.saved", saved_by, {
         "roster_date": roster_date, "note": body.note,
         "before": {"source": before.source, "working": [c.id for c in before.working], "total_minutes": before.total_minutes},
         "after": {"working": [c.id for c in team.working], "total_minutes": team.total_minutes,
@@ -117,12 +117,11 @@ def save_roster(roster_date: str, body: RosterIn):
 
 # ------------------------------------------------------------------------------------------ re-plan
 class ReplanIn(BaseModel):
-    requested_by: str = "manager.demo"
+    pass
 
 
 @router.post("/api/runs/{run_id}/replan")
-def replan(run_id: str, body: ReplanIn | None = None):
-    body = body or ReplanIn()
+def replan(run_id: str, request: Request, body: ReplanIn | None = None):
     parent = services.get_run(run_id)
     if parent["status"] != "awaiting_approval":
         raise HTTPException(409, f"only a worklist awaiting approval can be re-planned (this one is {parent['status']})")
@@ -138,7 +137,7 @@ def replan(run_id: str, body: ReplanIn | None = None):
     team = rosters.for_date(parent["as_of_date"], cfg.institution)
     if services.team_signature(team) == services.team_signature(pipeline.run_roster(run_id)):
         raise HTTPException(409, "the saved team is the same one this worklist was planned for; nothing to re-plan")
-    audit.append(run_id, "run.replan_requested", body.requested_by, {
+    audit.append(run_id, "run.replan_requested", auth.actor(request), {
         "decisions_discarded": decided, "working": [c.id for c in team.working], "total_minutes": team.total_minutes})
     new_id = pipeline.start_replan_background(run_id, team)
     return {"run_id": new_id, "parent_run_id": run_id, "decisions_discarded": decided}
@@ -146,14 +145,14 @@ def replan(run_id: str, body: ReplanIn | None = None):
 
 # --------------------------------------------------------------------------------------- close day
 class CloseIn(BaseModel):
-    closed_by: str = "manager.demo"
     confirm_unreleased: bool = False
     note: str | None = None
 
 
 @router.post("/api/day/close")
-def close_day(body: CloseIn | None = None):
+def close_day(request: Request, body: CloseIn | None = None):
     body = body or CloseIn()
+    closed_by = auth.actor(request)
     cfg = resolve()
     today = _bank_date()
     if services.closure(today):
@@ -183,9 +182,9 @@ def close_day(body: CloseIn | None = None):
     closed_at = db.now()
     with db.connect() as con:
         con.execute("INSERT INTO day_closures (business_date, run_id, closed_by, closed_at, report_json, bank_response_json)"
-                    " VALUES (?,?,?,?,?,?)", (today, run["run_id"] if run else None, body.closed_by, closed_at,
+                    " VALUES (?,?,?,?,?,?)", (today, run["run_id"] if run else None, closed_by, closed_at,
                                               db.dumps(report), db.dumps(bank_response)))
-    audit.append(run["run_id"] if run else None, "day.closed", body.closed_by, {
+    audit.append(run["run_id"] if run else None, "day.closed", closed_by, {
         "business_date": today, "note": body.note, "unreleased_approved": ready, "undecided": undecided,
         "released": (report.get("totals") or {}).get("released", 0), "bank": bank_response})
     return {"closed": today, "next_business_date": (bank_response or {}).get("as_of"), "bank_response": bank_response,

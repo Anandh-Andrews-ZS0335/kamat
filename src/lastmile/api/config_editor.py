@@ -17,10 +17,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import yaml
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field, ValidationError
 
-from lastmile.api import services
+from lastmile.api import auth, services
 from lastmile.config import docs
 from lastmile.config.resolve import resolve
 from lastmile.config.schema import InstitutionPack, RunConfig, ScenarioPack
@@ -289,11 +289,11 @@ class SaveIn(BaseModel):
     text: str = Field(max_length=200_000)
     base_sha: str
     reason: str = Field(min_length=5, max_length=500)
-    changed_by: str = "admin.demo"
 
 
 @router.put("/api/config/files/{kind}/{pack_id}")
-def save_file(kind: str, pack_id: str, body: SaveIn):
+def save_file(kind: str, pack_id: str, body: SaveIn, request: Request):
+    changed_by = auth.actor(request)
     path = _file(kind, pack_id)
     current = path.read_text()
     if _sha(current) != body.base_sha:
@@ -313,12 +313,12 @@ def save_file(kind: str, pack_id: str, body: SaveIn):
     hist.mkdir(parents=True, exist_ok=True)
     (hist / f"{stamp}.yaml").write_text(current)
     path.write_text(body.text)
-    entry = {"version": stamp, "saved_at": datetime.now(UTC).isoformat(), "changed_by": body.changed_by, "reason": body.reason,
+    entry = {"version": stamp, "saved_at": datetime.now(UTC).isoformat(), "changed_by": changed_by, "reason": body.reason,
              "sha_before": _sha(current), "sha_after": _sha(body.text), "config_hash_before": hash_before,
              "config_hash_after": _safe_hash(), "changes": [{k: c[k] for k in ("path", "old", "new", "kind")} for c in result["changes"]]}
     with (hist / "history.jsonl").open("a") as f:
         f.write(json.dumps(entry, default=str) + "\n")
-    audit.append(None, "config.changed", body.changed_by, {"file": f"config/{kind}/{path.name}", **entry})
+    audit.append(None, "config.changed", changed_by, {"file": f"config/{kind}/{path.name}", **entry})
     return {"saved": True, **entry, "warnings": result["warnings"]}
 
 

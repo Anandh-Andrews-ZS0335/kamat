@@ -7,6 +7,7 @@ async function api(path, opts = {}) {
   const r = await fetch(path, { headers: { "Content-Type": "application/json" }, ...opts });
   let body = null;
   try { body = await r.json(); } catch { body = null; }
+  if (r.status === 401) { location.href = "/login?next=" + encodeURIComponent(location.pathname + location.search); throw new Error("sign in required"); }
   if (!r.ok) throw new Error((body && (body.detail || body.message)) || `${r.status} ${r.statusText}`);
   return body;
 }
@@ -64,3 +65,17 @@ function tableHTML(rows, opts = {}) {
 function kvHTML(obj) {
   return `<dl class="kv">${Object.entries(obj || {}).map(([k, v]) => `<dt>${esc(k.replace(/_/g, " "))}</dt><dd>${esc(fmt.value(v))}</dd>`).join("")}</dl>`;
 }
+
+// Signed-in user: a chip and Sign out button in the page header; the role is also set on <body> for styling.
+const currentUser = fetch("/api/me").then((r) => r.ok ? r.json() : null).catch(() => null);
+currentUser.then((me) => {
+  if (!me) return;
+  document.body.dataset.role = me.role;
+  const who = document.getElementById("dlgWho");
+  if (who) who.value = me.username;
+  const bar = document.querySelector("header.topbar, header.g-top");
+  const box = document.createElement("form");
+  box.method = "post"; box.action = "/logout"; box.className = "userbox";
+  box.innerHTML = `<span class="userchip" title="Signed in">${esc(me.username)} · ${esc(me.role)}</span><button class="btn" type="submit">Sign out</button>`;
+  if (bar) bar.appendChild(box); else { box.classList.add("floating"); document.body.appendChild(box); }
+});

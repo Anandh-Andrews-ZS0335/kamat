@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -23,7 +23,7 @@ from lastmile.agents import crew, provenance
 from lastmile.agents.llm.factory import get_llm
 from lastmile.agents.tools import build_registry
 from lastmile.agents.trace import Tracer
-from lastmile.api import config_editor, daily, services
+from lastmile.api import auth, config_editor, daily, services
 from lastmile.config.resolve import resolve
 from lastmile.config.settings import ROOT
 from lastmile.governance import approvals, audit, policy, release
@@ -33,7 +33,9 @@ from lastmile.store import artifacts, db, llm_calls
 
 STATIC = Path(__file__).parent / "static"
 app = FastAPI(title="Last Mile - Agentic Prescriptive Analytics", version="1.0.0")
+app.add_middleware(auth.AuthMiddleware)
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
+app.include_router(auth.router)
 app.include_router(daily.router)
 app.include_router(config_editor.router)
 db.init()
@@ -239,7 +241,6 @@ def explain(run_id: str, token: str):
 
 class Decision(BaseModel):
     decision: str
-    approver_id: str = "manager.demo"
     final_action: str | None = None
     reason_code: str | None = None
     reason_text: str | None = None
@@ -253,8 +254,9 @@ def _open_for_decisions(run_id: str) -> None:
 
 
 @app.post("/api/runs/{run_id}/accounts/{token}/decision")
-def decide(run_id: str, token: str, d: Decision):
+def decide(run_id: str, token: str, d: Decision, request: Request):
     cfg = resolve()
+    approver_id = auth.actor(request)
     _open_for_decisions(run_id)
     with db.connect() as con:
         rec = con.execute("SELECT action FROM recommendations WHERE run_id = ? AND account_token = ?", (run_id, token)).fetchone()
@@ -265,19 +267,20 @@ def decide(run_id: str, token: str, d: Decision):
     cand = artifacts.load_frame(run_id, "candidates")
     allowed = set(cand[(cand["account_token"] == token) & cand["allowed"]]["action"])
     try:
-        res = approvals.record(run_id, token, d.decision, d.approver_id, d.final_action, d.reason_code, d.reason_text,
+        res = approvals.record(run_id, token, d.decision, approver_id, d.final_action, d.reason_code, d.reason_text,
                                allowed, cfg.institution.approval.reason_codes, rec["action"])
     except approvals.ApprovalError as e:
         raise HTTPException(422, str(e)) from e
     Tracer(run_id).event("human", "Collections manager", tool=f"approval.{d.decision}", module="lastmile.governance.approvals",
                          stage="approval", input={"account_token": token, "reason_code": d.reason_code},
-                         output=res, message=f"{d.approver_id} {d.decision} {token}" + (f" ({d.reason_code})" if d.reason_code else ""))
+                         output=res, message=f"{approver_id} {d.decision} {token}" + (f" ({d.reason_code})" if d.reason_code else ""))
     return res
 
 
 @app.post("/api/runs/{run_id}/approve-bulk")
-def bulk(run_id: str, approver_id: str = "manager.demo"):
+def bulk(run_id: str, request: Request):
     cfg = resolve()
+    approver_id = auth.actor(request)
     _open_for_decisions(run_id)
     items = [i for i in services.worklist(run_id) if i["decision"] == "pending" and not i["escalations"] and not i["released"]]
     for i in items:
@@ -290,8 +293,9 @@ def bulk(run_id: str, approver_id: str = "manager.demo"):
 
 
 @app.post("/api/runs/{run_id}/release")
-def release_actions(run_id: str, released_by: str = "manager.demo"):
+def release_actions(run_id: str, request: Request):
     cfg = resolve()
+    released_by = auth.actor(request)
     run = services.get_run(run_id)
     if run["status"] == "superseded":
         raise HTTPException(409, f"this worklist was replaced by {run['superseded_by']}; release from the current one")

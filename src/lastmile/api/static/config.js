@@ -176,7 +176,7 @@ async function doSave() {
   $("#dlgSave").disabled = true;
   try {
     const r = await api(`/api/config/files/${C.file.kind}/${C.file.id}`, { method: "PUT",
-      body: JSON.stringify({ text: $("#code").value, base_sha: C.file.sha, reason, changed_by: $("#dlgWho").value || "admin.demo" }) });
+      body: JSON.stringify({ text: $("#code").value, base_sha: C.file.sha, reason }) });
     $("#saveDlg").close(); $("#dlgReason").value = "";
     toast(`Saved. The next run uses configuration ${String(r.config_hash_after || "").slice(0, 12)}`);
     const k = C.file.kind, id = C.file.id; C.file = null;
