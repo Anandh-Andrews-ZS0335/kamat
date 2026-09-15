@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: lastmile-prescriptive-banking
+    runtime: docker
+    plan: standard
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: BANK_API_PORT
+        value: 8001
+      - key: BANK_API_URL
+        value: http://127.0.0.1:8001
+      - key: LLM_PROVIDER
+        value: gemini
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: LASTMILE_TOKEN_SECRET
+        generateValue: true
+    disk:
+      name: lastmile-data
+      mountPath: /app/data
+      sizeGB: 1

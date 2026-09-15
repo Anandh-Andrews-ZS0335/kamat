@@ -1,0 +1,27 @@
+app = "lastmile-prescriptive-banking"
+primary_region = "ord"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8000"
+  BANK_API_PORT = "8001"
+  BANK_API_URL = "http://127.0.0.1:8001"
+  LLM_PROVIDER = "gemini"
+  GEMINI_MODEL = "gemini-2.5-flash"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[mounts]]
+  source = "lastmile_data"
+  destination = "/app/data"
+
+[[vm]]
+  size = "shared-cpu-2x"
+  memory = "2048mb"

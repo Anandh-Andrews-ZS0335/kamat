@@ -1,0 +1,72 @@
+# Scenario Pack - what decision is being made. Nothing institution-specific lives here.
+scenario:
+  id: collections_delinquency
+  version: 1.0.0
+  title: Collections & delinquency
+  entity: account
+  group_by: member_token        # contact limits apply per person, not per account
+  decision_period: daily
+
+objective:
+  currency: USD
+  horizon_days: 30
+  # Evaluated with numexpr over named columns - arithmetic only, never eval().
+  # Loss if the account does not cure: the 12-month PD is the right horizon for that question.
+  # (pd_h, the 30-day PD, answers "defaults inside the window" - used for the risk-sort baseline.)
+  expected_loss: "pd_12m * exposure * lgd"
+  # A cure avoids that loss: value = change in cure probability x loss if uncured, net of cash cost.
+  action_value: "uplift * expected_loss - cost_cash"
+
+causal:
+  treatment_column: action
+  control_value: NONE
+  outcome_column: cured_30d
+  method: t_learner
+  bootstrap_rounds: 6          # bag size per arm; point = bag mean, interval = bag spread
+  label_maturity_days: 30
+  features:
+    - dpd_at_t
+    - balance_at_t
+    - risk_pd_at_t
+    - pmts_missed_12m_at_t
+    - mos_since_last_pmt_at_t
+    - contacts_30d
+    - rpc_rate_90d
+    - days_since_last_contact
+    - product_auto
+    - product_card
+    - orig_amt
+    - ptp_kept_rate_12m
+    - complaints_12m
+    - tenure_mos
+    - direct_deposit
+    - member_accounts
+  exclude_features:            # leakage guards - enforced in code, a request for any of these raises
+    - curr_bal
+    - dpd
+    - cured_30d
+    - amt_paid_30d
+    - status
+  validation:
+    holdout_fraction: 0.25
+    min_qini: 0.0
+
+actions:
+  - {id: SMS, label: SMS payment reminder, channel: sms, cost_minutes: 0, cost_cash: 0.02, is_contact: true, requires: [sms_consent]}
+  - {id: CALL, label: Collector call, channel: voice, cost_minutes: 12, cost_cash: 0.0, is_contact: true, requires: [phone_consent]}
+  - {id: PLAN, label: Payment plan offer, channel: voice, cost_minutes: 25, cost_cash: 0.0, is_contact: true, requires: [phone_consent, plan_eligible]}
+  - {id: HARDSHIP, label: Hardship programme referral, channel: voice, cost_minutes: 45, cost_cash: 0.0, is_contact: true, requires: [phone_consent, hardship_eligible]}
+
+segments:
+  persuadable_min_uplift: 0.05
+  sleeping_dog_max_uplift: -0.03
+  sure_thing_min_p0: 0.50
+  lost_cause_max_p0: 0.12
+
+simulation:
+  monte_carlo_runs: 2000
+  des_replications: 20
+  seed: 7
+
+explanation:
+  must_state: [expected_loss, uplift, action_value, runner_up_action]

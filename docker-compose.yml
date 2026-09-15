@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  lastmile:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: lastmile-prescriptive:latest
+    container_name: lastmile_app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - BANK_API_PORT=8001
+      - BANK_API_URL=http://127.0.0.1:8001
+      - LLM_PROVIDER=gemini
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_MODEL=gemini-2.5-flash
+      - LASTMILE_TOKEN_SECRET=${LASTMILE_TOKEN_SECRET:-production-secret-token-replace-me}
+    volumes:
+      - lastmile_data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  lastmile_data:
+    driver: local

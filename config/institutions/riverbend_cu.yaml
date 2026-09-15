@@ -1,0 +1,106 @@
+# Institution Pack - everything that differs between clients.
+institution:
+  id: riverbend_cu
+  name: Riverbend Credit Union
+  type: credit_union
+  customer_noun: member
+  currency: USD
+
+source:
+  base_url_env: BANK_API_URL
+  default_base_url: http://127.0.0.1:8001
+  page_size: 5000
+  feeds:
+    scores: /api/v1/risk-scores
+    accounts: /api/v1/accounts
+    members: /api/v1/members
+    consents: /api/v1/consents
+    queue_history: /api/v1/collections-queue-history
+    outcomes: /api/v1/outcomes
+  release_endpoint: /api/v1/collections/actions
+  simulation_endpoint: /api/v1/simulation/advance-day   # synthetic bank only; remove for a real bank
+
+# canonical name: bank's column name
+field_map:
+  scores: {account_id: ACCT_NBR, risk_grade: RISK_GRADE, score_date: SCORE_DT, model_version: MDL_VER, pd_horizon_days: PD_HORIZON_DAYS}
+  accounts: {account_id: ACCT_NBR, member_id: CIF_KEY, product: PROD_CD, secured: SECURED_IND, orig_amt: ORIG_AMT,
+             curr_bal: CURR_BAL, dpd: DPD_CNT, min_payment: MIN_PMT_AMT, status: ACCT_STATUS, litigation: LITIGATION_IND,
+             fraud_hold: FRAUD_HOLD_IND, hardship_active: HARDSHIP_ACTIVE_IND, hardship_plans_12m: HARDSHIP_PLANS_12M,
+             ptp_kept_rate_12m: PTP_KEPT_RATE_12M, complaints_12m: COMPLAINTS_12M, pmts_missed_12m: PMTS_MISSED_12M, mos_since_last_pmt: MOS_SINCE_LAST_PMT}
+  members: {member_id: CIF_KEY, first_name: FIRST_NM, last_name: LAST_NM, phone: PHONE_NBR, email: EMAIL_ADDR,
+            language: LANG_CD, tenure_mos: TENURE_MOS, direct_deposit: DIRECT_DEPOSIT_IND, deceased: DECEASED_IND,
+            bankruptcy: BANKRUPTCY_IND, cease_desist: CEASE_DESIST_IND}
+  consents: {member_id: CIF_KEY, phone_consent: PHONE_CONSENT_IND, sms_consent: SMS_CONSENT_IND,
+             email_consent: EMAIL_CONSENT_IND, dnc: DNC_IND, contacts_7d: CONTACTS_7D, last_rpc_date: LAST_RPC_DT}
+  queue_history: {queue_date: QUEUE_DT, account_id: ACCT_NBR, member_id: CIF_KEY, dpd_at_t: DPD_CNT, balance_at_t: CURR_BAL,
+                  risk_grade_at_t: RISK_GRADE, pmts_missed_12m_at_t: PMTS_MISSED_12M,
+                  mos_since_last_pmt_at_t: MOS_SINCE_LAST_PMT, action: ACTION_CD, rpc: RPC_IND}
+  outcomes: {account_id: ACCT_NBR, queue_date: QUEUE_DT, cured_30d: CURED_30D_IND, amt_paid_30d: AMT_PAID_30D}
+
+pii_fields: [first_name, last_name, phone, email]
+
+pd_calibration:
+  input_type: band
+  band_to_pd: {A: 0.015, B: 0.06, C: 0.17, D: 0.37, E: 0.65}   # from the CU's own 12-month default history
+  source_horizon_days: 365
+  horizon_method: constant_hazard
+
+lgd_table:
+  default: 0.65
+  rows:
+    - {product: AUTO, secured: 1, dpd_min: 0, dpd_max: 89, lgd: 0.32}
+    - {product: AUTO, secured: 1, dpd_min: 90, dpd_max: 9999, lgd: 0.45}
+    - {product: PERS, secured: 0, dpd_min: 0, dpd_max: 89, lgd: 0.68}
+    - {product: PERS, secured: 0, dpd_min: 90, dpd_max: 9999, lgd: 0.80}
+    - {product: CARD, secured: 0, dpd_min: 0, dpd_max: 89, lgd: 0.74}
+    - {product: CARD, secured: 0, dpd_min: 90, dpd_max: 9999, lgd: 0.85}
+
+capacity:
+  agents: 5                 # default team when the manager has not saved a roster
+  minutes_per_agent: 360
+  sms_per_day_max: 400
+  hardship_slots_per_day: 20
+  planning_buffer: 0.10     # plan to 90% of shift minutes; handling times run long
+
+contact_policy:
+  max_attempts_per_7d: 7
+  max_contacts_per_member_per_day: 1
+
+suppression: [deceased, bankruptcy, cease_desist, litigation, fraud_hold, dnc]
+
+# Structured rules - no strings to parse. Scenario actions reference these by name.
+eligibility:
+  sms_consent:
+    all: [{field: sms_consent, op: eq, value: 1}]
+  phone_consent:
+    all: [{field: phone_consent, op: eq, value: 1}]
+  plan_eligible:
+    all:
+      - {field: dpd, op: gte, value: 30}
+      - {field: hardship_active, op: eq, value: 0}
+  hardship_eligible:
+    all:
+      - {field: dpd, op: gte, value: 60}
+      - {field: dpd, op: lte, value: 150}
+      - {field: hardship_active, op: eq, value: 0}
+      - {field: hardship_plans_12m, op: lt, value: 2}
+      - {field: product, op: in, value: [AUTO, PERS, CARD]}
+
+data_quality:
+  max_score_age_days: 2
+  max_null_fraction: 0.02
+  min_rows: {scores: 100, accounts: 100, queue_history: 1000}
+  required_fields:
+    scores: [account_id, risk_grade, score_date]
+    accounts: [account_id, member_id, product, curr_bal, dpd, status]
+    members: [member_id, deceased, bankruptcy, cease_desist]
+    consents: [member_id, phone_consent, sms_consent, dnc]
+  valid_grades: [A, B, C, D, E]
+
+escalation:
+  exposure_threshold: 30000
+  max_interval_width: 0.30
+  escalate_actions: [HARDSHIP]
+
+approval:
+  reason_codes: [ALREADY_CONTACTED, IN_HARDSHIP, WRONG_ACTION, NEVER_RESPONDS, TONE, PREFER_OTHER_ACCOUNT, OTHER]

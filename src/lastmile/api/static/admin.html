@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Last Mile · Admin Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/static/console.css">
+<style>
+  .run-banner{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding:12px 16px;margin-bottom:14px}
+  .run-banner .rid{font-family:var(--mono);font-weight:600;font-size:14px}
+  .run-banner .meta{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--ink-3)}
+  .run-banner .meta b{color:var(--ink-2);font-weight:500;font-family:var(--mono)}
+
+  .rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(178px,1fr);gap:0;overflow-x:auto;padding:2px 2px 10px;margin-bottom:14px}
+  .stage{position:relative;margin-right:22px;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--line-2);border-radius:8px;
+    padding:10px 11px 11px;cursor:pointer;text-align:left;min-width:0;box-shadow:var(--shadow)}
+  .stage:last-child{margin-right:0}
+  .stage:not(:last-child)::after{content:"";position:absolute;right:-17px;top:50%;width:12px;height:2px;background:var(--line-2)}
+  .stage:not(:last-child)::before{content:"";position:absolute;right:-19px;top:calc(50% - 4px);border:5px solid transparent;border-left-color:var(--line-2)}
+  .stage.done{border-top-color:var(--good)} .stage.running{border-top-color:var(--primary)} .stage.failed{border-top-color:var(--bad)}
+  .stage.waiting{border-top-color:var(--warn)}
+  .stage.sel{outline:2px solid var(--primary);outline-offset:1px}
+  .stage .n{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);display:flex;justify-content:space-between;align-items:center}
+  .stage .t{font-weight:700;font-size:13px;margin:3px 0 5px;line-height:1.2}
+  .stage .ag{font-size:11px;color:var(--primary-ink);line-height:1.3;min-height:28px}
+  .stage .m{margin-top:7px;display:grid;gap:2px;font-size:11px;color:var(--ink-3)}
+  .stage .m span b{font-family:var(--mono);color:var(--ink-2);font-weight:500}
+
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:14px;align-items:start}
+  @media (max-width:1240px){.layout{grid-template-columns:1fr}}
+  .detail-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .detail-h h2{margin:0;font-size:16px}
+  .agents-inline{display:flex;gap:6px;flex-wrap:wrap}
+
+  .trace{position:sticky;top:64px;max-height:calc(100vh - 80px);display:flex;flex-direction:column}
+  .trace-list{overflow-y:auto;padding:4px 0}
+  .ev{display:grid;grid-template-columns:58px 1fr;gap:4px 8px;padding:7px 12px;border-bottom:1px solid var(--line);font-size:12px}
+  .ev:hover{background:var(--panel-2)}
+  .ev .when{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);padding-top:2px}
+  .ev .who{display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+  .ev .agent{font-weight:700}
+  .ev .arrow{color:var(--ink-3)}
+  .ev .tool{font-family:var(--mono);font-size:11.5px}
+  .ev .msg{grid-column:2;color:var(--ink-2)}
+  .ev .mod{grid-column:2;font-family:var(--mono);font-size:10.5px;color:var(--ink-3)}
+  .ev.kind-decision .msg{font-style:italic}
+  .ev.st-error,.ev.st-denied{background:var(--bad-soft)}
+  .k-api{background:var(--primary-soft);color:var(--primary-ink)} .k-tool{background:var(--brass-soft);color:var(--brass)}
+  .k-llm{background:var(--violet-soft);color:var(--violet)} .k-handoff{background:var(--panel-3);color:var(--ink)}
+  .k-decision{background:transparent;color:var(--ink-3);border:1px solid var(--line-2)} .k-human{background:var(--good-soft);color:var(--good)}
+  .k-denied{background:var(--bad-soft);color:var(--bad)}
+  .trace-filters{display:flex;flex-wrap:wrap;gap:5px;padding:8px 12px;border-bottom:1px solid var(--line)}
+  .fchip{border:1px solid var(--line-2);background:var(--panel);border-radius:999px;padding:2px 8px;font-size:11px;cursor:pointer}
+  .fchip.on{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+
+  .agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+  .agent-card{border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--panel)}
+  .agent-card h3{margin:0 0 2px;font-size:14px}
+  .agent-card .role{font-size:12px;color:var(--ink-3);margin-bottom:8px}
+  .agent-card .resp{font-size:12.5px;margin-bottom:8px}
+  .agent-card .mods{font-family:var(--mono);font-size:11px;color:var(--ink-3);line-height:1.6;margin-bottom:8px}
+  .agent-card .tools{display:flex;flex-wrap:wrap;gap:4px}
+  .agent-card .tools span{font-family:var(--mono);font-size:10.5px;padding:1px 6px;border-radius:4px;background:var(--panel-2);border:1px solid var(--line)}
+  .agent-card .calls{float:right;font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+  .art-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .art{border:1px solid var(--line-2);background:var(--panel);border-radius:6px;padding:5px 9px;cursor:pointer;text-align:left}
+  .art.on{border-color:var(--primary);background:var(--primary-soft)}
+  .art b{font-family:var(--mono);font-size:12px;font-weight:600;display:block}
+  .art small{color:var(--ink-3);font-size:11px}
+  details.io{grid-column:2}
+  details.io summary{cursor:pointer;font-size:11px;color:var(--ink-3)}
+  details.io pre{margin:6px 0 0;padding:8px;background:var(--panel-2);border-radius:6px;font-size:11px;white-space:pre-wrap;max-height:260px;overflow:auto}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><b>Last Mile</b><span>Admin Console</span></div>
+  <div class="chips" id="statusChips"><span class="chip"><i class="dot"></i>Loading status…</span></div>
+  <div class="spacer"></div>
+  <select class="input" id="runSelect" aria-label="Select run"></select>
+  <a class="btn" href="/admin/config">Configuration</a>
+  <a class="btn" href="/demo">✨ Demo Showcase</a>
+  <button class="btn primary" id="startRun">Start new run</button>
+  <a class="btn" href="/manager">Manager Console →</a>
+</header>
+
+<main class="page">
+  <section class="panel run-banner" id="runBanner"><span class="muted">No run selected. Start a run to watch the agents work.</span></section>
+  <nav class="rail" id="rail" aria-label="Pipeline stages"></nav>
+
+  <div class="layout">
+    <section class="panel" id="detail">
+      <div class="empty">Select a stage to see what its agent did.</div>
+    </section>
+
+    <aside class="panel trace" aria-label="Agent trace">
+      <div class="panel-h"><h2>Live agent trace</h2><span class="muted" id="traceCount"></span><div class="spacer"></div>
+        <label class="muted" style="font-size:11.5px"><input type="checkbox" id="follow" checked> follow</label></div>
+      <div class="trace-filters" id="traceFilters"></div>
+      <div class="trace-list" id="traceList"></div>
+    </aside>
+  </div>
+
+  <section class="panel" style="margin-top:14px" id="llmPanel">
+    <div class="panel-h"><h2>LLM calls</h2><span class="muted" id="llmCount"></span>
+      <span class="muted">Every request sent to the model and every response, stored in full. Click a call to read it.</span></div>
+    <div class="panel-b"><div id="llmList"><div class="empty">Select a run.</div></div><div id="llmDetail" style="margin-top:12px"></div></div>
+  </section>
+
+  <section class="panel" style="margin-top:14px">
+    <div class="panel-h"><h2>Agents and what each is accountable for</h2>
+      <span class="muted">Ownership is enforced: a tool call from a non-owner is refused and logged.</span></div>
+    <div class="panel-b">
+      <div class="agents-grid" id="agentsGrid"></div>
+      <div class="section-title" style="margin-top:18px">Tool registry <span class="muted" id="toolCount"></span></div>
+      <div id="toolTable"></div>
+    </div>
+  </section>
+</main>
+
+<script src="/static/common.js"></script>
+<script src="/static/admin.js"></script>
+</body>
+</html>

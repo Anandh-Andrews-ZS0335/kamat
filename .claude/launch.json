@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "bank-api",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "uvicorn", "bank_api.main:app", "--host", "127.0.0.1", "--port", "8001"],
+      "port": 8001
+    },
+    {
+      "name": "lastmile",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "uvicorn", "lastmile.api.app:app", "--host", "127.0.0.1", "--port", "8000"],
+      "port": 8000
+    }
+  ]
+}

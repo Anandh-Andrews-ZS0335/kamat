@@ -1,0 +1,78 @@
+[project]
+name = "kamat"
+version = "0.1.0"
+description = "Agentic prescriptive analytics for collections: a synthetic bank API plus the Last Mile decision engine and consoles."
+requires-python = ">=3.11,<3.13"
+dependencies = [
+  "fastapi>=0.110",
+  "uvicorn>=0.29",
+  "httpx>=0.27",
+  "pandas>=2.1",
+  "numpy>=1.26",
+  "pyarrow>=15",
+  "pydantic>=2.6",
+  "pyyaml>=6",
+  "numexpr>=2.9",
+  "scikit-learn>=1.4",
+  "pulp>=2.8,<4",          # PuLP 4 removes PULP_CBC_CMD and direct LpVariable construction
+  "simpy>=4.1",
+  "python-dotenv>=1.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.4", "import-linter>=2.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/lastmile", "src/bank_api"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501", "B008"]
+
+# ---------------------------------------------------------------------------
+# Architecture as code. `make lint` fails if a layer imports upward, if the
+# maths touches the LLM, or if the engine reaches into the bank's internals.
+# ---------------------------------------------------------------------------
+[tool.importlinter]
+root_packages = ["lastmile", "bank_api"]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Engine layers point downward"
+type = "layers"
+layers = [
+  "lastmile.api",
+  "lastmile.pipeline",
+  "lastmile.agents",
+  "lastmile.governance | lastmile.engine | lastmile.kpi",
+  "lastmile.features",
+  "lastmile.ingest",
+  "lastmile.store",
+  "lastmile.config",
+]
+containers = []
+
+[[tool.importlinter.contracts]]
+name = "The maths never touches the LLM"
+type = "forbidden"
+source_modules = ["lastmile.engine", "lastmile.features", "lastmile.governance", "lastmile.kpi"]
+forbidden_modules = ["lastmile.agents"]
+
+[[tool.importlinter.contracts]]
+name = "The engine talks to the bank over HTTP only"
+type = "forbidden"
+source_modules = ["lastmile"]
+forbidden_modules = ["bank_api"]

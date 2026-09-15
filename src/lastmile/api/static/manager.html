@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Last Mile · Manager Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/static/console.css">
+<style>
+  .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:12px}
+  .summary .tile{background:var(--panel);box-shadow:var(--shadow)}
+  .decisions-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;background:var(--panel-3);margin-top:7px}
+  .decisions-bar i{display:block;height:100%}
+  .actions-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px}
+  .filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
+
+  .ci{position:relative;height:14px;min-width:120px;background:linear-gradient(to right,transparent calc(50% - .5px),var(--line-2) calc(50% - .5px),var(--line-2) calc(50% + .5px),transparent calc(50% + .5px))}
+  .ci .band{position:absolute;top:4px;height:6px;border-radius:3px;background:var(--primary-soft);border:1px solid var(--primary)}
+  .ci .pt{position:absolute;top:1px;width:3px;height:12px;border-radius:1px;background:var(--primary)}
+  .flag{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.04em;padding:1px 5px;border-radius:3px;background:var(--warn-soft);color:var(--warn);margin:1px}
+
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(720px,100vw);z-index:60;background:var(--panel);border-left:1px solid var(--line);
+    box-shadow:-20px 0 50px -30px rgba(0,0,0,.45);display:flex;flex-direction:column;transform:translateX(102%);transition:transform .18s ease}
+  .drawer.open{transform:none}
+  @media (prefers-reduced-motion:reduce){.drawer{transition:none}}
+  .drawer-h{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
+  .drawer-b{overflow-y:auto;padding:14px 16px 40px}
+  .rec-card{border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--panel-2);margin-bottom:12px}
+  .rec-card .act{font-size:18px;font-weight:700;margin:2px 0 6px}
+  .prose{font-size:14px;line-height:1.65;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+  .fig{font-family:var(--mono);font-size:12.5px;background:var(--brass-soft);color:var(--brass);padding:0 4px;border-radius:3px;cursor:help;white-space:nowrap}
+  .fig.src-model{background:var(--primary-soft);color:var(--primary-ink)}
+  .fig.src-solver{background:var(--good-soft);color:var(--good)}
+  .fig.src-identity{background:var(--violet-soft);color:var(--violet)}
+  .show-src .fig::after{content:" ⟨" attr(data-src) "⟩";font-size:10px;opacity:.8}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--ink-3);margin:6px 0 0}
+  .legend .fig{cursor:default}
+  .decide{border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:8px}
+  .decide .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .checks{display:grid;grid-template-columns:1fr;gap:3px;font-size:12px}
+  .checks div{display:flex;gap:8px;align-items:baseline}
+  .checks .ok{color:var(--good);font-weight:700} .checks .no{color:var(--bad);font-weight:700}
+  .checks .grp{margin-top:6px;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+
+  .policies{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+  .policy{border:1px solid var(--line);border-radius:8px;padding:14px;background:var(--panel)}
+  .policy.win{border-color:var(--good);box-shadow:0 0 0 1px var(--good) inset}
+  .policy h3{margin:0 0 2px;font-size:14px}
+  .policy .big{font-family:var(--mono);font-size:24px;font-weight:600;margin:6px 0 2px}
+  .range{position:relative;height:22px;margin:10px 0 4px;background:var(--panel-2);border-radius:4px}
+  .range .band{position:absolute;top:5px;height:12px;border-radius:3px;background:var(--primary-soft);border:1px solid var(--primary)}
+  .range .mid{position:absolute;top:2px;width:2px;height:18px;background:var(--primary)}
+  .range .zero{position:absolute;top:0;bottom:0;width:1px;background:var(--ink-3)}
+  .stack{display:flex;height:10px;border-radius:3px;overflow:hidden;margin:8px 0 4px;background:var(--panel-3)}
+  .stack i{display:block;height:100%}
+  .stack-legend{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:11px;color:var(--ink-3)}
+  .sw{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;vertical-align:baseline}
+  .eval{margin-top:12px}
+  .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:12px;margin-top:12px}
+  @media (max-width:520px){.two{grid-template-columns:1fr}}
+
+  /* business day */
+  .day{margin-bottom:12px}
+  .day-top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:12px 16px}
+  .day-date b{display:block;font-size:17px;letter-spacing:-.01em}
+  .steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;padding:0 16px 12px}
+  @media (max-width:900px){.steps{grid-template-columns:1fr 1fr}}
+  @media (max-width:520px){.steps{grid-template-columns:1fr}}
+  .step{display:flex;gap:9px;align-items:flex-start;padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:var(--panel-2);min-width:0}
+  .step.todo{border-color:var(--primary);background:var(--primary-soft)}
+  .step.running{border-color:var(--primary)}
+  .step i{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:700;
+    background:var(--panel-3);color:var(--ink-3);border:1px solid var(--line-2)}
+  .step.done i{background:var(--good);border-color:var(--good);color:#fff}
+  .step.todo i{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+  .step.running i{background:var(--primary);border-color:var(--primary);color:var(--on-primary);animation:pulse 1.1s infinite}
+  .step > div{min-width:0}
+  .step b{display:block;font-size:12.5px}
+  .step span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:11px;color:var(--ink-3);overflow:hidden;overflow-wrap:anywhere}
+  .day-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-left:auto}
+  .day-msg{padding:0 16px 12px;display:grid;gap:8px}
+
+  /* team editor */
+  .team-intro{font-size:12.5px;color:var(--ink-2);margin:0 0 12px;line-height:1.55}
+  .team-row{display:grid;grid-template-columns:auto minmax(120px,1fr) 150px 78px 90px 28px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
+  .team-row.head{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;padding-top:0}
+  .team-row.off{opacity:.55}
+  .team-row .input{width:100%;min-width:0}
+  .team-row .plan{font-family:var(--mono);font-size:12px;text-align:right}
+  .toggle{position:relative;width:34px;height:20px;display:inline-block}
+  .toggle input{opacity:0;width:0;height:0;position:absolute}
+  .toggle span{position:absolute;inset:0;border-radius:999px;background:var(--panel-3);border:1px solid var(--line-2);cursor:pointer}
+  .toggle span::after{content:"";position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:var(--ink-3);transition:transform .12s}
+  .toggle input:checked + span{background:var(--good-soft);border-color:var(--good)}
+  .toggle input:checked + span::after{transform:translateX(14px);background:var(--good)}
+  .toggle input:focus-visible + span{outline:2px solid var(--primary);outline-offset:2px}
+  @media (max-width:640px){.team-row{grid-template-columns:auto 1fr 110px 28px}.team-row .custom,.team-row .plan,.team-row.head .h-custom,.team-row.head .h-plan{display:none}}
+
+  /* queues */
+  .queues{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+  .q{border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--panel);display:grid;gap:7px}
+  .q.over{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn) inset}
+  .q.off{opacity:.6}
+  .q h3{margin:0;font-size:14px;display:flex;gap:8px;align-items:center}
+  .q .meter{position:relative;height:10px;border-radius:5px;background:var(--panel-3);overflow:hidden}
+  .q .meter i{position:absolute;top:0;bottom:0;left:0}
+  .q .line{font-size:12px;color:var(--ink-2)}
+  .q .chips-row{display:flex;flex-wrap:wrap;gap:4px}
+  .q .chips-row span{font-family:var(--mono);font-size:10.5px;padding:1px 6px;border-radius:4px;background:var(--panel-2);border:1px solid var(--line)}
+  .who{font-size:12px;white-space:nowrap}.who .mono{color:var(--ink-3)}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><b>Last Mile</b><span>Manager Console</span></div>
+  <div class="chips" id="runChips"></div>
+  <div class="spacer"></div>
+  <select class="input" id="runSelect" aria-label="Select run"></select>
+  <a class="btn" href="/report" id="reportLink">Daily report</a>
+  <a class="btn" href="/demo">✨ Demo Showcase</a>
+  <a class="btn" href="/admin">← Admin Console</a>
+</header>
+
+<main class="page">
+  <section class="panel day" id="dayPanel" aria-label="Today's business day"><div class="empty">Loading today…</div></section>
+  <section class="summary" id="summary"></section>
+  <div class="actions-row">
+    <button class="btn good" id="bulkApprove">Approve all non-escalated</button>
+    <button class="btn primary" id="release">Release approved to bank</button>
+    <span class="muted" id="actionsNote">Nothing reaches a member until it is approved here and released.</span>
+  </div>
+
+  <section class="panel">
+    <div class="tabs" id="tabs">
+      <button class="tab on" data-tab="worklist">Worklist</button>
+      <button class="tab" data-tab="queues">Team queues</button>
+      <button class="tab" data-tab="compare">Sort vs Optimised</button>
+      <button class="tab" data-tab="model">Model health</button>
+      <button class="tab" data-tab="audit">Audit trail</button>
+    </div>
+    <div id="tab-worklist">
+      <div class="filters">
+        <input class="input" id="fSearch" placeholder="Search account token" style="min-width:200px">
+        <select class="input" id="fCollector"><option value="">All collectors</option></select>
+        <select class="input" id="fAction"><option value="">All actions</option></select>
+        <select class="input" id="fSegment"><option value="">All segments</option></select>
+        <select class="input" id="fDecision"><option value="">All decisions</option><option>pending</option><option>approved</option><option>edited</option><option>rejected</option></select>
+        <label class="muted"><input type="checkbox" id="fEsc"> escalated only</label>
+        <div class="spacer"></div><span class="muted num" id="fCount"></span>
+      </div>
+      <div id="worklist"></div>
+    </div>
+    <div id="tab-queues" class="panel-b hidden"></div>
+    <div id="tab-compare" class="panel-b hidden"></div>
+    <div id="tab-model" class="panel-b hidden"></div>
+    <div id="tab-audit" class="panel-b hidden"></div>
+  </section>
+</main>
+
+<aside class="drawer" id="drawer" aria-label="Account review">
+  <div class="drawer-h"><span class="eyebrow">Account review</span><b class="mono" id="drawerTitle"></b><div class="spacer"></div>
+    <label class="muted" style="font-size:11.5px"><input type="checkbox" id="showSrc"> show sources</label>
+    <button class="btn small" id="closeDrawer">Close</button></div>
+  <div class="drawer-b" id="drawerBody"></div>
+</aside>
+
+<aside class="drawer" id="teamDrawer" aria-label="Today's team">
+  <div class="drawer-h"><span class="eyebrow">Today's team</span><b id="teamTitle"></b><div class="spacer"></div>
+    <button class="btn small" id="closeTeam">Close</button></div>
+  <div class="drawer-b" id="teamBody"></div>
+</aside>
+
+<script src="/static/common.js"></script>
+<script src="/static/manager.js"></script>
+</body>
+</html>

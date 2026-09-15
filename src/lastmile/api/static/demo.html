@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Last Mile · Agentic Prescriptive Analytics Demo & Showcase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/static/console.css">
+<link rel="stylesheet" href="/static/demo.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <b>Last Mile</b>
+    <span>Demo & Showcase</span>
+  </div>
+  <div class="chips" id="statusChips">
+    <span class="chip"><i class="dot"></i>Connecting to Engine…</span>
+  </div>
+  <div class="spacer"></div>
+  <select class="input" id="runSelect" aria-label="Select run"></select>
+  <button class="btn primary" id="btnNewRun">▶ Run Pipeline (~10s)</button>
+  <a class="btn" href="/manager">Manager Console →</a>
+  <a class="btn" href="/admin">Admin Trace →</a>
+</header>
+
+<main class="page">
+
+  <!-- ========================================================================
+       HERO BANNER
+       ======================================================================== -->
+  <section class="demo-hero">
+    <div class="demo-hero-inner">
+      <div class="demo-hero-title">
+        <h1>Agentic Prescriptive Analytics for Banking</h1>
+        <p>From bare prediction to governed, optimal action. An orchestration platform combining causal uplift modeling, CBC MIP optimization, SimPy floor simulation, and zero-hallucination agentic governance.</p>
+        <div class="demo-hero-badges">
+          <span class="hero-tag">🎯 Causal T-Learner Uplift</span>
+          <span class="hero-tag">⚙️ CBC MIP Solver (PuLP)</span>
+          <span class="hero-tag">🎲 Monte Carlo & SimPy</span>
+          <span class="hero-tag">🔒 Cryptographic Audit Chain</span>
+          <span class="hero-tag">🛡️ Strict AI Division of Labor</span>
+        </div>
+      </div>
+      <div class="demo-hero-actions">
+        <div class="demo-mode-pill">
+          <button class="demo-mode-btn active" id="btnModeStory" data-mode="story">🎙️ Story & Pitch Mode</button>
+          <button class="demo-mode-btn" id="btnModeWorkbench" data-mode="workbench">🔬 Live Workbench</button>
+        </div>
+        <button class="btn good" id="btnRunBenchmark">⚡ Run Sealed-Truth Benchmark</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       STORY & PITCH MODE NAVIGATOR (Visible in Story Mode)
+       ======================================================================== -->
+  <section class="story-nav-panel" id="storyNavPanel">
+    <div class="panel-h" style="border-bottom:0;padding:0 0 10px 0">
+      <span class="eyebrow">Demo Day Storyboard & Presentation Guide</span>
+      <div class="spacer"></div>
+      <span class="muted" style="font-size:11.5px">Click any topic below to jump to that slide</span>
+    </div>
+    <div class="story-steps">
+      <button class="story-step active" data-step="1">
+        <span class="num">01 · THE PROBLEM</span>
+        <span class="label">Prediction vs Action</span>
+        <span class="tag">Why risk sort fails</span>
+      </button>
+      <button class="story-step" data-step="2">
+        <span class="num">02 · ARCHITECTURE</span>
+        <span class="label">8-Stage Pipeline</span>
+        <span class="tag">Agent crew & tools</span>
+      </button>
+      <button class="story-step" data-step="3">
+        <span class="num">03 · CAUSAL UPLIFT</span>
+        <span class="label">4 Quadrants Matrix</span>
+        <span class="tag">Targeting persuadables</span>
+      </button>
+      <button class="story-step" data-step="4">
+        <span class="num">04 · SIMULATION</span>
+        <span class="label">Monte Carlo & SimPy</span>
+        <span class="tag">Simulating before acting</span>
+      </button>
+      <button class="story-step" data-step="5">
+        <span class="num">05 · OPTIMIZATION</span>
+        <span class="label">CBC MIP Solver</span>
+        <span class="tag">+26% lift & trade-offs</span>
+      </button>
+      <button class="story-step" data-step="6">
+        <span class="num">06 · DIVISION OF LABOR</span>
+        <span class="label">Math vs AI Reasoning</span>
+        <span class="tag">Zero unstamped digits</span>
+      </button>
+      <button class="story-step" data-step="7">
+        <span class="num">07 · GOVERNANCE</span>
+        <span class="label">Approval & Hash Chain</span>
+        <span class="tag">Auditability & privacy</span>
+      </button>
+      <button class="story-step" data-step="8">
+        <span class="num">08 · REUSABLE CORE</span>
+        <span class="label">NPA & Fraud Triage</span>
+        <span class="tag">Business case & ROI</span>
+      </button>
+    </div>
+
+    <!-- Dynamic Speaker Notes for Presenter -->
+    <div class="speaker-notes-banner" id="speakerNotes">
+      <b>🎤 Presenter Talking Point:</b>
+      <span id="speakerNoteText">Banks already have risk models that tell them who might default. But sorting by risk leads to calling Lost Causes who default anyway or Sure Things who cure on their own. Last Mile solves the daily operational question: Who do I contact today, with what action, and why?</span>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       TOPIC 1: THE CORE PARADIGM SHIFT (Prediction to Governed Action)
+       ======================================================================== -->
+  <section class="panel" id="topic-1" style="margin-bottom:20px">
+    <div class="panel-h">
+      <h2>01 · The Problem: Why Predictive Scores Alone Fail Banking Operations</h2>
+      <span class="pill pri">Challenge Brief Scope</span>
+    </div>
+    <div class="panel-b">
+      <div class="paradigm-grid">
+        <div class="paradigm-card old">
+          <h3><span class="pill bad">Traditional Approach</span> Predictive Risk Dashboards</h3>
+          <div class="sub">Leaves collections managers to guess treatments based on raw probability</div>
+          <div class="paradigm-items">
+            <div class="p-item bad"><i>✕</i> <b>Ranks by raw PD or Risk Grade:</b> Squanders finite staff hours calling high-risk accounts that cannot be helped (Lost Causes).</div>
+            <div class="p-item bad"><i>✕</i> <b>No Causal Treatment Effect:</b> Assumes contacting everyone works equally well; cannot detect accounts that get annoyed and default (Sleeping Dogs).</div>
+            <div class="p-item bad"><i>✕</i> <b>No Capacity Awareness:</b> Outputs thousands of delinquent rows without optimizing for finite agent minutes or shift limits.</div>
+            <div class="p-item bad"><i>✕</i> <b>Ungoverned & Inconsistent:</b> Discretionary agent outreach with no machine-enforced compliance rules or audit proof.</div>
+          </div>
+        </div>
+
+        <div class="paradigm-card new">
+          <h3><span class="pill good">Prescriptive Solution</span> Agentic Prescriptive Analytics</h3>
+          <div class="sub">Delivers an optimized, policy-compliant worklist with drafted outreach and human approval</div>
+          <div class="paradigm-items">
+            <div class="p-item good"><i>✓</i> <b>Causal Uplift Prioritization:</b> Targets only <i>Persuadable</i> accounts where intervention creates positive net avoided loss.</div>
+            <div class="p-item good"><i>✓</i> <b>True Mathematical Optimization:</b> CBC Mixed-Integer Programming solves the knapsack assignment under strict staff minute constraints.</div>
+            <div class="p-item good"><i>✓</i> <b>Simulated Before Committed:</b> Monte Carlo uncertainty intervals and SimPy queue simulation validate throughput before touching real members.</div>
+            <div class="p-item good"><i>✓</i> <b>Governed by Construction:</b> Machine-checked policy constraints, isolated PII vault, template provenance, and append-only hash chains.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout good" style="font-size:13px">
+        <b>Core Formula:</b> $\text{Action Value} = \text{Causal Uplift} \times (\text{Exposure} \times \text{PD}_{12m} \times \text{LGD}) - \text{Direct Contact Cost}$. Real value is measured in expected dollars saved, not raw probabilities.
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       TOPIC 2: 8-STAGE AGENTIC ARCHITECTURE & DIVISION OF LABOR
+       ======================================================================== -->
+  <section class="panel" id="topic-2" style="margin-bottom:20px">
+    <div class="panel-h">
+      <h2>02 · Solution Architecture: 8-Stage Deterministic Agent Pipeline</h2>
+      <span class="pill pri">Architecture 30%</span>
+    </div>
+    <div class="panel-b">
+      <p class="muted" style="margin-top:0">Sequential orchestration ensures end-to-end auditability, reproducible runs, and strict tool ownership enforcement.</p>
+
+      <div class="pipeline-flow" id="pipelineFlow">
+        <div class="pipeline-node done">
+          <span class="ord">Stage 01</span>
+          <span class="name">Data Ingestion</span>
+          <span class="agent">Ingestion Agent</span>
+          <span class="tech">bank.fetch_feed (HTTP)</span>
+        </div>
+        <div class="pipeline-node done">
+          <span class="ord">Stage 02</span>
+          <span class="name">Configuration</span>
+          <span class="agent">Configuration Agent</span>
+          <span class="tech">YAML Packs & Hash</span>
+        </div>
+        <div class="pipeline-node done">
+          <span class="ord">Stage 03</span>
+          <span class="name">Quality & Privacy</span>
+          <span class="agent">Data Steward Agent</span>
+          <span class="tech">13 Gates + HMAC Vault</span>
+        </div>
+        <div class="pipeline-node done">
+          <span class="ord">Stage 04</span>
+          <span class="name">Feature Layer</span>
+          <span class="agent">Feature Agent</span>
+          <span class="tech">PD/LGD & Point-in-Time</span>
+        </div>
+        <div class="pipeline-node done">
+          <span class="ord">Stage 05</span>
+          <span class="name">Decision Engine</span>
+          <span class="agent">Decision Agent</span>
+          <span class="tech">T-Learner + CBC Solver</span>
+        </div>
+        <div class="pipeline-node done">
+          <span class="ord">Stage 06</span>
+          <span class="name">Policy Governance</span>
+          <span class="agent">Policy Agent</span>
+          <span class="tech">Independent Verifier</span>
+        </div>
+        <div class="pipeline-node done">
+          <span class="ord">Stage 07</span>
+          <span class="name">Explanation & Script</span>
+          <span class="agent">Explanation Agent</span>
+          <span class="tech">Stamped Provenance</span>
+        </div>
+        <div class="pipeline-node done">
+          <span class="ord">Stage 08</span>
+          <span class="name">Human Approval</span>
+          <span class="agent">Collections Manager</span>
+          <span class="tech">Release to Core Bank</span>
+        </div>
+      </div>
+
+      <div class="tiles" style="margin-top:14px" id="livePipelineStats">
+        <div class="tile"><div class="k">Active Scenario</div><div class="v" id="statScenario">–</div><div class="s" id="statInst">–</div></div>
+        <div class="tile"><div class="k">Config Fingerprint</div><div class="v mono" id="statCfgHash">–</div><div class="s">Immutable SHA-256</div></div>
+        <div class="tile"><div class="k">Tool Ownership</div><div class="v">Strict Refusal</div><div class="s">Unauthorized calls blocked</div></div>
+        <div class="tile"><div class="k">LLM Boundary</div><div class="v" id="statLLM">–</div><div class="s">Drafts templates only</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       TOPIC 3: CAUSAL UPLIFT MODELING & THE 4 QUADRANTS
+       ======================================================================== -->
+  <section class="panel" id="topic-3" style="margin-bottom:20px">
+    <div class="panel-h">
+      <h2>03 · Causal Targeting: The 4 Uplift Quadrants</h2>
+      <span class="pill pri">Technical Innovation 30%</span>
+    </div>
+    <div class="panel-b">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px">
+        <p class="muted" style="margin:0;max-width:780px">A standard risk score measures $P(\text{default})$. A causal uplift model estimates $\tau = P(\text{cure} \mid \text{action}) - P(\text{cure} \mid \text{no action})$. Only accounts in Quadrant 1 justify spending scarce team capacity.</p>
+        <div id="qiniBadge"><span class="pill good">Holdout Qini &gt; 0 (Beats Random Targeting)</span></div>
+      </div>
+
+      <div class="quadrant-matrix" id="quadrantMatrix">
+        <div class="quadrant-card q-persuadable">
+          <div class="quadrant-header">
+            <h4>🟢 1. Persuadables (High Positive Uplift)</h4>
+            <span class="quadrant-count" id="cntPersuadable">–</span>
+          </div>
+          <div class="quadrant-desc">Will default if left alone, but cure when contacted. High incremental dollar recovery per agent-minute.</div>
+          <div class="quadrant-prescriptive"><b>Action:</b> Prioritize for high-touch voice call, tailored payment plan, or SMS outreach.</div>
+        </div>
+
+        <div class="quadrant-card q-sure-thing">
+          <div class="quadrant-header">
+            <h4>⚪ 2. Sure Things (High Baseline Cure)</h4>
+            <span class="quadrant-count" id="cntSureThing">–</span>
+          </div>
+          <div class="quadrant-desc">Will cure on their own without intervention. High risk grade may trigger false alarms, but contact adds 0 incremental dollars.</div>
+          <div class="quadrant-prescriptive"><b>Action:</b> Do Not Contact (Save staff minutes; zero wasted cost).</div>
+        </div>
+
+        <div class="quadrant-card q-lost-cause">
+          <div class="quadrant-header">
+            <h4>🔴 3. Lost Causes (Severe Inelasticity)</h4>
+            <span class="quadrant-count" id="cntLostCause">–</span>
+          </div>
+          <div class="quadrant-desc">Will default regardless of outreach. High balance makes greedy systems call them first, wasting hundreds of agent minutes for zero cure lift.</div>
+          <div class="quadrant-prescriptive"><b>Action:</b> Suppress standard collections; route directly to legal or specialized recovery.</div>
+        </div>
+
+        <div class="quadrant-card q-sleeping-dog">
+          <div class="quadrant-header">
+            <h4>🟡 4. Sleeping Dogs (Negative Uplift)</h4>
+            <span class="quadrant-count" id="cntSleepingDog">–</span>
+          </div>
+          <div class="quadrant-desc">Outreach triggers reactance or anger, accelerating charge-off or dispute. Contact actually harms portfolio recovery.</div>
+          <div class="quadrant-prescriptive"><b>Action:</b> Strictly suppressed by the optimizer (0 negative value actions assigned).</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       TOPIC 4: SIMULATION BEFORE COMMITMENT (Monte Carlo & SimPy)
+       ======================================================================== -->
+  <section class="panel" id="topic-4" style="margin-bottom:20px">
+    <div class="panel-h">
+      <h2>04 · Simulation Before Commitment: What-If Analysis Under Uncertainty</h2>
+      <span class="pill pri">Risk Mitigation</span>
+    </div>
+    <div class="panel-b">
+      <div class="paradigm-grid">
+        <div class="paradigm-card">
+          <h3>🎲 Monte Carlo Parameter Uncertainty</h3>
+          <p class="muted">Runs 2,000 portfolio simulations sampling uncertainty across default hazard rates, uplift confidence bounds, and payment variance to produce an honest recovery range.</p>
+          <div class="tiles" style="margin-top:10px" id="mcTiles">
+            <div class="tile"><div class="k">P10 (Worst 10%)</div><div class="v" id="mcP10">–</div><div class="s">Downside protection</div></div>
+            <div class="tile"><div class="k">P50 (Median)</div><div class="v" id="mcP50">–</div><div class="s">Expected value</div></div>
+            <div class="tile"><div class="k">P90 (Best 10%)</div><div class="v" id="mcP90">–</div><div class="s">Upside potential</div></div>
+          </div>
+        </div>
+
+        <div class="paradigm-card">
+          <h3>⏱️ Discrete-Event Shift Simulation (SimPy)</h3>
+          <p class="muted">Simulates the collections floor as a multi-server queue with member contact arrival times, stochastic call durations, and finite agent shifts.</p>
+          <div class="tiles" style="margin-top:10px" id="desTiles">
+            <div class="tile"><div class="k">Voice Shift Completion</div><div class="v" id="desCompletion">–</div><div class="s">Tasks completed in shift</div></div>
+            <div class="tile"><div class="k">Plannable Minutes</div><div class="v" id="desMinutes">–</div><div class="s">Hard capacity budget</div></div>
+            <div class="tile"><div class="k">Queue Overload Risk</div><div class="v" id="desOverload">0.0%</div><div class="s">Capacity-bounded worklist</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       TOPIC 5: CONSTRAINED OPTIMIZATION & SYNTHETIC BENCHMARK
+       ======================================================================== -->
+  <section class="panel" id="topic-5" style="margin-bottom:20px">
+    <div class="panel-h">
+      <h2>05 · Mathematical Optimization: CBC MIP Solver vs Greedy Sorting</h2>
+      <span class="pill pri">Business Value 30%</span>
+    </div>
+    <div class="panel-b">
+      <div class="callout" style="margin-bottom:14px">
+        <b>The Knapsack Reality:</b> Under binding staff capacity, the CBC solver frequently skips one expensive, high-risk account (e.g. $45 \text{ mins}$) to take three higher-combined-uplift accounts ($15 \text{ mins}$ each). This mathematical arbitrage delivers <b>+26% true recovery lift</b> over risk scoring on benchmark data.
+      </div>
+
+      <!-- Benchmark Summary Cards -->
+      <div class="tiles" id="benchmarkTiles">
+        <div class="tile" style="border-top:3px solid var(--primary)"><div class="k">Optimised (Uplift + CBC)</div><div class="v" id="bmValOpt">–</div><div class="s">Targeted on persuadability</div></div>
+        <div class="tile"><div class="k">Sort by Risk Score</div><div class="v" id="bmValRisk">–</div><div class="s">Standard industry practice</div></div>
+        <div class="tile"><div class="k">Sort by Expected Loss</div><div class="v" id="bmValExp">–</div><div class="s">Exposure-weighted sort</div></div>
+        <div class="tile" style="border-top:3px solid var(--good)"><div class="k">True Lift vs Risk Sort</div><div class="v" id="bmLiftRisk">+26%</div><div class="s">Scored against sealed truth</div></div>
+        <div class="tile"><div class="k">Harmful Actions Avoided</div><div class="v" id="bmHarmAvoided">19 fewer</div><div class="s">Suppresses sleeping dogs</div></div>
+      </div>
+
+      <!-- Counterfactual Tester -->
+      <div class="section-title" style="margin-top:20px">Interactive Solver Counterfactual: "Why This Account, and Not Another?"</div>
+      <div class="cf-tester">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label class="muted" style="font-size:12px">Select an Account Token from current run:</label>
+          <select class="input" id="cfAccountSelect"></select>
+          <button class="btn primary" id="btnRunExplain">Compute Solver Counterfactual</button>
+          <span class="muted" style="font-size:11px">Re-solves the MIP with this account forced or omitted to compute exact opportunity cost.</span>
+        </div>
+        <div class="cf-output-box" id="cfOutput">
+          <div class="empty">Select an account and click above to see the solver's exact displacement rationale.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       TOPIC 6: DIVISION OF LABOR & PROVENANCE (AI vs Math)
+       ======================================================================== -->
+  <section class="panel" id="topic-6" style="margin-bottom:20px">
+    <div class="panel-h">
+      <h2>06 · Clean Division of Labor: AI Orchestrates, Models & Solvers Do the Math</h2>
+      <span class="pill pri">Responsible AI</span>
+    </div>
+    <div class="panel-b">
+      <div class="division-grid">
+        <div class="division-box" style="border-left:4px solid var(--primary)">
+          <h4>🤖 What the AI (LLM & Agents) Does</h4>
+          <ul>
+            <li><b>Workflow Orchestration:</b> Coordinates the 8 stages, checks preconditions, and manages handoffs.</li>
+            <li><b>Outreach Script Drafting:</b> Drafts empathetic, compliance-aligned rationale & script templates per segment × action.</li>
+            <li><b>Plain-Language Translation:</b> Explains solver trade-offs to managers and compliance reviewers without technical jargon.</li>
+            <li><b>Strict Constraint:</b> The LLM is NEVER sent raw account numbers and is forbidden from generating unverified digits.</li>
+          </ul>
+        </div>
+
+        <div class="division-box" style="border-left:4px solid var(--good)">
+          <h4>🔢 What the Math Models & Solvers Do</h4>
+          <ul>
+            <li><b>Causal Estimation:</b> Bagged T-Learner (Gradient Boosted) calculates uplift $\tau$ and 90% confidence intervals.</li>
+            <li><b>Assignment Optimization:</b> CBC Mixed-Integer Linear Solver maximizes total portfolio recovery subject to capacity.</li>
+            <li><b>Risk Simulation:</b> Monte Carlo runs 2,000 iterations for P10–P90 distributions; SimPy models floor queue dynamics.</li>
+            <li><b>Zero Hallucinations:</b> 100% of figures (balances, DPD, uplift, minutes) are stamped with cryptographic provenance.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tiles" style="margin-top:14px">
+        <div class="tile"><div class="k">Unstamped Digits by LLM</div><div class="v" style="color:var(--good)">0 (Enforced)</div><div class="s">Regex validator blocks any digit outside {{placeholder}}</div></div>
+        <div class="tile"><div class="k">Facts Provenance Stamped</div><div class="v" id="provStamped">100%</div><div class="s">Every number traces to bank API, model, or solver</div></div>
+        <div class="tile"><div class="k">PII Isolation</div><div class="v" style="color:var(--good)">HMAC Tokenized</div><div class="s">First names rejoined from vault only in outreach script</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       TOPIC 7: GOVERNANCE, HUMAN APPROVAL & AUDIT CHAIN
+       ======================================================================== -->
+  <section class="panel" id="topic-7" style="margin-bottom:20px">
+    <div class="panel-h">
+      <h2>07 · Governed by Construction: Human-in-the-Loop & Cryptographic Audit Trail</h2>
+      <span class="pill pri">Enterprise Readiness</span>
+    </div>
+    <div class="panel-b">
+      <div class="paradigm-grid">
+        <div class="paradigm-card">
+          <h3>🛡️ Human Approval Gate</h3>
+          <p class="muted">The system proposes; a collections manager disposes. Nothing touches a borrower until approved and released.</p>
+          <div class="tiles" style="margin-top:10px" id="approvalSummaryTiles">
+            <div class="tile"><div class="k">Approved</div><div class="v" id="apprApproved">–</div><div class="s">Ready for release</div></div>
+            <div class="tile"><div class="k">Escalations</div><div class="v" id="apprEscalated">–</div><div class="s">High balance / complaints</div></div>
+            <div class="tile"><div class="k">Released to Bank</div><div class="v" id="apprReleased">–</div><div class="s">POSTed to /actions endpoint</div></div>
+          </div>
+        </div>
+
+        <div class="paradigm-card">
+          <h3>⛓️ Append-Only Cryptographic Audit Trail</h3>
+          <p class="muted">Every agent event, tool input/output, policy check, and human decision is recorded with a SHA-256 hash linked to the previous block.</p>
+          <div class="tiles" style="margin-top:10px" id="auditSummaryTiles">
+            <div class="tile"><div class="k">Hash Chain Status</div><div class="v" id="auditChainStatus" style="color:var(--good)">VALID ✓</div><div class="s">Zero tampering detected</div></div>
+            <div class="tile"><div class="k">Total Audit Blocks</div><div class="v" id="auditBlockCount">–</div><div class="s">Immutable append-only log</div></div>
+            <div class="tile"><div class="k">Chain Head Hash</div><div class="v mono" id="auditHeadHash" style="font-size:13px">–</div><div class="s">Cryptographic root</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       TOPIC 8: REUSABLE CORE & BUSINESS CASE ROI
+       ======================================================================== -->
+  <section class="panel" id="topic-8" style="margin-bottom:20px">
+    <div class="panel-h">
+      <h2>08 · Reusable Core & Business Case: Expanding Beyond Collections</h2>
+      <span class="pill pri">Reusability & Market ROI</span>
+    </div>
+    <div class="panel-b">
+      <div class="section-title">Ship the Slice, Design the Core: Swappable Scenario Packs</div>
+      <p class="muted">The same engine, solver, and governance framework power multiple high-value banking workflows simply by swapping declarative YAML configuration packs:</p>
+
+      <div class="scenario-grid">
+        <div class="scenario-card active-scenario">
+          <span class="pill good" style="align-self:flex-start;margin-bottom:6px">Active Scenario</span>
+          <h4>Collections & Delinquency</h4>
+          <div class="entity">Entity: Account · Horizon: 30d</div>
+          <p>Maximizes recovered dollars under staff calling minute constraints and cooling-off rules.</p>
+          <div class="scenario-pills">
+            <span class="pill pri">Cure Rate</span>
+            <span class="pill">Voice / SMS / Plan</span>
+            <span class="pill">Agent Minutes</span>
+          </div>
+        </div>
+
+        <div class="scenario-card">
+          <span class="pill" style="align-self:flex-start;margin-bottom:6px">Plug-and-Play Pack</span>
+          <h4>NPA Early Warning</h4>
+          <div class="entity">Entity: Commercial Loan · Horizon: 90d</div>
+          <p>Identifies commercial borrowers at risk of non-performing asset slip before default occurs.</p>
+          <div class="scenario-pills">
+            <span class="pill pri">NPA Slippage</span>
+            <span class="pill">RM Review / Covenant</span>
+            <span class="pill">Restructure</span>
+          </div>
+        </div>
+
+        <div class="scenario-card">
+          <span class="pill" style="align-self:flex-start;margin-bottom:6px">Roadmap Pack</span>
+          <h4>Member Retention</h4>
+          <div class="entity">Entity: Member · Horizon: 60d</div>
+          <p>Prescribes targeted fee waivers or personalized rate incentives to prevent deposit flight.</p>
+          <div class="scenario-pills">
+            <span class="pill pri">Churn Rate</span>
+            <span class="pill">Fee Waiver / Offer</span>
+            <span class="pill">Incentive Budget</span>
+          </div>
+        </div>
+
+        <div class="scenario-card">
+          <span class="pill" style="align-self:flex-start;margin-bottom:6px">Roadmap Pack</span>
+          <h4>Fraud & Risk Triage</h4>
+          <div class="entity">Entity: Transaction · Horizon: Real-time</div>
+          <p>Optimizes transaction review queues to maximize fraud detection while preserving customer friction budgets.</p>
+          <div class="scenario-pills">
+            <span class="pill pri">Fraud Loss</span>
+            <span class="pill">Step-Up / Block</span>
+            <span class="pill">Review Capacity</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Business ROI Calculator -->
+      <div class="section-title" style="margin-top:24px">Interactive Financial Institution ROI Calculator</div>
+      <div class="roi-container">
+        <div class="roi-inputs">
+          <div class="roi-field">
+            <label>Credit Union Member Accounts:</label>
+            <input type="number" id="roiAccounts" value="50000" step="5000">
+          </div>
+          <div class="roi-field">
+            <label>Annual Delinquent Portfolio ($):</label>
+            <input type="number" id="roiDelinquentBal" value="12000000" step="500000">
+          </div>
+          <div class="roi-field">
+            <label>Base Recovery Rate (%):</label>
+            <input type="number" id="roiBaseCure" value="45" min="10" max="90">
+          </div>
+          <div class="roi-field">
+            <label>Estimated Prescriptive Lift vs Risk Sort (%):</label>
+            <input type="number" id="roiLift" value="26" min="5" max="50">
+          </div>
+        </div>
+
+        <div class="roi-results-grid">
+          <div class="roi-kpi-card" style="border-top:3px solid var(--good)">
+            <div class="k">Annual Incremental Recovery</div>
+            <div class="v" id="roiAnnualGain">$1,404,000</div>
+            <div class="s">Pure avoided charge-off cash</div>
+          </div>
+          <div class="roi-kpi-card">
+            <div class="k">FTE Capacity Multiplier</div>
+            <div class="v">1.45×</div>
+            <div class="s">Zero wasted minutes on lost causes</div>
+          </div>
+          <div class="roi-kpi-card">
+            <div class="k">Platform Payback Timeline</div>
+            <div class="v" style="color:var(--good)">&lt; 2.5 Months</div>
+            <div class="s">Rapid enterprise ROI</div>
+          </div>
+          <div class="roi-kpi-card">
+            <div class="k">Target Client Profile</div>
+            <div class="v" style="font-size:18px">Community Banks &amp; CUs</div>
+            <div class="s">$500M – $10B Asset Tier</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script src="/static/common.js"></script>
+<script src="/static/demo.js"></script>
+</body>
+</html>

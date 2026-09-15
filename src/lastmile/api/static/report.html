@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Last Mile · Daily report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/static/console.css">
+<style>
+  main.page{max-width:1180px}
+  .r-head{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:flex-end;padding:18px 20px}
+  .r-head h1{margin:2px 0 4px;font-size:24px;letter-spacing:-.015em}
+  .r-head .sub{color:var(--ink-3);font-size:12.5px}
+  .r-sec{margin-top:14px}
+  .r-sec .panel-b > p{margin:0 0 10px;font-size:12.5px;color:var(--ink-2);line-height:1.55}
+  .big-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+  .big-tiles .tile .v{font-size:21px}
+  .bar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--panel-3);margin-top:6px}
+  .bar i{display:block;height:100%}
+  .trend td,.trend th{white-space:nowrap}
+  .stamp{display:inline-flex;align-items:center;gap:6px}
+  @media print{
+    .topbar,.no-print{display:none!important}
+    body{background:#fff} .panel{box-shadow:none;break-inside:avoid} main.page{padding:0}
+    .tbl-wrap{max-height:none!important;overflow:visible}
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><b>Last Mile</b><span>Daily report</span></div>
+  <div class="spacer"></div>
+  <label class="muted" for="dateSelect">Business day</label>
+  <select class="input" id="dateSelect" aria-label="Business day"></select>
+  <button class="btn" id="printBtn">Print / save as PDF</button>
+  <a class="btn" href="/manager">← Manager Console</a>
+</header>
+<main class="page" id="report"><div class="empty">Loading…</div></main>
+<script src="/static/common.js"></script>
+<script src="/static/report.js"></script>
+</body>
+</html>

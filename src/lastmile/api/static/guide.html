@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Last Mile · How it works</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/static/console.css">
+<link rel="stylesheet" href="/static/guide.css">
+</head>
+<body>
+
+<header class="g-top">
+  <a class="g-brand" href="/guide"><b>Last Mile</b><span>How it works</span></a>
+  <div class="g-run" id="runChip">Loading…</div>
+  <div class="g-spacer"></div>
+  <label class="g-switch" title="Show the models, tools and figures behind each step">
+    <input type="checkbox" id="techToggle"><span class="track"><span class="thumb"></span></span><span>Technical detail</span>
+  </label>
+  <a class="g-link" href="/manager">Manager Console</a>
+  <a class="g-link" href="/admin">Admin Console</a>
+</header>
+
+<div class="g-shell">
+  <nav class="g-rail" aria-label="Chapters">
+    <ol id="chapters">
+      <li><a href="#c1"><i>1</i><span>The problem</span></a></li>
+      <li><a href="#c2"><i>2</i><span>Meet the team</span></a></li>
+      <li><a href="#c3"><i>3</i><span>Watch them work</span></a></li>
+      <li><a href="#c4"><i>4</i><span>Today's plan</span></a></li>
+      <li><a href="#c5"><i>5</i><span>One member's story</span></a></li>
+      <li><a href="#c6"><i>6</i><span>Does it work?</span></a></li>
+      <li><a href="#c7"><i>7</i><span>You stay in control</span></a></li>
+      <li><a href="#c8"><i>8</i><span>What's next</span></a></li>
+    </ol>
+  </nav>
+
+  <main class="g-main">
+
+    <!-- hero -->
+    <section class="g-hero">
+      <p class="g-kicker" id="heroInstitution">Collections decisions</p>
+      <h1>Every morning, a collections team has to decide who to call.</h1>
+      <p class="g-lede" id="heroLede">Last Mile works out who to contact, how, and why — then a person approves every action before anything is sent.</p>
+      <div class="g-hero-actions">
+        <button class="g-btn primary" id="heroStart">Start today's run</button>
+        <a class="g-btn" href="#c1">Take the tour</a>
+      </div>
+      <p class="g-hint" id="heroHint"></p>
+    </section>
+
+    <!-- 1 ------------------------------------------------------------------ -->
+    <section class="g-ch" id="c1">
+      <header class="g-ch-h"><span class="g-num">Chapter 1</span><h2>The problem</h2>
+        <p>The bank already knows who is likely to fall behind. What it doesn't know is what to do about it.</p></header>
+
+      <div class="g-cards three">
+        <article class="g-card">
+          <div class="g-big" id="p1Accounts">–</div>
+          <h3>members behind on a payment today</h3>
+          <p>Each one could get a text, a call, a payment plan, a hardship referral — or nothing at all.</p>
+        </article>
+        <article class="g-card">
+          <div class="g-big" id="p1Minutes">–</div>
+          <h3>agent minutes available</h3>
+          <p id="p1MinutesNote">A small team can only reach a fraction of those members in a day.</p>
+        </article>
+        <article class="g-card accent">
+          <div class="g-big">?</div>
+          <h3>who, how, and why</h3>
+          <p>Calling the riskiest accounts first feels right, but some would pay anyway, some never will, and some react badly to being chased.</p>
+        </article>
+      </div>
+
+      <div class="g-types">
+        <h3 class="g-sub">Not every member responds the same way to contact</h3>
+        <div class="g-cards four" id="typeCards"></div>
+      </div>
+
+      <div class="tech g-tech">
+        <b>Under the hood.</b> A risk score estimates the chance an account defaults. Last Mile adds a second
+        estimate — <em>uplift</em>: how much a specific action changes the chance the member catches up. The value of
+        an action is <span class="mono">uplift × expected loss if the account does not cure − cost</span>.
+      </div>
+    </section>
+
+    <!-- 2 ------------------------------------------------------------------ -->
+    <section class="g-ch" id="c2">
+      <header class="g-ch-h"><span class="g-num">Chapter 2</span><h2>Meet the team</h2>
+        <p>Eight AI agents each own one job. None of them can do another agent's work — and none of them has the final say.</p></header>
+
+      <div class="g-split">
+        <div class="g-split-col"><span class="g-dot agent"></span><div><b>Agents coordinate and explain</b><p>They run the steps in order, check the work, and write the reasons in plain language.</p></div></div>
+        <div class="g-split-col"><span class="g-dot maths"></span><div><b>Models and a planner do the maths</b><p>Every number comes from a statistical model, a simulation or an optimisation solver — never from the AI.</p></div></div>
+        <div class="g-split-col"><span class="g-dot human"></span><div><b>A person decides</b><p>The collections manager approves, edits or rejects every action. Nothing reaches a member without it.</p></div></div>
+      </div>
+
+      <div class="g-team" id="teamGrid"></div>
+    </section>
+
+    <!-- 3 ------------------------------------------------------------------ -->
+    <section class="g-ch" id="c3">
+      <header class="g-ch-h"><span class="g-num">Chapter 3</span><h2>Watch them work</h2>
+        <p>Start a fresh run, or replay the last one. Each agent lights up as it takes its turn.</p></header>
+
+      <div class="g-toolbar">
+        <button class="g-btn primary" id="runStart">Start a new run</button>
+        <button class="g-btn" id="runReplay">Replay the latest run</button>
+        <span class="g-status" id="runStatus"></span>
+      </div>
+
+      <div class="g-live">
+        <ol class="g-stages" id="stageList"></ol>
+        <div class="g-feed">
+          <div class="g-feed-h"><b>What's happening</b><span id="feedCount"></span></div>
+          <div class="g-feed-list" id="feed"><div class="g-empty">Press <b>Start a new run</b> or <b>Replay</b> to see the agents at work.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 ------------------------------------------------------------------ -->
+    <section class="g-ch" id="c4">
+      <header class="g-ch-h"><span class="g-num">Chapter 4</span><h2>Today's plan</h2>
+        <p>What the team is being asked to do — and what it's expected to achieve.</p></header>
+      <div id="planBody"><div class="g-empty">The plan appears here once a run has finished.</div></div>
+    </section>
+
+    <!-- 5 ------------------------------------------------------------------ -->
+    <section class="g-ch" id="c5">
+      <header class="g-ch-h"><span class="g-num">Chapter 5</span><h2>One member's story</h2>
+        <p>Follow a single recommendation from the bank's data to the manager's desk.</p></header>
+      <div class="g-toolbar">
+        <label for="memberSelect" class="g-label">Choose a member</label>
+        <select class="g-select" id="memberSelect"></select>
+      </div>
+      <div id="storyBody"><div class="g-empty">Recommendations appear here once a run has finished.</div></div>
+    </section>
+
+    <!-- 6 ------------------------------------------------------------------ -->
+    <section class="g-ch" id="c6">
+      <header class="g-ch-h"><span class="g-num">Chapter 6</span><h2>Does it work?</h2>
+        <p>We compared three ways of using the same team, the same rules and the same hours.</p></header>
+      <div id="proofBody"><div class="g-empty">Results appear here once a run has finished.</div></div>
+    </section>
+
+    <!-- 7 ------------------------------------------------------------------ -->
+    <section class="g-ch" id="c7">
+      <header class="g-ch-h"><span class="g-num">Chapter 7</span><h2>You stay in control</h2>
+        <p>Six promises the system makes — each one checked live against this run.</p></header>
+      <div class="g-promises" id="promises"></div>
+      <div class="g-cta">
+        <div><b>Ready to review today's worklist?</b><p>Approve, change or reject each recommendation, then release the approved ones to the bank.</p></div>
+        <a class="g-btn primary" id="managerLink" href="/manager">Open the Manager Console</a>
+      </div>
+    </section>
+
+    <!-- 8 ------------------------------------------------------------------ -->
+    <section class="g-ch" id="c8">
+      <header class="g-ch-h"><span class="g-num">Chapter 8</span><h2>What's next</h2>
+        <p>The same team of agents can make other decisions. What changes is the rules file; the checks, the planner and the approval step stay the same.</p></header>
+      <div class="g-cards four">
+        <article class="g-card scenario live"><span class="g-tag good">Running now</span><h3>Collections</h3><p>Who to contact about a missed payment, and how, within the team's hours.</p></article>
+        <article class="g-card scenario"><span class="g-tag">Configured</span><h3>Early warning on loans</h3><p>Spot business loans likely to go bad and choose a review or restructure. Its rules file loads today; it needs loan-level data from the bank to run.</p></article>
+        <article class="g-card scenario"><span class="g-tag muted">Idea</span><h3>Member retention</h3><p>Decide which members to offer a fee waiver or rate before they move their savings elsewhere.</p></article>
+        <article class="g-card scenario"><span class="g-tag muted">Idea</span><h3>Fraud review queues</h3><p>Decide which alerts a limited fraud team should review first.</p></article>
+      </div>
+      <p class="tech g-tech"><b>Under the hood.</b> A scenario is a YAML “scenario pack” (decision, actions, what counts as success);
+        each bank has an “institution pack” (its data fields, rules and capacity). The engine code is unchanged between scenarios.</p>
+    </section>
+
+    <footer class="g-foot">
+      Figures on this page come from the selected run of the engine against a <b>simulated</b> credit union.
+      Dollar estimates are the model's own view; Chapter 6 checks them against what really happened in the simulation.
+    </footer>
+  </main>
+</div>
+
+<script src="/static/common.js"></script>
+<script src="/static/guide.js"></script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+# Scenario Pack - NPA early warning. Same schema, same engine; only the decision differs.
+# Loads and validates today. Running it end to end needs a loan-level feed from the bank.
+scenario:
+  id: npa_early_warning
+  version: 0.1.0
+  title: NPA early warning
+  entity: loan                  # CHANGED
+  group_by: member_token
+  decision_period: weekly       # CHANGED
+
+objective:
+  currency: USD
+  horizon_days: 90              # CHANGED
+  expected_loss: "pd_12m * exposure * lgd"
+  action_value: "uplift * expected_loss - cost_cash"
+
+causal:
+  treatment_column: action
+  control_value: NONE
+  outcome_column: slipped_to_npa_90d   # CHANGED - the causal target
+  method: t_learner
+  bootstrap_rounds: 3
+  label_maturity_days: 90
+  features:                            # CHANGED - loan-level signals
+    - dpd_at_t
+    - balance_at_t
+    - risk_pd_at_t
+    - utilisation_at_t
+    - covenant_breaches_12m
+    - tenure_mos
+  exclude_features: [curr_bal, dpd, slipped_to_npa_90d]
+  validation:
+    holdout_fraction: 0.25
+    min_qini: 0.0
+
+actions:                               # CHANGED - different levers
+  - {id: RM_REVIEW, label: Relationship manager review, channel: internal, cost_minutes: 90, cost_cash: 0.0, is_contact: true, requires: [phone_consent]}
+  - {id: COVENANT_CHECK, label: Covenant check, channel: internal, cost_minutes: 30, cost_cash: 0.0, is_contact: false, requires: []}
+  - {id: RESTRUCTURE, label: Restructure proposal, channel: voice, cost_minutes: 240, cost_cash: 0.0, is_contact: true, requires: [phone_consent, plan_eligible]}
+
+segments:
+  persuadable_min_uplift: 0.03
+  sleeping_dog_max_uplift: -0.02
+  sure_thing_min_p0: 0.60
+  lost_cause_max_p0: 0.10
+
+simulation:
+  monte_carlo_runs: 2000
+  des_replications: 20
+  seed: 7
+
+explanation:
+  must_state: [expected_loss, uplift, action_value, runner_up_action]

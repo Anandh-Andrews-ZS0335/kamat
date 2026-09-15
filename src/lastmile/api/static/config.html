@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Last Mile · Configuration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/static/console.css">
+<style>
+  .how{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0;margin-bottom:14px}
+  .how > div{padding:12px 16px;border-right:1px solid var(--line)}
+  .how > div:last-child{border-right:0}
+  .how > div > b{display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:3px}
+  .how > div > b i{font-style:normal;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--primary);color:var(--on-primary);font-size:11px}
+  .how p{margin:0;font-size:12px;color:var(--ink-2);line-height:1.5}
+
+  .cfg{display:grid;grid-template-columns:250px minmax(0,1fr) 340px;gap:14px;align-items:start}
+  @media (max-width:1280px){.cfg{grid-template-columns:230px minmax(0,1fr)}.guide{grid-column:1 / -1}}
+  @media (max-width:820px){.cfg{grid-template-columns:1fr}}
+  .files .grp{padding:10px 12px 4px}
+  .files .grp h3{margin:0;font-size:12px}
+  .files .grp p{margin:2px 0 6px;font-size:11.5px;color:var(--ink-3);line-height:1.4}
+  .file{display:flex;align-items:center;gap:6px;width:100%;text-align:left;border:0;background:none;padding:7px 12px;cursor:pointer;border-left:3px solid transparent}
+  .file:hover{background:var(--panel-2)}
+  .file.on{background:var(--primary-soft);border-left-color:var(--primary)}
+  .file span{font-family:var(--mono);font-size:12px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+
+  .file-h{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .file-h h2{margin:0;font-size:15px}
+  .outline{display:flex;flex-wrap:wrap;gap:5px;padding:9px 14px;border-bottom:1px solid var(--line)}
+  .sec-chip{border:1px solid var(--line-2);background:var(--panel);border-radius:999px;padding:2px 9px;font-size:11.5px;cursor:pointer;display:inline-flex;gap:5px;align-items:center}
+  .sec-chip.on{border-color:var(--primary);background:var(--primary-soft)}
+  .risk{width:7px;height:7px;border-radius:50%;display:inline-block}
+  .risk.safe{background:var(--good)} .risk.careful{background:var(--warn)} .risk.expert{background:var(--bad)}
+
+  .editor{display:grid;grid-template-columns:auto 1fr;height:min(62vh,640px);background:var(--panel-2);border-bottom:1px solid var(--line)}
+  .gutter{margin:0;padding:10px 8px 10px 12px;overflow:hidden;text-align:right;color:var(--ink-3);font:12.5px/1.6 var(--mono);user-select:none;background:var(--panel-3)}
+  .gutter .err{color:#fff;background:var(--bad);border-radius:3px;padding:0 3px}
+  .gutter .warnl{color:var(--warn);font-weight:700}
+  .gutter .cur{color:var(--ink);font-weight:700}
+  textarea.code{margin:0;border:0;outline:0;resize:none;padding:10px 12px;font:12.5px/1.6 var(--mono);background:var(--panel);color:var(--ink);white-space:pre;overflow:auto;tab-size:2}
+  textarea.code:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px}
+  .dirty{color:var(--warn);font-weight:700;font-size:12px}
+
+  .result .item{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+  .result .item:last-child{border-bottom:0}
+  .result .item .where{font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
+  .result .item button{border:0;background:none;color:var(--primary);cursor:pointer;padding:0;font:inherit;font-family:var(--mono);font-size:11.5px}
+  .chg{font-family:var(--mono);font-size:12px}
+  .chg del{color:var(--bad);text-decoration:line-through} .chg ins{color:var(--good);text-decoration:none}
+
+  .guide{position:sticky;top:64px}
+  .guide .panel-b h3{margin:0 0 4px;font-size:15px}
+  .guide p{margin:6px 0;font-size:12.5px;line-height:1.55;color:var(--ink-2)}
+  .guide .lbl{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-top:12px}
+  .guide dl{margin:6px 0 0;display:grid;gap:6px}
+  .guide dt{font-family:var(--mono);font-size:11.5px;font-weight:600}
+  .guide dd{margin:0 0 4px;font-size:12px;color:var(--ink-2);line-height:1.45}
+  .guide .field-on{background:var(--brass-soft);border-radius:5px;padding:4px 6px;margin:-4px -6px}
+  .agents{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+
+  dialog{border:1px solid var(--line);border-radius:10px;padding:0;background:var(--panel);color:var(--ink);width:min(620px,94vw);box-shadow:var(--shadow)}
+  dialog::backdrop{background:rgba(10,14,20,.45)}
+  dialog .panel-b{display:grid;gap:10px}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><b>Last Mile</b><span>Configuration</span></div>
+  <div class="chips" id="hashChip"></div>
+  <div class="spacer"></div>
+  <a class="btn" href="/admin">← Admin Console</a>
+  <a class="btn" href="/manager">Manager Console →</a>
+</header>
+
+<main class="page">
+  <section class="panel how" aria-label="How configuration works">
+    <div><b><i>1</i>Pick a file and a section</b><p>Everything the agents follow lives in three kinds of file. Click a section chip or put the cursor anywhere: the guide on the right explains it.</p></div>
+    <div><b><i>2</i>Edit, then check</b><p><b>Check changes</b> runs the same validation a run applies and lists every change in plain words, with the line of any mistake.</p></div>
+    <div><b><i>3</i>Save with a reason</b><p>The old version is kept and the change goes in the audit trail. It applies from the <b>next run</b>; runs already made keep their own copy.</p></div>
+  </section>
+
+  <div class="cfg">
+    <nav class="panel files" id="files" aria-label="Configuration files"><div class="empty">Loading…</div></nav>
+
+    <section class="panel" id="editorPanel">
+      <div class="file-h" id="fileHead"><span class="muted">Choose a file.</span></div>
+      <div class="outline" id="outline"></div>
+      <div class="editor">
+        <pre class="gutter" id="gutter" aria-hidden="true"></pre>
+        <textarea class="code" id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="YAML editor"></textarea>
+      </div>
+      <div class="toolbar">
+        <button class="btn primary" id="checkBtn">Check changes</button>
+        <button class="btn good" id="saveBtn" disabled>Save…</button>
+        <button class="btn" id="discardBtn" disabled>Discard edits</button>
+        <span class="dirty" id="dirty"></span>
+        <div class="spacer"></div>
+        <select class="input" id="historySel" aria-label="Earlier versions"><option value="">Earlier versions…</option></select>
+      </div>
+      <div class="panel-b result" id="result" style="border-top:1px solid var(--line)"></div>
+    </section>
+
+    <aside class="panel guide" id="guide" aria-label="What this section does"><div class="panel-b"><div class="muted">The guide appears here.</div></div></aside>
+  </div>
+</main>
+
+<dialog id="saveDlg">
+  <div class="panel-h"><h2>Save changes</h2><div class="spacer"></div><button class="btn small" id="dlgClose">Cancel</button></div>
+  <div class="panel-b">
+    <div id="dlgSummary"></div>
+    <label class="eyebrow" for="dlgReason">Why are you making this change? <span class="muted">(required, kept in the audit trail)</span></label>
+    <textarea class="input" id="dlgReason" placeholder="e.g. Calls are running long this week, so plan 85% of each shift"></textarea>
+    <label class="eyebrow" for="dlgWho">Your name</label>
+    <input class="input" id="dlgWho" value="admin.demo">
+    <div class="callout">Takes effect from the next run. Runs already made, and any worklist waiting for approval, keep the configuration they were produced with.</div>
+    <div style="display:flex;gap:8px"><button class="btn good" id="dlgSave">Save</button><span class="muted" id="dlgMsg"></span></div>
+  </div>
+</dialog>
+
+<script src="/static/common.js"></script>
+<script src="/static/config.js"></script>
+</body>
+</html>

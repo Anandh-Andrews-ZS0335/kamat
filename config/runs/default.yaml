@@ -1,0 +1,6 @@
+# Run Config - what changes day to day.
+run:
+  scenario: collections_delinquency
+  institution: riverbend_cu
+  as_of: null                 # null = use the bank's reported as-of date
+  approver_default: manager.demo
