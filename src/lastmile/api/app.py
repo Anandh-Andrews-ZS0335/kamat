@@ -9,13 +9,14 @@
 
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 from pathlib import Path
 
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -32,9 +33,35 @@ from lastmile.pipeline import run as pipeline
 from lastmile.store import artifacts, db, llm_calls
 
 STATIC = Path(__file__).parent / "static"
+
+
+_ASSET = re.compile(r'(/static/[\w.-]+\.(?:css|js))"')
+
+
+def page(name: str) -> HTMLResponse:
+    """Serve a console page with its stylesheets and scripts versioned by file time.
+
+    A browser that cached an older build cannot serve it back: the URL itself changes when the file does.
+    """
+    def version(match: re.Match) -> str:
+        asset = STATIC / Path(match.group(1)).name
+        stamp = int(asset.stat().st_mtime) if asset.exists() else 0
+        return f'{match.group(1)}?v={stamp}"'
+
+    html = _ASSET.sub(version, (STATIC / name).read_text())
+    return HTMLResponse(html, headers={"Cache-Control": "no-cache"})
 app = FastAPI(title="Last Mile - Agentic Prescriptive Analytics", version="1.0.0")
 app.add_middleware(auth.AuthMiddleware)
-app.mount("/static", StaticFiles(directory=STATIC), name="static")
+class RevalidatingStatic(StaticFiles):
+    """Browsers must re-check the consoles' CSS and JS. ETags keep that cheap, and a deploy is never half-stale."""
+
+    def file_response(self, *args, **kwargs):
+        response = super().file_response(*args, **kwargs)
+        response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
+app.mount("/static", RevalidatingStatic(directory=STATIC), name="static")
 app.include_router(auth.router)
 app.include_router(daily.router)
 app.include_router(config_editor.router)
@@ -49,33 +76,33 @@ def root():
 
 @app.get("/demo", include_in_schema=False)
 def demo_page():
-    return FileResponse(STATIC / "demo.html")
+    return page("demo.html")
 
 
 @app.get("/guide", include_in_schema=False)
 def guide_page():
     """Guided tour: plain-language, client-facing walkthrough of a run. Technical detail on demand."""
-    return FileResponse(STATIC / "guide.html")
+    return page("guide.html")
 
 
 @app.get("/admin", include_in_schema=False)
 def admin_page():
-    return FileResponse(STATIC / "admin.html")
+    return page("admin.html")
 
 
 @app.get("/manager", include_in_schema=False)
 def manager_page():
-    return FileResponse(STATIC / "manager.html")
+    return page("manager.html")
 
 
 @app.get("/report", include_in_schema=False)
 def report_page():
-    return FileResponse(STATIC / "report.html")
+    return page("report.html")
 
 
 @app.get("/admin/config", include_in_schema=False)
 def config_page():
-    return FileResponse(STATIC / "config.html")
+    return page("config.html")
 
 
 # ----------------------------------------------------------------------------- status

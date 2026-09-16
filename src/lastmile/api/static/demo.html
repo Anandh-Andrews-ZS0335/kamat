@@ -9,23 +9,15 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="/static/console.css">
 <link rel="stylesheet" href="/static/demo.css">
+<link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
 
-<header class="topbar">
-  <div class="brand">
-    <b>Last Mile</b>
-    <span>Demo & Showcase</span>
-  </div>
-  <div class="chips" id="statusChips">
-    <span class="chip"><i class="dot"></i>Connecting to Engine…</span>
-  </div>
-  <div class="spacer"></div>
+<div id="pageActions" hidden>
   <select class="input" id="runSelect" aria-label="Select run"></select>
-  <button class="btn primary" id="btnNewRun">▶ Run Pipeline (~10s)</button>
-  <a class="btn" href="/manager">Manager Console →</a>
-  <a class="btn" href="/admin">Admin Trace →</a>
-</header>
+  <button class="btn primary needs-write" id="btnNewRun">Run pipeline (~10s)</button>
+</div>
+
 
 <main class="page">
 
@@ -534,6 +526,7 @@
 </main>
 
 <script src="/static/common.js"></script>
+<script src="/static/shell.js"></script>
 <script src="/static/demo.js"></script>
 </body>
 </html>

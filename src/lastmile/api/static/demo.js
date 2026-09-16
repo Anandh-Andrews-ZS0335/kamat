@@ -40,7 +40,7 @@ async function loadStatus() {
   try {
     const s = await api("/api/status");
     D.status = s;
-    $("#statusChips").innerHTML = `
+    if ($("#statusChips")) $("#statusChips").innerHTML = `
       <span class="chip"><i class="dot ${s.bank.ok ? "ok" : "bad"}"></i>Bank API ${s.bank.ok ? `· ${esc(s.bank.as_of)}` : "offline"}</span>
       <span class="chip"><i class="dot ${s.llm_mode.startsWith("gemini") ? "ok" : "warn"}"></i>LLM: ${esc(s.llm_mode)}</span>
       <span class="chip">${esc(s.scenario)}</span>
@@ -51,7 +51,7 @@ async function loadStatus() {
     $("#statCfgHash").textContent = fmt.short(s.config_hash, 16);
     $("#statLLM").textContent = s.llm_mode;
   } catch (e) {
-    $("#statusChips").innerHTML = `<span class="chip"><i class="dot bad"></i>${esc(e.message)}</span>`;
+    if ($("#statusChips")) $("#statusChips").innerHTML = `<span class="chip"><i class="dot bad"></i>${esc(e.message)}</span>`;
   }
 }
 
@@ -350,4 +350,4 @@ function setupRoiCalculator() {
 // --------------------------------------------------------------------------
 // Start on page load
 // --------------------------------------------------------------------------
-document.addEventListener("DOMContentLoaded", initDemo);
+document.addEventListener("DOMContentLoaded", () => Shell.mount({ page: "demo", title: "Demo showcase" }).then(initDemo));

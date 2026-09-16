@@ -627,4 +627,4 @@ function scrollSpy() {
   Object.keys(map).forEach((id) => { const el = document.getElementById(id); if (el) obs.observe(el); });
 }
 
-document.addEventListener("DOMContentLoaded", init);
+document.addEventListener("DOMContentLoaded", () => Shell.mount({ page: "guide", title: "Guided tour" }).then(init));
