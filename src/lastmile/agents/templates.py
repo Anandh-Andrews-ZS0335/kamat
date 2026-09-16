@@ -11,8 +11,8 @@ SEGMENT_SENTENCE = {
 }
 
 RATIONALE = (
-    "{segment_sentence} The {{product_label}} balance of {{exposure}} is {{dpd}} days past due at grade "
-    "{{risk_grade}}, carrying {{expected_loss}} of expected loss if it does not cure. The uplift model estimates that {{action_label}} "
+    "{segment_sentence} The {{product_label}} balance of {{exposure}} is {{dpd}} days past due with a bank risk "
+    "rating of {{risk_grade}}, carrying {{expected_loss}} of expected loss if it does not cure. The uplift model estimates that {{action_label}} "
     "changes the chance of curing within {{horizon_days}} days by {{uplift}} (between {{uplift_low}} and "
     "{{uplift_high}}), worth {{action_value}} in avoided loss. The next best option, {{runner_up_action}}, "
     "is worth {{runner_up_value}}."

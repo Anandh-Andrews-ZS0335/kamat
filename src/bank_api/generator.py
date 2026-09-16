@@ -63,6 +63,11 @@ class GenParams:
     history_days: int = 120
     seed: int = 20260914
     as_of: date | None = None  # defaults to today
+    institution: str = "Riverbend Credit Union"
+    # How this bank's own predictive model reports risk: "grade" (A-E scorecard) or "probability" (a default
+    # probability over score_horizon_days, as a logistic or gradient-boosted model would output).
+    score_style: str = "grade"
+    score_horizon_days: int = 365
 
 
 def _sigmoid(x: np.ndarray) -> np.ndarray:
@@ -77,6 +82,14 @@ def _true_pd12(dpd, missed, mos, ptp, dd, noise):
     return _sigmoid(-2.4 + 0.022 * (dpd - 30) + 0.28 * missed + 0.22 * mos - 1.1 * ptp - 0.5 * dd + noise)
 
 
+def _bank_probability(pd12: np.ndarray, horizon_days: int) -> np.ndarray:
+    """The bank's model output: default probability over its own horizon, a little over-confident, as an
+    uncalibrated boosted-tree model tends to be. Deterministic - it consumes no random numbers."""
+    p = 1.0 - np.power(1.0 - np.clip(pd12, 1e-4, 0.9999), horizon_days / 365.0)
+    logit = np.log(p / (1.0 - p))
+    return np.round(1.0 / (1.0 + np.exp(-(1.15 * logit + 0.08))), 4)
+
+
 def _true_effect(segment: str, action: str, dpd: float) -> float:
     eff = TRUE_EFFECT[segment][action]
     if segment == "persuadable":
@@ -85,7 +98,8 @@ def _true_effect(segment: str, action: str, dpd: float) -> float:
 
 
 def _simulate_day(st: dict, d: int, day: date, rng: np.random.Generator, queue_rows: list, outcome_rows: list,
-                  hist_truth: list, forced: dict[int, str] | None = None, executed: list | None = None) -> None:
+                  hist_truth: list, forced: dict[int, str] | None = None, executed: list | None = None,
+                  score_style: str = "grade", score_horizon_days: int = 365) -> None:
     """One day of the book. `forced` maps account index -> action released by the engine for this day."""
     dpd, bal, missed, mos, status = st["dpd"], st["bal"], st["missed"], st["mos"], st["status"]
     resolve_day, last_queued, entry_day = st["resolve_day"], st["last_queued"], st["entry_day"]
@@ -116,6 +130,7 @@ def _simulate_day(st: dict, d: int, day: date, rng: np.random.Generator, queue_r
         pd12 = _true_pd12(dpd[queued], missed[queued], mos[queued], ptp[queued], dd[queued],
                           rng.normal(0, 0.35, len(queued)))
         grades = _grade(pd12)
+        probs = _bank_probability(pd12, score_horizon_days) if score_style == "probability" else None
         # legacy policy: worst grade first, noisy, capacity-limited, with a random holdout
         priority = np.array([grade_rank[g] for g in grades]) + rng.normal(0, 1.3, len(queued))
         order = np.argsort(-priority)
@@ -145,7 +160,8 @@ def _simulate_day(st: dict, d: int, day: date, rng: np.random.Generator, queue_r
             rpc = int(action in ("CALL", "PLAN", "HARDSHIP") and rng.random() < 0.62)
             queue_rows.append({
                 "QUEUE_DT": day.isoformat(), "ACCT_NBR": acct[i], "CIF_KEY": cif[owner_idx[i]],
-                "DPD_CNT": int(dpd[i]), "CURR_BAL": round(float(bal[i]), 2), "RISK_GRADE": grades[k],
+                "DPD_CNT": int(dpd[i]), "CURR_BAL": round(float(bal[i]), 2),
+                **({"PD_EST": float(probs[k])} if score_style == "probability" else {"RISK_GRADE": grades[k]}),
                 "PMTS_MISSED_12M": int(missed[i]), "MOS_SINCE_LAST_PMT": int(mos[i]),
                 "ACTION_CD": action, "RPC_IND": rpc,
             })
@@ -170,7 +186,8 @@ def _simulate_day(st: dict, d: int, day: date, rng: np.random.Generator, queue_r
     status[charged] = "CHARGED_OFF"
 
 
-def _views(st: dict, history_days: int, as_of: date, rng: np.random.Generator):
+def _views(st: dict, history_days: int, as_of: date, rng: np.random.Generator, score_style: str = "grade",
+           score_horizon_days: int = 365):
     """What the bank publishes today: account state, today's scores and today's sealed truth."""
     dpd, bal, missed, mos, orig, prod = st["dpd"], st["bal"], st["missed"], st["mos"], st["orig"], st["prod"]
     status = st["status"].copy()
@@ -191,12 +208,18 @@ def _views(st: dict, history_days: int, as_of: date, rng: np.random.Generator):
 
     live = status == "DELINQUENT"
     pd12_today = _true_pd12(dpd, missed, mos, st["ptp"], st["dd"], rng.normal(0, 0.35, n_a))
+    if score_style == "probability":
+        risk = {"PD_EST": _bank_probability(pd12_today[live], score_horizon_days)}
+        model, horizon = "xgb-collect-2.3", score_horizon_days
+    else:
+        risk = {"RISK_GRADE": _grade(pd12_today[live])}
+        model, horizon = "cu-delinq-v4.2", 365
     scores = pd.DataFrame({
         "ACCT_NBR": acct[live],
-        "RISK_GRADE": _grade(pd12_today[live]),
+        **risk,
         "SCORE_DT": (as_of - timedelta(days=1)).isoformat(),
-        "MDL_VER": "cu-delinq-v4.2",
-        "PD_HORIZON_DAYS": 365,
+        "MDL_VER": model,
+        "PD_HORIZON_DAYS": horizon,
     })
 
     live_idx = np.where(live)[0]
@@ -380,8 +403,9 @@ def generate(out_dir: Path, params: GenParams = GenParams()) -> dict:
         "sms_ok": consents["SMS_CONSENT_IND"].to_numpy()[owner_idx] == 1,
     }
     queue_rows, outcome_rows, hist_truth = [], [], []
+    style = {"score_style": params.score_style, "score_horizon_days": params.score_horizon_days}
     for d in range(params.history_days):
-        _simulate_day(st, d, start + timedelta(days=d), rng, queue_rows, outcome_rows, hist_truth)
+        _simulate_day(st, d, start + timedelta(days=d), rng, queue_rows, outcome_rows, hist_truth, **style)
 
     queue = pd.DataFrame(queue_rows)
     all_outcomes = pd.DataFrame(outcome_rows)
@@ -389,7 +413,7 @@ def generate(out_dir: Path, params: GenParams = GenParams()) -> dict:
     outcomes = all_outcomes[matured].reset_index(drop=True)
 
     # ----------------------------------------------- today's view of the book
-    dynamic, scores, truth_today, live = _views(st, params.history_days, as_of, rng)
+    dynamic, scores, truth_today, live = _views(st, params.history_days, as_of, rng, **style)
     for col in dynamic.columns:
         accounts[col] = dynamic[col].to_numpy()
     consents = _contacts(consents, queue, as_of)
@@ -400,7 +424,8 @@ def generate(out_dir: Path, params: GenParams = GenParams()) -> dict:
     pd.DataFrame(hist_truth).to_csv(out_dir / "sealed" / "truth_history.csv", index=False)
     all_outcomes[~matured].to_parquet(out_dir / "sealed" / "pending_outcomes.parquet", index=False)
     _save_state(out_dir, st, rng, {"as_of": as_of.isoformat(), "history_days": params.history_days,
-                                   "initial_history_days": params.history_days, "seed": params.seed})
+                                   "initial_history_days": params.history_days, "seed": params.seed,
+                                   "institution": params.institution, **style})
 
     # ------------------------------------------------------------ persist
     db_path = out_dir / "bank.db"
@@ -415,7 +440,7 @@ def generate(out_dir: Path, params: GenParams = GenParams()) -> dict:
         outcomes.to_sql("outcomes", con, index=False)
         con.execute("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT)")
         con.executemany("INSERT INTO meta VALUES (?, ?)", [
-            ("as_of", as_of.isoformat()), ("seed", str(params.seed)), ("institution", "Riverbend Credit Union"),
+            ("as_of", as_of.isoformat()), ("seed", str(params.seed)), ("institution", params.institution),
         ])
         con.execute("""CREATE TABLE collection_actions (
             ACTION_ID INTEGER PRIMARY KEY AUTOINCREMENT, ACCT_NBR TEXT, ACTION_CD TEXT, CHANNEL TEXT,
@@ -481,7 +506,8 @@ def advance_day(out_dir: Path) -> dict:
     st["resolve_day"][newly] = -1
 
     queue_rows, outcome_rows, hist_truth, executed = [], [], [], []
-    _simulate_day(st, d, as_of, rng, queue_rows, outcome_rows, hist_truth, forced=forced, executed=executed)
+    style = {"score_style": meta.get("score_style", "grade"), "score_horizon_days": meta.get("score_horizon_days", 365)}
+    _simulate_day(st, d, as_of, rng, queue_rows, outcome_rows, hist_truth, forced=forced, executed=executed, **style)
     new_as_of = as_of + timedelta(days=1)
     history_days = d + 1
 
@@ -492,7 +518,7 @@ def advance_day(out_dir: Path) -> dict:
     pending_out[~matured].to_parquet(sealed / "pending_outcomes.parquet", index=False)
     pd.DataFrame(hist_truth).to_csv(sealed / "truth_history.csv", mode="a", header=False, index=False)
 
-    dynamic, scores, truth_today, live = _views(st, history_days, new_as_of, rng)
+    dynamic, scores, truth_today, live = _views(st, history_days, new_as_of, rng, **style)
     truth_today.to_csv(sealed / "truth_today.csv", index=False)
     truth_today.to_csv(sealed / f"truth_{new_as_of.isoformat()}.csv", index=False)
 

@@ -1,4 +1,10 @@
-"""Risk grade -> probability, and 12-month probability -> decision-horizon probability."""
+"""The bank's risk output -> a 12-month default probability and a decision-horizon probability.
+
+Banks send this in different shapes, depending on their own predictive model:
+  band        a grade from a scorecard (A-E), mapped through the institution's table
+  probability a default probability straight from a logistic / gradient-boosted / forest model
+Whatever arrives, everything downstream sees the same two numbers: pd_12m and pd_h.
+"""
 
 from __future__ import annotations
 
@@ -21,7 +27,27 @@ def convert_horizon(pd_source: pd.Series | np.ndarray, source_days: int, target_
     return 1.0 - np.power(1.0 - p, target_days / source_days)
 
 
-def calibrate(grades: pd.Series, cal: PdCalibration, horizon_days: int) -> pd.DataFrame:
-    pd12 = band_to_pd(grades, cal)
-    return pd.DataFrame({"pd_source": pd12, "pd_h": convert_horizon(pd12, cal.source_horizon_days, horizon_days)},
-                        index=grades.index)
+def source_probability(values: pd.Series, cal: PdCalibration) -> pd.Series:
+    if cal.input_type == "band":
+        return band_to_pd(values, cal)
+    p = pd.to_numeric(values, errors="coerce")
+    bad = p.notna() & ((p < 0) | (p > 1))
+    if bad.any():
+        raise ValueError(f"{int(bad.sum())} risk score(s) outside 0-1; the bank does not send probabilities")
+    return p.astype(float)
+
+
+def display_label(values: pd.Series, cal: PdCalibration) -> pd.Series:
+    """What people see as 'the bank's risk rating': the grade itself, or the probability with its horizon."""
+    if cal.input_type == "band":
+        return values.astype(str)
+    p = pd.to_numeric(values, errors="coerce")
+    return p.map(lambda v: "n/a" if pd.isna(v) else f"{v * 100:.1f}% in {cal.source_horizon_days}d")
+
+
+def calibrate(values: pd.Series, cal: PdCalibration, horizon_days: int) -> pd.DataFrame:
+    src = source_probability(values, cal)
+    return pd.DataFrame({"pd_source": src,
+                         "pd_12m": convert_horizon(src, cal.source_horizon_days, 365),
+                         "pd_h": convert_horizon(src, cal.source_horizon_days, horizon_days),
+                         "label": display_label(values, cal)}, index=values.index)

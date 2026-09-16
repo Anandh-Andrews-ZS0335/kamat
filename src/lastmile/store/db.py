@@ -43,6 +43,15 @@ CREATE TABLE IF NOT EXISTS recommendations (
   PRIMARY KEY (run_id, account_token)
 );
 
+-- A bank being onboarded: what the Onboarding Agent proposed, whether it passed the checks, and who decided.
+CREATE TABLE IF NOT EXISTS onboarding_sessions (
+  session_id TEXT PRIMARY KEY, base_url TEXT NOT NULL,
+  status TEXT CHECK (status IN ('running','proposed','needs_review','failed','approved','rejected')),
+  institution_id TEXT, institution_name TEXT, plan_json TEXT, proposal_json TEXT, profiles_json TEXT, problems_json TEXT,
+  pack_yaml TEXT, attempts INTEGER DEFAULT 0, error TEXT, created_by TEXT, created_at TEXT NOT NULL, finished_at TEXT,
+  decided_by TEXT, decided_at TEXT, decision_note TEXT, test_run_id TEXT
+);
+
 -- Every LLM call in full: what was asked, what came back, how long it took. Append-only.
 CREATE TABLE IF NOT EXISTS llm_calls (
   id INTEGER PRIMARY KEY AUTOINCREMENT, run_id TEXT, stage TEXT, agent TEXT, tool TEXT, purpose TEXT,

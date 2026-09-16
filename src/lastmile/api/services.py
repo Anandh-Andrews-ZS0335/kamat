@@ -12,14 +12,15 @@ from lastmile.config.settings import bank_base_url
 from lastmile.engine.collectors import AUTOMATED
 from lastmile.governance import approvals, audit
 from lastmile.ingest.bank_client import BankApiError, BankClient
-from lastmile.pipeline.run import run_roster
+from lastmile.pipeline.run import run_config, run_roster
 from lastmile.store import artifacts, db, rosters
 
 LIVE = ("awaiting_approval", "released")
 
 
-def bank() -> BankClient:
-    src = resolve().institution.source
+def bank(cfg=None) -> BankClient:
+    """The bank of the given configuration (a run's own), or of the primary institution."""
+    src = (cfg or resolve()).institution.source
     return BankClient(bank_base_url(src.base_url_env, src.default_base_url), src.page_size, timeout=5)
 
 
@@ -72,8 +73,7 @@ def worklist(run_id: str) -> list[dict]:
 
 def queues(run_id: str, items: list[dict]) -> list[dict]:
     """Per collector: what was planned, what the manager has decided so far, and whether it still fits the shift."""
-    cfg = resolve()
-    cfg.roster = run_roster(run_id)
+    cfg = run_config(run_id)
     minutes_of = {a.id: a.cost_minutes for a in cfg.scenario.actions}
     try:
         simulated = {q["collector_id"]: q.get("completion_simulated") for q in artifacts.load_json(run_id, "decision")["queues"]}
@@ -107,15 +107,17 @@ def queues(run_id: str, items: list[dict]) -> list[dict]:
 
 # ------------------------------------------------------------------------------------ business day
 def live_run_for(business_date: str, include_running: bool = False) -> dict | None:
+    institution = resolve().institution.institution.id     # the Manager's business day is the primary institution's
     with db.connect() as con:
         if include_running:
             # a run learns its business date from the bank a few seconds in; until then it has none
             r = con.execute("SELECT * FROM runs WHERE status = 'running' AND (as_of_date = ? OR as_of_date IS NULL)"
-                            " ORDER BY started_at DESC LIMIT 1", (business_date,)).fetchone()
+                            " AND (institution = ? OR institution IS NULL) ORDER BY started_at DESC LIMIT 1",
+                            (business_date, institution)).fetchone()
             if r:
                 return dict(r)
-        r = con.execute(f"SELECT * FROM runs WHERE as_of_date = ? AND status IN ({','.join('?' * len(LIVE))})"
-                        " ORDER BY started_at DESC LIMIT 1", (business_date, *LIVE)).fetchone()
+        r = con.execute(f"SELECT * FROM runs WHERE as_of_date = ? AND institution = ? AND status IN ({','.join('?' * len(LIVE))})"
+                        " ORDER BY started_at DESC LIMIT 1", (business_date, institution, *LIVE)).fetchone()
     return dict(r) if r else None
 
 

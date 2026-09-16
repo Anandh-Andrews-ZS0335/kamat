@@ -42,14 +42,14 @@ class BankClient:
             raise BankApiError(f"GET {path} -> {r.status_code}: {r.text[:200]}")
         return r.json(), ms
 
-    def health(self) -> dict:
-        return self._get("/api/v1/health")[0]
+    def health(self, path: str = "/api/v1/health") -> dict:
+        return self._get(path)[0]
 
     def get(self, path: str, params: dict | None = None) -> dict:
         return self._get(path, params)[0]
 
-    def feeds(self) -> dict:
-        return self._get("/api/v1/feeds")[0]
+    def feeds(self, path: str = "/api/v1/feeds") -> dict:
+        return self._get(path)[0]
 
     def fetch_feed(self, feed: str, path: str) -> FeedResult:
         page, items, calls, total_ms, as_of = 1, [], [], 0, None

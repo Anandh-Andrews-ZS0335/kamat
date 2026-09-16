@@ -9,6 +9,7 @@ import time
 
 PROCS = [
     ["-m", "uvicorn", "bank_api.main:app", "--host", "127.0.0.1", "--port", "8001"],
+    ["-m", "uvicorn", "bank_api.harbor:app", "--host", "127.0.0.1", "--port", "8002"],
     ["-m", "uvicorn", "lastmile.api.app:app", "--host", "127.0.0.1", "--port", "8000"],
 ]
 
@@ -16,6 +17,7 @@ PROCS = [
 def main() -> None:
     running = [subprocess.Popen([sys.executable, *p]) for p in PROCS]
     print("\n  Bank API          http://127.0.0.1:8001/docs"
+          "\n  Harbor bank API   http://127.0.0.1:8002/docs   (second bank, for onboarding)"
           "\n  Guided tour       http://127.0.0.1:8000/guide"
           "\n  Demo & Showcase   http://127.0.0.1:8000/demo"
           "\n  Admin Console     http://127.0.0.1:8000/admin"

@@ -6,7 +6,7 @@ const KIND_LABEL = { api: "API", tool: "TOOL", llm: "LLM", handoff: "HANDOFF", d
 async function loadRuns(selectId) {
   const runs = await api("/api/runs");
   const sel = $("#runSelect");
-  sel.innerHTML = runs.length ? runs.map((r) => `<option value="${esc(r.run_id)}">${esc(r.run_id)} · ${esc(r.status.replace(/_/g, " "))}</option>`).join("")
+  sel.innerHTML = runs.length ? runs.map((r) => `<option value="${esc(r.run_id)}">${esc(r.run_id)} · ${esc(r.status.replace(/_/g, " "))}${r.institution && Shell.status && r.institution !== Shell.status.institution_id ? ` · ${esc(r.institution)}` : ""}</option>`).join("")
                              : `<option value="">No runs yet</option>`;
   const id = selectId || (runs[0] && runs[0].run_id);
   if (id) { sel.value = id; await selectRun(id); }

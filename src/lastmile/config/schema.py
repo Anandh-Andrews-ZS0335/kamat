@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -121,15 +122,23 @@ class Source(BaseModel):
     page_size: int = Field(ge=100, le=20000)
     feeds: dict[str, str]
     release_endpoint: str
+    # Where the bank answers "are you up, and what day is it?" and lists its feeds.
+    health_endpoint: str = "/api/v1/health"
+    catalogue_endpoint: str = "/api/v1/feeds"
     # Synthetic bank only: closes the business day on request. A real bank's day closes on its own.
     simulation_endpoint: str | None = None
 
 
 class PdCalibration(BaseModel):
-    input_type: str
-    band_to_pd: dict[str, float]
-    source_horizon_days: int
-    horizon_method: str
+    """How to read the bank's own risk output.
+
+    band        the bank sends a grade (A-E); band_to_pd says what each grade means as a default probability
+    probability the bank's model already sends a default probability over source_horizon_days
+    """
+    input_type: Literal["band", "probability"]
+    band_to_pd: dict[str, float] = {}
+    source_horizon_days: int = Field(gt=0)
+    horizon_method: str = "constant_hazard"
 
     @field_validator("band_to_pd")
     @classmethod
@@ -138,6 +147,12 @@ class PdCalibration(BaseModel):
         if bad:
             raise ValueError(f"band probabilities must be in (0,1): {bad}")
         return v
+
+    @model_validator(mode="after")
+    def bands_need_a_table(self):
+        if self.input_type == "band" and not self.band_to_pd:
+            raise ValueError("input_type band needs band_to_pd: what each grade means as a probability")
+        return self
 
 
 class LgdRow(BaseModel):
@@ -219,7 +234,7 @@ class DataQuality(BaseModel):
     max_null_fraction: float
     min_rows: dict[str, int]
     required_fields: dict[str, list[str]]
-    valid_grades: list[str]
+    valid_grades: list[str] = []          # only checked when the bank sends grades
 
 
 class Escalation(BaseModel):

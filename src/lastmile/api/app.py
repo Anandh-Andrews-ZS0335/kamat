@@ -24,7 +24,7 @@ from lastmile.agents import crew, provenance
 from lastmile.agents.llm.factory import get_llm
 from lastmile.agents.tools import build_registry
 from lastmile.agents.trace import Tracer
-from lastmile.api import auth, config_editor, daily, services
+from lastmile.api import auth, config_editor, daily, onboarding, services
 from lastmile.config.resolve import resolve
 from lastmile.config.settings import ROOT
 from lastmile.governance import approvals, audit, policy, release
@@ -65,6 +65,7 @@ app.mount("/static", RevalidatingStatic(directory=STATIC), name="static")
 app.include_router(auth.router)
 app.include_router(daily.router)
 app.include_router(config_editor.router)
+app.include_router(onboarding.router)
 db.init()
 
 
@@ -100,6 +101,11 @@ def report_page():
     return page("report.html")
 
 
+@app.get("/admin/onboarding", include_in_schema=False)
+def onboarding_page():
+    return page("onboarding.html")
+
+
 @app.get("/admin/config", include_in_schema=False)
 def config_page():
     return page("config.html")
@@ -114,7 +120,7 @@ def status():
     except BankApiError as e:
         bank = {"ok": False, "error": str(e)}
     cfg = resolve()
-    return {"bank": bank, "llm_mode": mode, "config_hash": cfg.config_hash,
+    return {"bank": bank, "llm_mode": mode, "config_hash": cfg.config_hash, "institution_id": cfg.institution.institution.id,
             "scenario": cfg.scenario.scenario.title, "institution": cfg.institution.institution.name}
 
 
@@ -122,7 +128,9 @@ def status():
 def agents():
     reg = build_registry()
     tools = reg.describe()
-    return {"agents": [c.describe() | {"tools": [t["name"] for t in tools if c.name in t["owners"]]} for c in crew.AGENT_CLASSES],
+    from lastmile.agents.onboarding import OnboardingAgent  # works once per new bank, outside the daily run
+    return {"agents": [c.describe() | {"tools": [t["name"] for t in tools if c.name in t["owners"]]}
+                       for c in [*crew.AGENT_CLASSES, OnboardingAgent]],
             "tools": tools}
 
 
@@ -147,10 +155,12 @@ def start_run():
 
 
 @app.get("/api/runs")
-def list_runs(limit: int = 30):
+def list_runs(limit: int = 30, institution: str | None = None):
+    where, params = ("WHERE institution = ?", (institution,)) if institution else ("", ())
     with db.connect() as con:
         return db.rows(con, "SELECT run_id, status, as_of_date, started_at, finished_at, config_hash, model_run_id, llm_mode,"
-                            " error, parent_run_id, superseded_by FROM runs ORDER BY started_at DESC LIMIT ?", (limit,))
+                            f" error, parent_run_id, superseded_by, institution FROM runs {where} ORDER BY started_at DESC LIMIT ?",
+                       (*params, limit))
 
 
 @app.get("/api/runs/{run_id}")
@@ -206,8 +216,7 @@ def worklist(run_id: str):
     items = services.worklist(run_id)
     dec = artifacts.load_json(run_id, "decision") if (artifacts.run_dir(run_id) / "decision.json").exists() else {}
     counts = pd.Series([i["decision"] for i in items]).value_counts().to_dict() if items else {}
-    cfg = resolve()
-    cfg.roster = pipeline.run_roster(run_id)
+    cfg = pipeline.run_config(run_id)
     return {"run": {k: run[k] for k in ("run_id", "status", "as_of_date", "llm_mode", "model_run_id", "config_hash",
                                         "parent_run_id", "superseded_by")},
             "day_closed": services.closure(run["as_of_date"]) is not None if run["as_of_date"] else False,
@@ -223,7 +232,7 @@ def worklist(run_id: str):
 
 @app.get("/api/runs/{run_id}/accounts/{token}")
 def account(run_id: str, token: str):
-    cfg = resolve()
+    cfg = pipeline.run_config(run_id)
     port = artifacts.load_frame(run_id, "portfolio")
     row = port[port["account_token"] == token]
     if row.empty:
@@ -282,7 +291,7 @@ def _open_for_decisions(run_id: str) -> None:
 
 @app.post("/api/runs/{run_id}/accounts/{token}/decision")
 def decide(run_id: str, token: str, d: Decision, request: Request):
-    cfg = resolve()
+    cfg = pipeline.run_config(run_id)
     approver_id = auth.actor(request)
     _open_for_decisions(run_id)
     with db.connect() as con:
@@ -306,7 +315,7 @@ def decide(run_id: str, token: str, d: Decision, request: Request):
 
 @app.post("/api/runs/{run_id}/approve-bulk")
 def bulk(run_id: str, request: Request):
-    cfg = resolve()
+    cfg = pipeline.run_config(run_id)
     approver_id = auth.actor(request)
     _open_for_decisions(run_id)
     items = [i for i in services.worklist(run_id) if i["decision"] == "pending" and not i["escalations"] and not i["released"]]
@@ -321,7 +330,7 @@ def bulk(run_id: str, request: Request):
 
 @app.post("/api/runs/{run_id}/release")
 def release_actions(run_id: str, request: Request):
-    cfg = resolve()
+    cfg = pipeline.run_config(run_id)
     released_by = auth.actor(request)
     run = services.get_run(run_id)
     if run["status"] == "superseded":
@@ -349,7 +358,7 @@ def release_actions(run_id: str, request: Request):
                         "script_text": provenance.render_text(script_tpl, facts)})
     channels = {a.id: a.channel for a in cfg.scenario.actions}
     try:
-        res = release.release(run_id, payload, ident, services.bank(), cfg.institution.source.release_endpoint, channels, released_by)
+        res = release.release(run_id, payload, ident, services.bank(cfg), cfg.institution.source.release_endpoint, channels, released_by)
     except BankApiError as e:
         raise HTTPException(502, str(e)) from e
     Tracer(run_id).event("api", "Collections manager", tool="bank.release_actions", module="bank_api  POST /api/v1/collections/actions",

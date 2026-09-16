@@ -68,6 +68,31 @@ The top of the Manager Console walks through the day, and nothing moves on its o
 
 A bank seeded before this existed cannot move day by day: run `make seed` once (and `make clean-runs` if old runs confuse you).
 
+### Onboarding a new bank (`/admin/onboarding`)
+
+Banks run different predictive models - a scorecard sends grade letters, a logistic, random forest or gradient-boosted
+model sends default probabilities over its own horizon - and name their endpoints and columns their own way. The
+**Onboarding Agent** works that out. Its brain is the LLM:
+
+1. reads the bank's published API description (`/openapi.json`)
+2. **LLM decides** which endpoint is the status check, the catalogue, each of the six feeds and the action receiver
+3. samples 300 rows per feed and profiles them privately - kinds, ranges, code values, and only the *shape* of
+   names, phones and ids, so no customer data reaches the LLM
+4. **LLM decides** which bank column is which Last Mile field (with a reason for each), what the risk score is
+   (`band` or `probability`, and over how many days), and which fields are personal
+5. checks test that answer against the real data (columns exist, types fit, flags are 0/1, probabilities are 0-1,
+   the horizon matches the bank's own column); failures go back to the LLM once with the exact problems
+6. an admin approves: the Institution Pack and Run Config are saved, then **Run a test day** runs the full pipeline
+
+Business rules an API cannot reveal (LGD table, capacity, contact policy, eligibility, escalation, reason codes) are
+copied from Riverbend and listed for confirmation with the bank. Every prompt and response is stored in `llm_calls`.
+
+**Demo bank:** Harbor Community Bank runs on port 8002 (`make up` starts it; `make seed` seeds it). It sends
+180-day default probabilities from an "xgb-collect" model, under `/v2/...` paths with its own column names. Against it,
+Gemini mapped all 54 fields correctly on the first attempt and a full test day completed. The integration contract
+kept the same as Riverbend: the page envelope, status and catalogue keys, code values (products, statuses, treatments)
+and the approved-action payload.
+
 ### Configuration editor (`/admin/config`)
 
 Edit the three YAML packs in the browser. A guide beside the editor explains each section and setting, which agent reads it

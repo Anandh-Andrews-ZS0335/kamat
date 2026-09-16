@@ -60,12 +60,12 @@ def build_registry() -> Registry:
     # ------------------------------------------------------------------ Ingestion Agent
     @r.register("bank.health", "bank_api  GET /api/v1/health", INGESTION, "Check the bank API is up and read its as-of date", "api")
     def bank_health(ctx):
-        h = ctx.bank.health()
+        h = ctx.bank.health(ctx.cfg.institution.source.health_endpoint)
         return h, {**h, "_message": f"{h['institution']} is up, data as of {h['as_of']}"}
 
     @r.register("bank.list_feeds", "bank_api  GET /api/v1/feeds", INGESTION, "Discover the feeds the bank publishes", "api")
     def bank_feeds(ctx):
-        f = ctx.bank.feeds()
+        f = ctx.bank.feeds(ctx.cfg.institution.source.catalogue_endpoint)
         return f, {"feeds": [{"feed": x["feed"], "rows": x["row_count"], "pii": x["contains_pii"]} for x in f["feeds"]],
                    "_message": f"{len(f['feeds'])} feeds published"}
 
@@ -146,10 +146,10 @@ def build_registry() -> Registry:
         return port, {**info, "_message": f"{info['portfolio_rows']:,} accounts in today's decision population"}
 
     @r.register("features.calibrate_pd", "lastmile.features.calibration", FEATURE,
-                "Convert risk grades to probabilities and the 365-day horizon to the decision horizon")
+                "Turn the bank's risk output (grade or probability) into 12-month and decision-horizon default probabilities")
     def feat_pd(ctx, portfolio: pd.DataFrame):
         port, info = builder.attach_pd(portfolio, ctx.cfg)
-        return port, {**info, "_message": f"grades calibrated, {info['horizon']}"}
+        return port, {**info, "_message": f"{info['input_type']} risk scores calibrated, {info['horizon']}"}
 
     @r.register("features.lookup_lgd", "lastmile.features.lgd", FEATURE, "Loss given default from the recovery table")
     def feat_lgd(ctx, portfolio: pd.DataFrame):
@@ -521,4 +521,8 @@ def build_registry() -> Registry:
         return len(rows), {"published": len(rows), "unstamped_numbers": digits,
                            "_message": f"{len(rows)} recommendations awaiting approval"}
 
+    from lastmile.agents import (
+        onboarding,  # the Onboarding Agent's tools share the registry and its ownership rules
+    )
+    onboarding.register(r)
     return r

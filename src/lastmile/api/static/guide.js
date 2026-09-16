@@ -172,7 +172,7 @@ async function init() {
 }
 
 async function loadRuns(prefer) {
-  const runs = (await api("/api/runs").catch(() => [])).filter((r) => ["awaiting_approval", "released"].includes(r.status));
+  const runs = (await api(`/api/runs${Shell.status && Shell.status.institution_id ? `?institution=${encodeURIComponent(Shell.status.institution_id)}` : ""}`).catch(() => [])).filter((r) => ["awaiting_approval", "released"].includes(r.status));
   if (!runs.length) {
     $("#runChip").innerHTML = `No finished runs yet`;
     renderHero(null);

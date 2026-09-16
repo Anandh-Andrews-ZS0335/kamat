@@ -82,10 +82,17 @@ def run_gates(frames: dict[str, pd.DataFrame], inst: InstitutionPack, as_of: dat
                                       overridable=False))
 
     # 4. ranges and domains
-    bad_grade = ~out["scores"]["risk_grade"].isin(dq.valid_grades)
-    quarantine_rows("scores", bad_grade, "unknown risk grade")
-    results.append(GateResult("domain", "scores", True, "quarantine", int(bad_grade.sum()),
-                              f"{int(bad_grade.sum())} score(s) with grade outside {dq.valid_grades}", False))
+    if inst.pd_calibration.input_type == "band":
+        bad_grade = ~out["scores"]["risk_grade"].isin(dq.valid_grades)
+        quarantine_rows("scores", bad_grade, "unknown risk grade")
+        results.append(GateResult("domain", "scores", True, "quarantine", int(bad_grade.sum()),
+                                  f"{int(bad_grade.sum())} score(s) with grade outside {dq.valid_grades}", False))
+    else:
+        p = pd.to_numeric(out["scores"]["risk_grade"], errors="coerce")
+        bad_p = p.isna() | (p < 0) | (p > 1)
+        quarantine_rows("scores", bad_p, "risk probability missing or outside 0-1")
+        results.append(GateResult("domain", "scores", True, "quarantine", int(bad_p.sum()),
+                                  f"{int(bad_p.sum())} score(s) not a probability between 0 and 1", False))
     acc = out["accounts"]
     bad_range = (pd.to_numeric(acc["curr_bal"], errors="coerce") < 0) | (pd.to_numeric(acc["dpd"], errors="coerce") < 0)
     quarantine_rows("accounts", bad_range, "negative balance or dpd")

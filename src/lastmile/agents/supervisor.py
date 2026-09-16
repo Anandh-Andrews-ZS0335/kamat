@@ -19,6 +19,7 @@ from lastmile.agents.tools import build_registry, capacities_from
 from lastmile.config.resolve import resolve
 from lastmile.config.settings import bank_base_url
 from lastmile.engine import collectors
+from lastmile.features import builder
 from lastmile.ingest.bank_client import BankClient
 from lastmile.ingest.gates import GateAbort
 from lastmile.store import artifacts, db
@@ -87,8 +88,8 @@ class Supervisor:
         """One live worklist per business day: older unreleased worklists for the same day are retired."""
         with db.connect(self.ctx.data_dir) as con:
             old = [r["run_id"] for r in con.execute(
-                "SELECT run_id FROM runs WHERE as_of_date = ? AND status = 'awaiting_approval' AND run_id != ?",
-                (as_of, self.ctx.run_id))]
+                "SELECT run_id FROM runs WHERE as_of_date = ? AND status = 'awaiting_approval' AND run_id != ?"
+                " AND institution = ?", (as_of, self.ctx.run_id, self.ctx.cfg.institution.institution.id))]
         for rid in old:
             self._set_run(rid, status="superseded", superseded_by=self.ctx.run_id)
             self.registry.call(self.agent, "audit.append", event_type="run.superseded", actor=self.agent.name,
@@ -109,7 +110,8 @@ class Supervisor:
                             f"explanations will use {ctx.llm_mode}", files=ctx.cfg.files)
             with db.connect(ctx.data_dir) as con:
                 prev = con.execute("SELECT summary_json FROM runs WHERE status IN ('awaiting_approval','released','superseded') "
-                                   "AND run_id != ? ORDER BY started_at DESC LIMIT 1", (ctx.run_id,)).fetchone()
+                                   "AND run_id != ? AND institution = ? ORDER BY started_at DESC LIMIT 1",
+                                   (ctx.run_id, ctx.cfg.institution.institution.id)).fetchone()
             if prev and prev["summary_json"]:
                 ctx.state["previous_score_rows"] = db.loads(prev["summary_json"]).get("scores_rows")
 
@@ -180,8 +182,8 @@ class Supervisor:
                                  "Control rows": int((train["T"] == ctx.cfg.scenario.causal.control_value).sum())},
                        [_table("Causal feasibility", feats["feasibility"]["checks"]),
                         _kv("Treatment arms in training data", feats["feasibility"]["arms"]),
-                        _table("PD calibration by grade", port.groupby("risk_grade").agg(
-                            accounts=("account_token", "size"), pd_12m=("pd_12m", "first"), pd_30d=("pd_h", "first")).reset_index().round(4))])
+                        _table(f"PD calibration ({ctx.cfg.institution.pd_calibration.input_type} scores)",
+                               builder.calibration_table(port, ctx.cfg))])
 
             # 5 -------------------------------------------------------------- decision
             current = "decision"

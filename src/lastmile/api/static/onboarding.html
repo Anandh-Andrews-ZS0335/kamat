@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Last Mile · Onboard a bank</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/static/app.css">
+<style>
+  .how{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;margin-bottom:var(--s4);overflow:hidden}
+  .how > div{padding:var(--s3) var(--s4);border-right:1px solid var(--line);display:grid;gap:4px;align-content:start}
+  .how > div:last-child{border-right:0}
+  .how b{font-size:12.5px}
+  .how p{margin:0;font-size:11.5px;color:var(--ink-3);line-height:1.45}
+  .brain{display:inline-flex;align-items:center;gap:5px;font:700 9.5px/1 var(--sans);letter-spacing:.08em;text-transform:uppercase;
+    padding:3px 6px;border-radius:var(--r-sm);background:var(--info-soft);color:var(--info);width:fit-content}
+  .rules{display:inline-flex;align-items:center;gap:5px;font:700 9.5px/1 var(--sans);letter-spacing:.08em;text-transform:uppercase;
+    padding:3px 6px;border-radius:var(--r-sm);background:var(--surface-3);color:var(--ink-3);width:fit-content}
+  .onb{display:grid;grid-template-columns:320px minmax(0,1fr);gap:var(--s4);align-items:start}
+  @media (max-width:1100px){.onb{grid-template-columns:1fr}}
+  .connect .field{display:grid;gap:6px;margin-bottom:var(--s3)}
+  .connect input{width:100%}
+  .sess{display:flex;flex-direction:column;gap:2px}
+  .sess button{display:grid;grid-template-columns:1fr auto;gap:2px 8px;text-align:left;border:1px solid transparent;background:none;
+    padding:8px 10px;border-radius:var(--r);cursor:pointer;color:var(--ink)}
+  .sess button:hover{background:var(--surface-2)}
+  .sess button.on{background:var(--brand-soft);border-color:var(--brand-line)}
+  .sess small{grid-column:1 / -1;color:var(--ink-3);font-size:11px}
+  .head{display:flex;flex-wrap:wrap;gap:var(--s2) var(--s4);align-items:center}
+  .head h2{margin:0;font-size:17px}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:var(--s4)}
+  .think{display:grid;gap:0;max-height:520px;overflow:auto}
+  .think .ev{display:grid;grid-template-columns:82px 1fr;gap:3px 10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+  .think .ev:last-child{border-bottom:0}
+  .think .ev .msg{color:var(--ink-2)}
+  .think .ev.decision .msg{color:var(--ink);font-weight:500}
+  .think .ev.llm{background:linear-gradient(90deg,var(--info-soft),transparent 60%)}
+  .scorecard{border:1px solid var(--brand-line);background:var(--brand-soft);border-radius:var(--r);padding:var(--s4);display:grid;gap:6px}
+  .scorecard .big{font-size:18px;font-weight:700;letter-spacing:-.01em}
+  .chips-row{display:flex;flex-wrap:wrap;gap:6px}
+  .miss{color:var(--ink-3);font-style:italic}
+  pre.yaml{margin:0;max-height:420px;overflow:auto;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);
+    padding:var(--s3);font:12px/1.55 var(--mono);white-space:pre}
+  details summary{cursor:pointer;font-weight:600;font-size:12.5px}
+  .kbd{font-family:var(--mono);font-size:12px}
+</style>
+</head>
+<body>
+<div id="pageActions" hidden></div>
+
+<main class="page">
+  <div class="page-head">
+    <div><h2>Onboard a bank</h2>
+      <p>Point the Onboarding Agent at a bank's API. The LLM works out which endpoint is which, which column means what,
+        and what the bank's risk score is — whatever predictive model the bank runs. Checks test its answer against real
+        data; you approve before anything is saved.</p></div>
+  </div>
+
+  <section class="panel how" aria-label="How onboarding works">
+    <div><span class="rules">tool</span><b>Read the API</b><p>The bank's published API description: every path and what it says it does.</p></div>
+    <div><span class="brain">LLM decides</span><b>Choose endpoints</b><p>Status, catalogue, the six feeds, where approved actions go.</p></div>
+    <div><span class="rules">tool</span><b>Sample privately</b><p>300 rows per feed, described by type, range and shape. No names, phones or ids reach the LLM.</p></div>
+    <div><span class="brain">LLM decides</span><b>Map and read the score</b><p>Column by column, with reasons. Grades or probabilities, and over how many days.</p></div>
+    <div><span class="rules">checks</span><b>Test against data</b><p>Columns exist, types fit, flags are 0/1, probabilities are 0–1, horizon matches. One rewrite if not.</p></div>
+    <div><span class="rules">you</span><b>Approve, then test</b><p>Saves the Institution Pack and runs a full day for the new bank.</p></div>
+  </section>
+
+  <div class="onb">
+    <aside class="panel">
+      <div class="panel-b connect">
+        <div class="field">
+          <label class="eyebrow" for="baseUrl">Bank API address</label>
+          <input class="input mono" id="baseUrl" value="http://127.0.0.1:8002" spellcheck="false">
+          <span class="note" style="margin:0">The demo's second bank, <b>Harbor Community Bank</b>, runs on port 8002.</span>
+        </div>
+        <button class="btn primary needs-write needs-admin" id="startBtn" style="width:100%;justify-content:center">Start onboarding</button>
+        <p class="role-note" id="roleNote" hidden>Only an admin can onboard a bank.</p>
+      </div>
+      <div class="panel-h"><h2>Sessions</h2></div>
+      <div class="panel-b" style="padding-top:var(--s2)"><div class="sess" id="sessions"><div class="muted">Loading…</div></div></div>
+    </aside>
+
+    <section id="detail"><div class="panel"><div class="empty">Start onboarding, or pick a session.</div></div></section>
+  </div>
+</main>
+
+<script src="/static/common.js"></script>
+<script src="/static/shell.js"></script>
+<script src="/static/onboarding.js"></script>
+</body>
+</html>

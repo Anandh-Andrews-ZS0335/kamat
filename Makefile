@@ -7,8 +7,9 @@ setup:        ## install Python 3.11 and all dependencies
 users:        ## create admin / manager / guest accounts with random passwords (paste output into .env)
 	uv run python -m lastmile.api.auth users
 
-seed:         ## regenerate the synthetic credit union (bank data + sealed truth)
+seed:         ## regenerate both simulated banks (Riverbend and Harbor)
 	uv run python -m bank_api seed
+	uv run python -m bank_api seed --profile harbor
 
 up:           ## start bank API (:8001) and engine + consoles (:8000) for local dev
 	uv run python scripts/dev.py
@@ -18,6 +19,9 @@ prod:         ## start production multi-process server (0.0.0.0 binding)
 
 docker-up:    ## build and start via Docker Compose
 	docker compose up -d --build
+
+harbor:       ## second bank API only (onboarding demo)
+	uv run uvicorn bank_api.harbor:app --port 8002
 
 bank:         ## bank API only
 	uv run uvicorn bank_api.main:app --port 8001

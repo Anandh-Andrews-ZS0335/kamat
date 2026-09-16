@@ -35,7 +35,7 @@ MEANINGS = {
     "exposure": ("the balance owed", "$33,826"),
     "dpd": ("days past due, a whole number", "160"),
     "min_payment": ("the minimum payment due", "$990"),
-    "risk_grade": ("the bank's risk grade letter", "E"),
+    "risk_grade": ("the bank's own risk rating as it sent it: a grade letter or a default probability", "E"),
     "pd_horizon": ("chance of default within the decision window", "4.2%"),
     "lgd": ("share of the balance lost if it defaults", "45.0%"),
     "expected_loss": ("expected loss if the account does not catch up", "$9,894"),

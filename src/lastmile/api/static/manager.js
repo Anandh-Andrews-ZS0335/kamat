@@ -4,7 +4,7 @@ const SEG_COLORS = { persuadable: "var(--good)", sure_thing: "var(--ink-3)", los
 const SEG_LABEL = { persuadable: "Persuadable", sure_thing: "Sure thing", lost_cause: "Lost cause", sleeping_dog: "Sleeping dog", uncertain: "Uncertain" };
 
 async function loadRuns(pref) {
-  const runs = (await api("/api/runs")).filter((r) => ["awaiting_approval", "released"].includes(r.status));
+  const runs = (await api(`/api/runs${Shell.status && Shell.status.institution_id ? `?institution=${encodeURIComponent(Shell.status.institution_id)}` : ""}`)).filter((r) => ["awaiting_approval", "released"].includes(r.status));
   $("#runSelect").innerHTML = runs.length ? runs.map((r) => `<option value="${esc(r.run_id)}">${esc(r.run_id)} · ${esc(r.status.replace(/_/g, " "))}</option>`).join("")
     : `<option value="">No runs awaiting approval</option>`;
   const today = D.day && D.day.run && runs.find((r) => r.run_id === D.day.run.run_id) ? D.day.run.run_id : null;

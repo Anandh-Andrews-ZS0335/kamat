@@ -80,15 +80,28 @@ def join_portfolio(canon: dict[str, pd.DataFrame]) -> tuple[pd.DataFrame, dict]:
 
 
 def attach_pd(port: pd.DataFrame, cfg: ResolvedConfig) -> tuple[pd.DataFrame, dict]:
-    cal = calibrate(port["risk_grade"], cfg.institution.pd_calibration, cfg.scenario.objective.horizon_days)
+    pc = cfg.institution.pd_calibration
+    cal = calibrate(port["risk_grade"], pc, cfg.scenario.objective.horizon_days)
     out = port.copy()
-    out["pd_12m"] = cal["pd_source"].to_numpy()
+    out["risk_score_raw"] = out["risk_grade"]
+    out["pd_12m"] = cal["pd_12m"].to_numpy()
     out["pd_h"] = cal["pd_h"].to_numpy()
-    by_grade = out.groupby("risk_grade").agg(accounts=("account_token", "size"), pd_12m=("pd_12m", "first"),
-                                             pd_h=("pd_h", "first")).reset_index()
-    return out, {"horizon": f"{cfg.institution.pd_calibration.source_horizon_days}d -> "
-                            f"{cfg.scenario.objective.horizon_days}d (constant hazard)",
-                 "by_grade": by_grade.round(4).to_dict("records")}
+    out["risk_grade"] = cal["label"].to_numpy()
+    return out, {"input_type": pc.input_type,
+                 "horizon": f"{pc.source_horizon_days}d -> 365d and {cfg.scenario.objective.horizon_days}d (constant hazard)",
+                 "by_band": calibration_table(out, cfg).to_dict("records")}
+
+
+def calibration_table(port: pd.DataFrame, cfg: ResolvedConfig) -> pd.DataFrame:
+    """Accounts per grade (grade banks) or per probability band (probability banks), with the resulting PDs."""
+    if cfg.institution.pd_calibration.input_type == "band":
+        key = port["risk_grade"]
+    else:
+        key = pd.cut(port["pd_12m"], [0, .03, .10, .25, .50, 1.0001], labels=["<3%", "3-10%", "10-25%", "25-50%", ">=50%"],
+                     include_lowest=True).astype(str).rename("pd_12m_band")
+    return (port.assign(_k=key).groupby("_k", observed=True)
+            .agg(accounts=("account_token", "size"), pd_12m=("pd_12m", "mean"), pd_h=("pd_h", "mean"))
+            .reset_index().rename(columns={"_k": "risk_band"}).round(4))
 
 
 def attach_lgd(port: pd.DataFrame, cfg: ResolvedConfig) -> tuple[pd.DataFrame, dict]:

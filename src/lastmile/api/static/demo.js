@@ -56,7 +56,7 @@ async function loadStatus() {
 }
 
 async function loadRuns(preferredRunId) {
-  const runs = await api("/api/runs");
+  const runs = await api(`/api/runs${Shell.status && Shell.status.institution_id ? `?institution=${encodeURIComponent(Shell.status.institution_id)}` : ""}`);
   const sel = $("#runSelect");
   if (!runs || !runs.length) {
     sel.innerHTML = `<option value="">No runs available — click 'Run Pipeline'</option>`;

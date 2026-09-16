@@ -62,6 +62,9 @@ class ConfigurationAgent(Agent):
 
     def load_roster(self, override=None):
         day = self.ctx.as_of.isoformat()
+        if override is None and self.ctx.state.get("default_roster"):
+            from lastmile.config.schema import Roster
+            override = Roster.default(self.ctx.cfg.institution.capacity, day)
         team = self.use("roster.load", input_summary={"roster_date": day, "override": override is not None},
                         roster_date=day, override=override)
         if not team.working:
