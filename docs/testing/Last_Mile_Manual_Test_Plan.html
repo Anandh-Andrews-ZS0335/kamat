@@ -1,0 +1,620 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Last Mile — Manual Test Plan</title>
+<style>
+@page { size: A4; margin: 16mm 14mm 18mm 14mm;
+  @bottom-left { content: "Last Mile · Manual Test Plan · v1.0"; font: 8pt 'Helvetica Neue', Arial, sans-serif; color: #6b7a7c; }
+  @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 8pt 'Helvetica Neue', Arial, sans-serif; color: #6b7a7c; } }
+@page :first { @bottom-left { content: none } @bottom-right { content: none } }
+:root { --ink:#15282c; --ink2:#46585b; --mut:#6b7a7c; --rule:#d5dfdd; --teal:#1b5e66; --tealsoft:#e3efef; --amber:#a86d14; --ambersoft:#f7ecda; --red:#a63d35; --redsoft:#f6e2df; }
+* { box-sizing: border-box; }
+body { margin:0; color:var(--ink); font: 9.6pt/1.45 'Helvetica Neue', Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+h1,h2,h3,h4 { font-family: 'Avenir Next', 'Helvetica Neue', Arial, sans-serif; margin:0; line-height:1.2; }
+code, .mono, pre { font-family: Menlo, 'SF Mono', monospace; font-size: 8.4pt; }
+code { background: var(--tealsoft); padding: 0 3px; border-radius: 2px; }
+p { margin: 0 0 6pt; }
+.cover { height: 255mm; display:flex; flex-direction:column; justify-content:space-between; page-break-after: always; }
+.cover .top { border-top: 5pt solid var(--teal); padding-top: 14mm; }
+.cover .kicker { font: 600 9pt/1 'Avenir Next', Arial; letter-spacing: .14em; text-transform: uppercase; color: var(--teal); }
+.cover h1 { font-size: 34pt; font-weight: 700; letter-spacing: -.01em; margin: 8mm 0 4mm; }
+.cover .sub { font-size: 13pt; color: var(--ink2); max-width: 150mm; }
+.meta { display:grid; grid-template-columns: 38mm 1fr; gap: 3pt 10pt; font-size: 9.5pt; border-top: 1px solid var(--rule); padding-top: 6mm; }
+.meta dt { color: var(--mut); } .meta dd { margin:0; }
+.sign { display:grid; grid-template-columns: repeat(3, 1fr); gap: 8mm; margin-top: 8mm; }
+.sign div { border-top: 1px solid var(--ink); padding-top: 3pt; font-size: 8.5pt; color: var(--mut); }
+.chapter { page-break-before: always; }
+h2.ch { break-after: avoid; font-size: 18pt; margin: 0 0 3mm; padding-bottom: 2mm; border-bottom: 2pt solid var(--teal); }
+h3 { font-size: 11.5pt; margin: 5mm 0 2mm; color: var(--teal); }
+.toc { columns: 2; column-gap: 10mm; padding:0; list-style:none; }
+.toc li { break-inside: avoid; padding: 2pt 0; border-bottom: 1px dotted var(--rule); }
+.toc .num { display:inline-block; width: 9mm; color: var(--teal); font-weight: 600; }
+table { width:100%; border-collapse: collapse; }
+.grid th, .grid td { border: 1px solid var(--rule); padding: 3.5pt 5pt; text-align:left; vertical-align: top; }
+.grid th { background: var(--tealsoft); font-size: 8.3pt; text-transform: uppercase; letter-spacing: .05em; color: var(--teal); }
+.grid td.n { text-align:right; font-variant-numeric: tabular-nums; }
+.grid td.blank { min-width: 14mm; }
+.box { border: 1px solid var(--rule); border-left: 3pt solid var(--teal); padding: 3mm 4mm; margin: 3mm 0; break-inside: avoid; }
+.box.warn { border-left-color: var(--amber); background: var(--ambersoft); }
+.box.bad { border-left-color: var(--red); background: var(--redsoft); }
+pre { background: #f1f5f4; border: 1px solid var(--rule); padding: 3mm; margin: 2mm 0; white-space: pre-wrap; break-inside: avoid; }
+ol, ul { margin: 2pt 0 0; padding-left: 13pt; } li { margin: 1pt 0; }
+.area { margin-top: 7mm; }
+.area h2 { font-size: 13.5pt; display:flex; align-items:baseline; gap: 3mm; margin-bottom: 1.5mm; break-after: avoid; }
+.code { font: 600 8.5pt Menlo, monospace; color: #fff; background: var(--teal); padding: 1pt 4pt; border-radius: 2pt; margin-right: 2mm; }
+.intro { color: var(--ink2); margin-bottom: 2mm; }
+.cases th { background: var(--teal); color: #fff; font-size: 8pt; text-transform: uppercase; letter-spacing: .06em; text-align:left; padding: 3pt 5pt; }
+.cases td { border-bottom: 1px solid var(--rule); padding: 4pt 5pt; vertical-align: top; font-size: 8.8pt; }
+.cases tr { break-inside: avoid; }
+.cases td.id { font: 600 8.5pt Menlo, monospace; }
+.pri { display:block; width: fit-content; margin-top: 3pt; font: 700 7.5pt Arial; padding: 0 4pt; border-radius: 2pt; }
+.pri.p1 { background: var(--redsoft); color: var(--red); } .pri.p2 { background: var(--ambersoft); color: var(--amber); } .pri.p3 { background: #eceff0; color: var(--mut); }
+.res span { display:block; font-size: 8.3pt; white-space: nowrap; line-height: 1.7; }
+.res .line { border-bottom: 1px solid var(--ink2); color: var(--mut); margin-top: 3pt; }
+.two { display:grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
+.flow { display:grid; grid-template-columns: repeat(5, 1fr); gap: 2mm; margin: 3mm 0; }
+.flow div { border:1px solid var(--rule); padding: 2.5mm; font-size: 8.5pt; background: #fbfcfc; }
+.flow b { display:block; color: var(--teal); font-size: 9pt; }
+.sql h4 { font-size: 9.5pt; margin-top: 3mm; }
+.small { font-size: 8.5pt; color: var(--mut); }
+</style></head><body>
+
+<section class="cover">
+  <div class="top">
+    <div class="kicker">Hackfest'26 · Tech track · Quality assurance</div>
+    <h1>Last Mile<br>Manual Test Plan</h1>
+    <p class="sub">Everything a manual tester needs: how to set up, what to check, how to check it, how to record results and report defects — for the collections decision engine, its Manager and Admin consoles, the daily cycle and the configuration editor.</p>
+  </div>
+  <div>
+    <dl class="meta">
+      <dt>System under test</dt><dd>Last Mile engine (port 8000) + simulated Riverbend Credit Union bank API (port 8001)</dd>
+      <dt>Document version</dt><dd>1.0 · 15 September 2026</dd>
+      <dt>Test cases</dt><dd>108 manual cases across 15 areas (55 priority P1)</dd>
+      <dt>Estimated effort</dt><dd>2 days for one tester: day 1 areas ENV–REL, day 2 CLOSE–NFR and regression of defects</dd>
+      <dt>Tester</dt><dd>______________________________ &nbsp; Build / date tested: ______________________</dd>
+    </dl>
+    <div class="sign"><div>Tester signature &amp; date</div><div>Developer lead</div><div>Product owner</div></div>
+  </div>
+</section>
+
+<section>
+  <h2 class="ch">Contents</h2>
+  <ol class="toc">
+    <li><span class="num">1</span>What the system does (in two minutes)</li>
+    <li><span class="num">2</span>Scope: what to test and what not to</li>
+    <li><span class="num">3</span>Test environment setup and reset</li>
+    <li><span class="num">4</span>How to run, record and track testing</li>
+    <li><span class="num">5</span>Test cases (108)</li>
+    <li><span class="num">6</span>Optional database checks</li>
+    <li><span class="num">7</span>Known behaviour that is not a bug</li>
+    <li><span class="num">8</span>Templates: defect report and daily status</li>
+    <li><span class="num">9</span>Exit criteria and sign-off</li>
+  </ol>
+
+  <h2 class="ch" style="margin-top:9mm">1 · What the system does</h2>
+  <p>A bank already predicts which members may miss payments. <b>Last Mile</b> decides, every business day, <b>who the collections team should contact, how, and why</b> — within each collector's working hours and the bank's rules — and a <b>manager approves every action</b> before anything reaches a member.</p>
+  <div class="flow">
+    <div><b>1 · Team</b>Manager enters who works today and for how long</div>
+    <div><b>2 · Run</b>8 AI agents read bank data, score accounts and build one queue per collector</div>
+    <div><b>3 · Review</b>Manager approves, changes or rejects each recommendation</div>
+    <div><b>4 · Release</b>Approved actions are sent to the bank</div>
+    <div><b>5 · Close day</b>Report is frozen; the simulated bank moves to the next day</div>
+  </div>
+  <table class="grid"><thead><tr><th>Page</th><th>Address</th><th>Who uses it</th><th>What it is for</th></tr></thead><tbody>
+    <tr><td>Manager Console</td><td class="mono">127.0.0.1:8000/manager</td><td>Collections manager</td><td>Team, worklist, queues, decisions, release, close day</td></tr>
+    <tr><td>Daily report</td><td class="mono">127.0.0.1:8000/report</td><td>Manager, leadership</td><td>One page per business day</td></tr>
+    <tr><td>Admin Console</td><td class="mono">127.0.0.1:8000/admin</td><td>Admin, developer</td><td>Every stage, agent, tool call, table and LLM call</td></tr>
+    <tr><td>Configuration</td><td class="mono">127.0.0.1:8000/admin/config</td><td>Admin</td><td>Edit and validate the three YAML rule files</td></tr>
+    <tr><td>Guided tour</td><td class="mono">127.0.0.1:8000/guide</td><td>Clients</td><td>Plain-language walkthrough of a run</td></tr>
+    <tr><td>Bank API docs</td><td class="mono">127.0.0.1:8001/docs</td><td>Tester</td><td>See what the bank received and its business date</td></tr>
+  </tbody></table>
+  <h3>Words used in this document</h3>
+  <table class="grid"><tbody>
+    <tr><td style="width:32mm"><b>Run</b></td><td>One execution of the agents. Has an id like <code>run_20260915T063217_3955</code>. Always note it in results.</td></tr>
+    <tr><td><b>Business day</b></td><td>The bank's date (<i>as of</i>). It only changes when the manager closes the day. It can be ahead of the real calendar.</td></tr>
+    <tr><td><b>Roster / team</b></td><td>Collectors, whether each is working, and shift minutes. 90% of each shift is plannable (10% buffer).</td></tr>
+    <tr><td><b>Queue</b></td><td>The ordered list of tasks for one collector. Texts (SMS) go to <i>Automated SMS</i>.</td></tr>
+    <tr><td><b>Escalated</b></td><td>A recommendation that needs individual review; excluded from bulk approve.</td></tr>
+    <tr><td><b>Superseded</b></td><td>A worklist replaced by a newer one for the same day (re-plan or new run). Read-only.</td></tr>
+    <tr><td><b>Segments</b></td><td>Persuadable (contact helps), Sure thing (pays anyway), Lost cause (unlikely to pay), Sleeping dog (contact may make it worse), Uncertain.</td></tr>
+  </tbody></table>
+</section>
+
+<section>
+  <h2 class="ch" style="margin-top:9mm">2 · Scope</h2>
+  <div class="two">
+    <div><h3>In scope</h3><ul>
+      <li>Team (roster) entry, validation and carry-forward</li><li>Starting runs; the 8 stages; failures</li>
+      <li>Worklist, per-collector queues, filters, account review</li><li>Approve / change / reject / bulk approve</li>
+      <li>Re-plan after a team change</li><li>Release to the bank; locking</li>
+      <li>Close the day; bank day advance; daily report</li><li>Admin Console incl. LLM call records</li>
+      <li>Configuration editor: check, save, history, conflicts</li><li>Governance rules (suppression, contact caps, audit)</li>
+      <li>Layout at phone width, dark mode, performance, error messages</li></ul></div>
+    <div><h3>Out of scope</h3><ul>
+      <li>Accuracy of the statistical model (covered by automated tests and the benchmark)</li>
+      <li>The <code>/demo</code> page — contains known outdated claims; not a release target</li>
+      <li>Real bank integration, logins and permissions (none exist; everyone is <i>manager.demo</i> / <i>admin.demo</i>)</li>
+      <li>Load testing, security penetration testing</li>
+      <li>Wording quality of Gemini output beyond the checks in ACC-03/04</li></ul></div>
+  </div>
+  <div class="box"><b>Priorities.</b> <span class="pri p1" style="display:inline">P1</span> a member could be wrongly contacted, data is wrong or lost, or the main flow is blocked. &nbsp;
+  <span class="pri p2" style="display:inline">P2</span> a feature does not work but there is a workaround. &nbsp; <span class="pri p3" style="display:inline">P3</span> cosmetic or minor.</div>
+  <div class="box"><b>Automated tests exist.</b> Developers run <code>make test</code> (39 tests). Manual testing focuses on what a person sees and does; if you find a rule broken that you think a test should catch, say so in the defect.</div>
+
+  <h2 class="ch" style="margin-top:9mm">3 · Test environment</h2>
+  <h3>3.1 Prerequisites</h3>
+  <table class="grid"><tbody>
+    <tr><td style="width:40mm">Machine</td><td>macOS or Linux, 8 GB RAM, internet (only for Gemini)</td></tr>
+    <tr><td>Tools</td><td><code>uv</code> (Python package manager), <code>make</code>, a terminal, Google Chrome (latest). Optional: <i>DB Browser for SQLite</i> for section 6.</td></tr>
+    <tr><td>Project</td><td>The <code>kamat</code> folder from the developer</td></tr>
+    <tr><td>Gemini key</td><td>Optional. Ask the developer; needed only for ADM-05/07 and LLM wording checks. Never paste it into a defect.</td></tr>
+  </tbody></table>
+  <h3>3.2 First-time setup</h3>
+<pre>cd kamat
+make setup          # installs Python 3.11 and dependencies, creates .env
+# optional: open .env and set GEMINI_API_KEY=...
+make seed           # creates the simulated bank (about 2 seconds)
+make up             # starts bank (8001) and engine + consoles (8000); leave this terminal open</pre>
+  <h3>3.3 Daily start / stop</h3>
+  <p>Start: <code>make up</code>. Stop: press <b>Ctrl+C</b> in that terminal. After the developer delivers a new build, <b>stop and start again</b> — the servers do not reload code on their own.</p>
+  <h3>3.4 Reset to a clean state</h3>
+  <p>Use before a full test cycle, or when data from earlier testing gets in the way.</p>
+<pre>Ctrl+C              # stop make up
+make seed           # new simulated bank, business day = today's real date
+make clean-runs     # deletes all runs, decisions, rosters, reports, audit and LLM records
+make up</pre>
+  <div class="box warn"><b>Reset deletes history.</b> Export or screenshot anything you need as evidence first. <code>make clean-runs</code> does <u>not</u> reset configuration files — use the editor's <i>Earlier versions</i> to restore those (CFG-09).</div>
+  <h3>3.5 Test data</h3>
+  <p>All data is <b>synthetic</b>: 4,000 members, about 1,500 accounts behind on payments, 120 days of history. Names like <i>Morgan Nguyen</i> are fake. Generation is deterministic for a given date: two testers who reset on the same day see the same numbers. Figures quoted in this plan (e.g. 291 recommendations) are examples; yours will differ.</p>
+</section>
+
+<section>
+  <h2 class="ch" style="margin-top:9mm">4 · How to run, record and track testing</h2>
+  <h3>4.1 Order of execution</h3>
+  <p>Execute areas in this order — later areas need state created by earlier ones: <b>ENV → TEAM → RUN → WL → ACC → DEC → RPL → REL → CLOSE → RPT → ADM → CFG → GOV → OTH → NFR</b>. Run the full <b>P1</b> set first on day 1; P2/P3 on day 2.</p>
+  <h3>4.2 Recording a result</h3>
+  <ol>
+    <li>Tick <b>Pass</b> only if <u>every</u> bullet under Expected is true.</li>
+    <li>Tick <b>Fail</b> if any bullet is false; raise a defect (template 8.1) and write its id in the Defect line.</li>
+    <li>Tick <b>Blocked</b> if you could not execute (e.g. bank would not start); note the blocking defect id.</li>
+    <li>Leave untested cases blank; they count as <i>Not run</i>.</li>
+    <li>For every run you create, write the <b>run id</b> next to the case (shown in the Manager chips and Admin banner).</li>
+  </ol>
+  <h3>4.3 Tracking sheet</h3>
+  <p>Keep one spreadsheet with one row per case. Columns:</p>
+  <table class="grid"><thead><tr><th>Column</th><th>Content</th></tr></thead><tbody>
+    <tr><td style="width:40mm">Case ID</td><td>e.g. DEC-02</td></tr><tr><td>Priority</td><td>P1 / P2 / P3</td></tr>
+    <tr><td>Status</td><td>Pass · Fail · Blocked · Not run · Retest pass · Retest fail</td></tr>
+    <tr><td>Run id / business date</td><td>run_… and the bank date shown in the Manager panel</td></tr>
+    <tr><td>Defect ID</td><td>e.g. LM-014</td></tr><tr><td>Evidence</td><td>Screenshot file name(s)</td></tr>
+    <tr><td>Tested on / by</td><td>Date, tester initials, build</td></tr><tr><td>Notes</td><td>Anything unexpected even if passed</td></tr>
+  </tbody></table>
+  <h3>4.4 Progress summary</h3>
+  <table class="grid"><thead><tr><th>Area</th><th>Name</th><th>Cases</th><th>P1</th><th>Pass</th><th>Fail</th><th>Blocked</th><th>Not run</th></tr></thead>
+    <tbody><tr><td class='mono'>ENV</td><td>Setup and health</td><td class='n'>7</td><td class='n'>3</td><td class='blank'></td><td class='blank'></td><td class='blank'></td><td class='blank'></td></tr><tr><td class='mono'>TEAM</td><td>Today&#x27;s team (roster)</td><td class='n'>10</td><td class='n'>3</td><td class='blank'></td><td class='blank'></td><td class='blank'></td><td class='blank'></td></tr><tr><td class='mono'>RUN</td><td>Starting a run</td><td class='n'>7</td><td class='n'>5</td><td class='blank'></td><td class='blank'></td><td class='blank'></td><td class='blank'></td></tr><tr><td class='mono'>WL</td><td>Worklist and collector queues</td><td class='n'>8</td><td class='n'>3</td><td class='blank'></td><td class='blank'></td><td class='blank'></td><td class='blank'></td></tr><tr><td class='mono'>ACC</td><td>Account review</td><td class='n'>8</td><td class='n'>5</td><td class='blank'></td><td class='blank'></td><td class='blank'></td><td class='blank'></td></tr><tr><td class='mono'>DEC</td><td>Decisions</td><td class='n'>8</td><td class='n'>5</td><td class='blank'></td><td class='blank'></td><td class='blank'></td><td class='blank'></td></tr><tr><td class='mono'>RPL</td><td>Re-plan when the team changes</td><td class='n'>6</td><td class='n'>4</td><td class='blank'></td><td class='blank'></td><td class='blank'></td><td class='blank'></td></tr><tr><td class='mono'>REL</td><td>Release to the bank</td><td class='n'>4</td><td class='n'>3</td><td class='blank'></td><td class='blank'></td><td class='blank'></td><td class='blank'></td></tr><tr><td class='mono'>CLOSE</td><td>Close the day</td><td class='n'>6</td><td class='n'>4</td><td class='blank'></td><td class='blank'></td><td class='blank'></td><td class='blank'></td></tr><tr><td class='mono'>RPT</td><td>Daily report</td><td class='n'>8</td><td class='n'>5</td><td class='blank'></td><td class='blank'></td><td class='blank'></td><td class='blank'></td></tr><tr><td class='mono'>ADM</td><td>Admin Console</td><td class='n'>8</td><td class='n'>3</td><td class='blank'></td><td class='blank'></td><td class='blank'></td><td class='blank'></td></tr><tr><td class='mono'>CFG</td><td>Configuration editor</td><td class='n'>13</td><td class='n'>7</td><td class='blank'></td><td class='blank'></td><td class='blank'></td><td class='blank'></td></tr><tr><td class='mono'>GOV</td><td>Governance rules</td><td class='n'>6</td><td class='n'>5</td><td class='blank'></td><td class='blank'></td><td class='blank'></td><td class='blank'></td></tr><tr><td class='mono'>OTH</td><td>Guided tour, comparison and model pages</td><td class='n'>4</td><td class='n'>0</td><td class='blank'></td><td class='blank'></td><td class='blank'></td><td class='blank'></td></tr><tr><td class='mono'>NFR</td><td>Usability, layout and performance</td><td class='n'>5</td><td class='n'>0</td><td class='blank'></td><td class='blank'></td><td class='blank'></td><td class='blank'></td></tr><tr><td></td><td><b>Total</b></td><td class="n"><b>108</b></td><td class="n"><b>55</b></td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr></tbody></table>
+  <h3>4.5 Collecting evidence</h3>
+  <table class="grid"><tbody>
+    <tr><td style="width:45mm"><b>Screenshot</b></td><td>Whole browser window including the address bar. Name: <code>CASEID_short-description.png</code>.</td></tr>
+    <tr><td><b>Run id</b></td><td>Manager top chips or Admin run banner.</td></tr>
+    <tr><td><b>Browser errors</b></td><td>Chrome → View → Developer → JavaScript Console. Copy red lines.</td></tr>
+    <tr><td><b>Server errors</b></td><td>The <code>make up</code> terminal. Copy the traceback (lines starting <i>Traceback</i> down to the error).</td></tr>
+    <tr><td><b>What an agent did</b></td><td>Admin → stage → <i>Agent &amp; tool calls</i>; click a row for input/output.</td></tr>
+    <tr><td><b>Who did what, when</b></td><td>Manager → Audit trail tab.</td></tr>
+    <tr><td><b>What the bank received</b></td><td><code>127.0.0.1:8001/docs</code> → GET /api/v1/collections/actions.</td></tr>
+    <tr><td><b>LLM request/response</b></td><td>Admin → LLM calls panel.</td></tr>
+  </tbody></table>
+</section>
+
+<section class="chapter">
+  <h2 class="ch">5 · Test cases</h2>
+  <p class="small">Each case: <b>ID + priority</b> · <b>what to check and steps</b> · <b>expected result</b> (all bullets must hold) · <b>result</b>.</p>
+  <section class="area"><h2><span class="code">ENV</span>Setup and health</h2><p class="intro">Confirms the environment is correct before any functional testing. If an ENV case fails, stop and report it: every later result depends on it.</p>
+<table class="cases"><thead><tr><th style="width:11%">ID</th><th style="width:40%">Check and steps</th><th style="width:35%">Expected result</th><th style="width:14%">Result</th></tr></thead><tbody><tr><td class="id">ENV-01<span class="pri p1">P1</span></td>
+<td><b>Both services start</b><ol><li>In a terminal in the kamat folder run <code>make up</code>.</li><li>Wait until the URL list is printed.</li></ol></td>
+<td><ul><li>Terminal lists Bank API :8001, Guided tour, Demo, Admin, Manager, Daily report and Configuration URLs.</li><li>No red traceback in the terminal.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">ENV-02<span class="pri p1">P1</span></td>
+<td><b>Bank API is reachable</b><ol><li>Open <code>http://127.0.0.1:8001/docs</code>.</li><li>Expand <b>GET /api/v1/health</b> → Try it out → Execute.</li></ol></td>
+<td><ul><li>Response 200 with <code>status: ok</code>, institution <i>Riverbend Credit Union</i> and an <code>as_of</code> date.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">ENV-03<span class="pri p1">P1</span></td>
+<td><b>Sign in and read the app shell</b><ol><li>Open <code>http://127.0.0.1:8000/manager</code> and sign in with the account you were given.</li></ol></td>
+<td><ul><li>Left sidebar: Today, Daily reports, Runs &amp; agents, Configuration, Guided tour, Bank API; the current page is highlighted.</li><li>Top bar: page title, chip <i>Bank · &lt;date&gt;</i> with a green dot, the LLM chip, and a <i>cfg</i> hash chip.</li><li>Top right: your username and role, and a menu with Light / Dark / System and <b>Sign out</b>.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">ENV-06<span class="pri p2">P2</span></td>
+<td><b>Roles show only what they may do</b><ol><li>Sign in as <i>guest</i>, open /manager, then /admin/config.</li><li>Sign out, sign in as <i>manager</i>, open /admin/config.</li></ol></td>
+<td><ul><li>Guest: no Approve, Release, Start run, Close day or Save buttons; a note says the account is read-only.</li><li>Manager: the configuration editor loads and <b>Check changes</b> works, but <b>Save…</b> is not shown.</li><li>Admin: everything is available.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">ENV-07<span class="pri p3">P3</span></td>
+<td><b>Theme and sidebar preferences stick</b><ol><li>Switch the theme to Dark in the user menu; collapse the sidebar; reload; open another console.</li></ol></td>
+<td><ul><li>Both choices persist across pages and reloads.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">ENV-04<span class="pri p2">P2</span></td>
+<td><b>Bank down is reported clearly</b><ol><li>Stop only the bank (or stop <code>make up</code> and start <code>make engine</code> alone).</li><li>Open <code>/manager</code> and <code>/admin</code>.</li></ol></td>
+<td><ul><li>Manager shows a red callout <i>The bank is not reachable</i> with the reason.</li><li>The top-bar chip reads <i>Bank unreachable</i> with a red dot on every console. No blank page, no crash.</li><li>Restart <code>make up</code> afterwards.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">ENV-05<span class="pri p3">P3</span></td>
+<td><b>All pages load</b><ol><li>Open /guide, /demo, /admin, /manager, /report, /admin/config.</li></ol></td>
+<td><ul><li>Each page loads without a browser error. Open DevTools → Console: no red errors.</li><li>The four operator consoles share the same sidebar and top bar; /guide and /demo keep their presentation layout.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr></tbody></table></section><section class="area"><h2><span class="code">TEAM</span>Today&#x27;s team (roster)</h2><p class="intro">The manager tells the planner who is working today and for how long. Location: Manager Console → top panel → <b>Confirm today's team</b> / <b>Edit today's team</b>.</p>
+<table class="cases"><thead><tr><th style="width:11%">ID</th><th style="width:40%">Check and steps</th><th style="width:35%">Expected result</th><th style="width:14%">Result</th></tr></thead><tbody><tr><td class="id">TEAM-01<span class="pri p1">P1</span></td>
+<td><b>Default team on a fresh day</b><ol><li>Reset to a clean state (section 3.4).</li><li>Open /manager.</li></ol></td>
+<td><ul><li>Step 1 <i>Confirm today's team</i> is highlighted.</li><li>Callout says no team has been saved and the <b>default team</b> is shown.</li><li>Panel shows 5 collectors · 1,800 min.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">TEAM-02<span class="pri p1">P1</span></td>
+<td><b>Edit and save a team</b><ol><li>Click <b>Confirm today's team</b>.</li><li>Rename Collector 1 to <i>Priya</i>; set Collector 2 shift to <i>Part time · 4 h</i>; switch Collector 3 off.</li><li>Type a note; click <b>Save today's team</b>.</li></ol></td>
+<td><ul><li>Toast <i>Today's team saved</i>.</li><li>Tiles show Working 4 of 5, Shift minutes 1,320, Plannable 1,188.</li><li><i>Saved today</i> table lists the save with time, 4 working, 1,320 minutes and the note.</li><li>Step 1 turns green (✓).</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">TEAM-03<span class="pri p2">P2</span></td>
+<td><b>Plannable minutes = 90% of shift</b><ol><li>In the team drawer, set a collector to Custom 200 minutes.</li></ol></td>
+<td><ul><li>Plannable for that row shows 180 min. Tile totals update immediately.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">TEAM-04<span class="pri p2">P2</span></td>
+<td><b>Custom minutes are bounded</b><ol><li>Enter 900 in Minutes; tab out.</li><li>Enter -30; tab out.</li></ol></td>
+<td><ul><li>Value is clamped to 720 and 0 respectively.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">TEAM-05<span class="pri p2">P2</span></td>
+<td><b>Name is required</b><ol><li>Clear a collector's name; click Save.</li></ol></td>
+<td><ul><li>Red toast <i>Every collector needs a name</i>. Nothing is saved.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">TEAM-06<span class="pri p2">P2</span></td>
+<td><b>At least one collector</b><ol><li>Remove every row with ✕; click Save.</li></ol></td>
+<td><ul><li>Red toast <i>Add at least one collector</i>.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">TEAM-07<span class="pri p2">P2</span></td>
+<td><b>Nobody working</b><ol><li>Switch every collector off; Save.</li></ol></td>
+<td><ul><li>Amber warning <i>Nobody is working: only automated text reminders can be planned</i>. Save is allowed.</li><li>A run started afterwards produces only SMS tasks (check in TEAM queues).</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">TEAM-08<span class="pri p2">P2</span></td>
+<td><b>Add collector gets a unique id</b><ol><li>Click <b>+ Add collector</b> twice; save; reopen.</li></ol></td>
+<td><ul><li>New rows named Collector 6, Collector 7. Saving succeeds (no duplicate-id error).</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">TEAM-09<span class="pri p1">P1</span></td>
+<td><b>Team carries forward to the next day</b><ol><li>Save a non-default team, run the day through Close the day (CLOSE-01).</li><li>On the new business day open the team drawer.</li></ol></td>
+<td><ul><li>Callout says the team is <b>carried forward</b> from the previous date.</li><li>Same collectors and shifts. Step 1 is <i>todo</i> until saved again.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">TEAM-10<span class="pri p3">P3</span></td>
+<td><b>Start with this team</b><ol><li>On a day with no saved team click <b>Start with this team</b>.</li></ol></td>
+<td><ul><li>The shown team is saved automatically (note <i>confirmed at run start</i>) and the run starts.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr></tbody></table></section><section class="area"><h2><span class="code">RUN</span>Starting a run</h2><p class="intro">The agents pull the bank's data, score every account and build the collector queues. A run takes about 10 seconds without an LLM, 50–70 seconds with Gemini.</p>
+<table class="cases"><thead><tr><th style="width:11%">ID</th><th style="width:40%">Check and steps</th><th style="width:35%">Expected result</th><th style="width:14%">Result</th></tr></thead><tbody><tr><td class="id">RUN-01<span class="pri p1">P1</span></td>
+<td><b>Start today&#x27;s run from Manager</b><ol><li>After saving the team click <b>Start today's run</b>.</li></ol></td>
+<td><ul><li>Toast <i>Started run_…</i>.</li><li>Button changes to <i>Agents are planning…</i> with a <i>Watch in Admin Console</i> link.</li><li>When finished: toast <i>Today's worklist is ready</i>, worklist loads, step 2 ✓.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">RUN-02<span class="pri p1">P1</span></td>
+<td><b>Stages complete in Admin</b><ol><li>Click <i>Watch in Admin Console</i> during a run.</li></ol></td>
+<td><ul><li>Eight stage cards fill in order: Data ingestion → Configuration → Data quality &amp; privacy → Feature layer → Decision engine → Policy &amp; governance → Explanation → Human approval.</li><li>First seven show green; Human approval shows amber (waiting).</li><li>Live trace on the right keeps scrolling; run banner shows status <i>awaiting approval</i>.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">RUN-03<span class="pri p1">P1</span></td>
+<td><b>Run uses the saved team</b><ol><li>Admin → select the run → Configuration stage → Outputs.</li></ol></td>
+<td><ul><li>Table <i>Today's team (Manager Console roster)</i> lists exactly the collectors, working flags and shifts you saved.</li><li><i>Plannable minutes</i> metric = sum of working shifts × 0.9.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">RUN-04<span class="pri p1">P1</span></td>
+<td><b>No double start</b><ol><li>Click Start, then immediately refresh /manager and look for the Start button.</li></ol></td>
+<td><ul><li>While running, only <i>Agents are planning…</i> is shown (no second Start).</li><li>Calling Start again via Admin → <b>Start new run</b> gives red toast <i>run … is still running</i>.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">RUN-05<span class="pri p2">P2</span></td>
+<td><b>Second run the same day replaces the first</b><ol><li>With a worklist awaiting approval (nothing released), Admin → Start new run.</li></ol></td>
+<td><ul><li>New run reaches awaiting approval. The earlier run shows status <b>superseded</b> in Admin's run list and disappears from Manager's run list.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">RUN-06<span class="pri p1">P1</span></td>
+<td><b>No run after release on the same day</b><ol><li>Release at least one action (REL-01). Admin → Start new run.</li></ol></td>
+<td><ul><li>Red toast: <i>today's actions (&lt;date&gt;) were already released … close the day in the Manager Console</i>.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">RUN-07<span class="pri p2">P2</span></td>
+<td><b>Failed run is visible</b><ol><li>Stop only the bank (run <code>make engine</code> alone); Admin → Start new run.</li></ol></td>
+<td><ul><li>Run ends <b>failed</b> at Data ingestion with a red error in the run banner. No worklist is published; Manager does not list the run.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr></tbody></table></section><section class="area"><h2><span class="code">WL</span>Worklist and collector queues</h2><p class="intro">Location: Manager Console → Worklist and Team queues tabs.</p>
+<table class="cases"><thead><tr><th style="width:11%">ID</th><th style="width:40%">Check and steps</th><th style="width:35%">Expected result</th><th style="width:14%">Result</th></tr></thead><tbody><tr><td class="id">WL-01<span class="pri p1">P1</span></td>
+<td><b>Summary tiles</b><ol><li>After a run, read the tiles above the tabs.</li></ol></td>
+<td><ul><li>Recommendations, Est. avoided loss (with P10–P90 range), Team today (N collectors, minutes used of plannable), Escalated, Decisions 0 / N, Released 0.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">WL-02<span class="pri p1">P1</span></td>
+<td><b>Every task belongs to a working collector</b><ol><li>Worklist → Collector filter → pick each collector in turn.</li></ol></td>
+<td><ul><li>Voice tasks (Collector call, Payment plan offer, Hardship referral) are only assigned to collectors who are working.</li><li>SMS tasks are under <i>Automated SMS</i>.</li><li>No collector who was switched off appears in the filter.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">WL-03<span class="pri p1">P1</span></td>
+<td><b>Queue fits the shift</b><ol><li>Team queues tab: read each collector card.</li></ol></td>
+<td><ul><li><i>planned min</i> ≤ <i>plannable min</i> for every collector (e.g. 322 of 324).</li><li>No card shows <i>over shift</i> before any decisions are made.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">WL-04<span class="pri p2">P2</span></td>
+<td><b>Queue order</b><ol><li>Worklist → filter one collector.</li></ol></td>
+<td><ul><li>Rows are ordered #1, #2, #3… and Value decreases down the list.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">WL-05<span class="pri p2">P2</span></td>
+<td><b>Review this queue</b><ol><li>Team queues → <b>Review this queue →</b> on one card.</li></ol></td>
+<td><ul><li>Switches to Worklist filtered to that collector; count shows e.g. <i>16 of 291</i>.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">WL-06<span class="pri p2">P2</span></td>
+<td><b>Filters combine</b><ol><li>Set Action = CALL and Segment = Persuadable and tick <i>escalated only</i>.</li></ol></td>
+<td><ul><li>Only rows matching all filters; count updates. Clearing filters restores all rows.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">WL-07<span class="pri p2">P2</span></td>
+<td><b>Escalation flags</b><ol><li>Filter <i>escalated only</i>.</li></ol></td>
+<td><ul><li>Each row shows at least one flag: HIGH EXPOSURE (balance ≥ $30,000), WIDE INTERVAL, or HARDSHIP OFFER (every hardship referral).</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">WL-08<span class="pri p3">P3</span></td>
+<td><b>Simulated completion shown</b><ol><li>Team queues → each card.</li></ol></td>
+<td><ul><li><i>Simulated day: NN% of this queue finishes in the shift</i> is present for working collectors (typically 90–100%).</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr></tbody></table></section><section class="area"><h2><span class="code">ACC</span>Account review</h2><p class="intro">Click any worklist row. A drawer opens on the right.</p>
+<table class="cases"><thead><tr><th style="width:11%">ID</th><th style="width:40%">Check and steps</th><th style="width:35%">Expected result</th><th style="width:14%">Result</th></tr></thead><tbody><tr><td class="id">ACC-01<span class="pri p1">P1</span></td>
+<td><b>Recommendation card</b><ol><li>Open a row.</li></ol></td>
+<td><ul><li>Shows action, rank, segment pill, template source (LLM template / fallback template), flags, and tiles Action value, Uplift (with range), Expected loss, Base cure.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">ACC-02<span class="pri p1">P1</span></td>
+<td><b>Every figure in the explanation is sourced</b><ol><li>Tick <b>show sources</b>. Hover figures in <i>Why</i>.</li></ol></td>
+<td><ul><li>Every number is highlighted and shows a source such as <code>bank:accounts.CURR_BAL</code>, <code>model:tlearner-…</code>, <code>solver:cbc</code>.</li><li><b>Fail</b> if any number in the sentence is plain (not highlighted).</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">ACC-03<span class="pri p1">P1</span></td>
+<td><b>Explanation reads correctly</b><ol><li>Read the <i>Why</i> paragraph for 5 different segments.</li></ol></td>
+<td><ul><li>Grammatical English; no <i>a auto loan</i>, no <i>an $9,894 of $9,894</i>; the sentence fits the segment (e.g. a Sleeping dog says contact may backfire).</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">ACC-04<span class="pri p1">P1</span></td>
+<td><b>Outreach script</b><ol><li>Read <i>Outreach script</i>.</li></ol></td>
+<td><ul><li>Uses the member's first name; warm tone; no internal words (uplift, model, risk grade, <i>Collector call</i>).</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">ACC-05<span class="pri p2">P2</span></td>
+<td><b>Policy checks</b><ol><li>Scroll to <i>Policy checks</i>.</li></ol></td>
+<td><ul><li>Every suppression flag, the 7-day contact cap and eligibility rules listed with ✓ / ✕. The recommended action's rules all pass.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">ACC-06<span class="pri p2">P2</span></td>
+<td><b>Why this account (counterfactual)</b><ol><li>Click <b>Ask the Decision Agent</b>.</li></ol></td>
+<td><ul><li>Green callout: dropping this account lowers the plan by $X, followed by the accounts that would replace it.</li><li>Admin trace shows a HANDOFF from Collections manager and an <code>engine.explain_selection</code> call.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">ACC-07<span class="pri p2">P2</span></td>
+<td><b>Not-selected account</b><ol><li>Compare tab → a row under <i>Chosen by the risk sort, skipped by the optimiser</i> → Ask the Decision Agent.</li></ol></td>
+<td><ul><li>Explains why it lost: outcompeted (with cost), no positive value, or no allowed action.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">ACC-08<span class="pri p1">P1</span></td>
+<td><b>No personal data shown except first name</b><ol><li>Read <i>Account data (tokenised)</i>.</li></ol></td>
+<td><ul><li>Account and member shown only as tokens (acc_…, mem_…). No surname, phone or email anywhere in the drawer.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr></tbody></table></section><section class="area"><h2><span class="code">DEC</span>Decisions</h2><p class="intro">Location: account drawer → <i>Your decision</i>, and the buttons above the tabs.</p>
+<table class="cases"><thead><tr><th style="width:11%">ID</th><th style="width:40%">Check and steps</th><th style="width:35%">Expected result</th><th style="width:14%">Result</th></tr></thead><tbody><tr><td class="id">DEC-01<span class="pri p1">P1</span></td>
+<td><b>Approve one</b><ol><li>Open a pending row → <b>Approve &lt;action&gt;</b>.</li></ol></td>
+<td><ul><li>Toast; row decision pill = APPROVED; Decisions tile increments; drawer shows <i>Current: approved by manager.demo</i>.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">DEC-02<span class="pri p1">P1</span></td>
+<td><b>Change action needs a reason</b><ol><li>Pick a different action in the dropdown, leave Reason empty → <b>Change action</b>.</li></ol></td>
+<td><ul><li>Red toast <i>a reason code is required to edit or reject a recommendation</i>.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">DEC-03<span class="pri p1">P1</span></td>
+<td><b>Change action with reason</b><ol><li>Pick action + reason (e.g. WRONG_ACTION) → Change action.</li></ol></td>
+<td><ul><li>Pill EDITED with <i>→ NEWACTION</i>. Audit trail tab shows <code>approval.edited</code> with the reason.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">DEC-04<span class="pri p1">P1</span></td>
+<td><b>Reject needs a reason</b><ol><li>Reject with empty reason; then with reason TONE.</li></ol></td>
+<td><ul><li>First: red toast. Second: pill REJECTED; audit entry <code>approval.rejected</code>.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">DEC-05<span class="pri p2">P2</span></td>
+<td><b>Only allowed actions offered</b><ol><li>For an account without phone consent (Policy checks show ✕ phone_consent), open Change action dropdown.</li></ol></td>
+<td><ul><li>Voice actions are not offered. Only allowed actions appear.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">DEC-06<span class="pri p1">P1</span></td>
+<td><b>Bulk approve skips escalated</b><ol><li>Click <b>Approve all non-escalated (N)</b>.</li></ol></td>
+<td><ul><li>Toast <i>Approved N; M escalated left for review</i>. Escalated rows stay PENDING.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">DEC-07<span class="pri p2">P2</span></td>
+<td><b>Edits that overfill a shift are flagged</b><ol><li>Change several CALL (12 min) tasks of one collector to Hardship referral (45 min) where allowed.</li></ol></td>
+<td><ul><li>That collector's card in Team queues shows <b>over shift</b> and an amber outline once committed + pending minutes exceed plannable.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">DEC-08<span class="pri p2">P2</span></td>
+<td><b>Decisions persist</b><ol><li>Refresh the page.</li></ol></td>
+<td><ul><li>All decisions remain; counts identical.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr></tbody></table></section><section class="area"><h2><span class="code">RPL</span>Re-plan when the team changes</h2><p class="intro">If staffing changes after the worklist was produced, the manager re-plans. Data and model are reused, so it takes seconds.</p>
+<table class="cases"><thead><tr><th style="width:11%">ID</th><th style="width:40%">Check and steps</th><th style="width:35%">Expected result</th><th style="width:14%">Result</th></tr></thead><tbody><tr><td class="id">RPL-01<span class="pri p1">P1</span></td>
+<td><b>Banner after team change</b><ol><li>With a worklist awaiting approval, Edit today's team → switch someone on/off or change a shift → Save.</li></ol></td>
+<td><ul><li>Drawer shows amber <i>Today's worklist was planned for a different team</i> with <b>Re-plan now</b>.</li><li>Top panel shows amber banner and primary <b>Re-plan for the new team</b>.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">RPL-02<span class="pri p1">P1</span></td>
+<td><b>Re-plan produces a new worklist</b><ol><li>Click Re-plan (confirm if asked).</li></ol></td>
+<td><ul><li><i>Agents are planning…</i>, then a new run id loads.</li><li>Team queues now match the new team; absent collectors have 0 tasks.</li><li>Admin: stages Data ingestion, Data quality and Feature layer say <i>Reused from run …</i>; model id is the same as the old run.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">RPL-03<span class="pri p1">P1</span></td>
+<td><b>Old worklist is locked</b><ol><li>In Admin select the old run; note its status. Try approving in it (Manager ?run=&lt;old id&gt;).</li></ol></td>
+<td><ul><li>Status <b>superseded</b>. Approve gives red toast <i>this worklist was replaced by … after the team changed</i>.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">RPL-04<span class="pri p2">P2</span></td>
+<td><b>Decisions warning</b><ol><li>Approve 3 rows, change team, click Re-plan.</li></ol></td>
+<td><ul><li>Confirm dialog says the 3 decisions will need to be made again.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">RPL-05<span class="pri p2">P2</span></td>
+<td><b>Saving the same team does not ask to re-plan</b><ol><li>With a worklist awaiting approval, open the team drawer and save without changing anything.</li></ol></td>
+<td><ul><li>No re-plan banner in the drawer or the top panel. Existing decisions are untouched.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">RPL-06<span class="pri p1">P1</span></td>
+<td><b>No re-plan after release</b><ol><li>Release some actions; change the team.</li></ol></td>
+<td><ul><li>Re-plan is refused: <i>some actions were already sent to the bank; re-planning could contact members twice</i>.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr></tbody></table></section><section class="area"><h2><span class="code">REL</span>Release to the bank</h2>
+<table class="cases"><thead><tr><th style="width:11%">ID</th><th style="width:40%">Check and steps</th><th style="width:35%">Expected result</th><th style="width:14%">Result</th></tr></thead><tbody><tr><td class="id">REL-01<span class="pri p1">P1</span></td>
+<td><b>Release approved</b><ol><li>Approve some rows → <b>Release approved to bank (N)</b> → OK.</li></ol></td>
+<td><ul><li>Toast <i>Released N actions to the bank</i>; rows show SENT; Released tile = N; step 4 ✓.</li><li>Bank docs → GET /api/v1/collections/actions lists N items with ACTION_CD, SCRIPT_TXT, APPROVED_BY.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">REL-02<span class="pri p1">P1</span></td>
+<td><b>Released decisions are locked</b><ol><li>Open a SENT row.</li></ol></td>
+<td><ul><li><i>Released to the bank — decisions are locked</i>; no approve/change/reject controls.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">REL-03<span class="pri p2">P2</span></td>
+<td><b>Nothing to release</b><ol><li>With no approved unreleased rows, the Release button.</li></ol></td>
+<td><ul><li>Disabled, count 0.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">REL-04<span class="pri p1">P1</span></td>
+<td><b>Script sent uses first name only</b><ol><li>Bank docs → collections/actions → read SCRIPT_TXT.</li></ol></td>
+<td><ul><li>Contains first name and institution name; no surname, phone or model terms.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr></tbody></table></section><section class="area"><h2><span class="code">CLOSE</span>Close the day</h2><p class="intro">Freezes the day's report and moves the simulated bank to the next business day. Started only by the manager.</p>
+<table class="cases"><thead><tr><th style="width:11%">ID</th><th style="width:40%">Check and steps</th><th style="width:35%">Expected result</th><th style="width:14%">Result</th></tr></thead><tbody><tr><td class="id">CLOSE-01<span class="pri p1">P1</span></td>
+<td><b>Close a completed day</b><ol><li>After releasing, click <b>Close the day</b> → confirm.</li></ol></td>
+<td><ul><li>Toast <i>Closed &lt;date&gt;. The bank is now on &lt;date+1&gt;</i>.</li><li>Offer to open the report.</li><li>Top panel shows the next date with step 1 todo and team carried forward.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">CLOSE-02<span class="pri p1">P1</span></td>
+<td><b>Warn about unreleased or undecided</b><ol><li>With pending (e.g. escalated) or approved-but-unreleased rows, click Close the day.</li></ol></td>
+<td><ul><li>Second dialog: <i>N approved action(s) have not been released and M recommendation(s) were never decided; they will not happen. Close anyway?</i>. Cancel keeps the day open.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">CLOSE-04<span class="pri p1">P1</span></td>
+<td><b>Bank really moved on</b><ol><li>Bank docs → GET /api/v1/health; GET /api/v1/simulation/day-log.</li></ol></td>
+<td><ul><li>as_of is the next date. Day log row for the closed date: ENGINE_ACTIONS and EXECUTED equal the released count.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">CLOSE-05<span class="pri p1">P1</span></td>
+<td><b>Closed day is locked</b><ol><li>Open Manager with ?run=&lt;closed day's run id&gt; → Release.</li></ol></td>
+<td><ul><li>Red toast <i>business day … is closed; its actions can no longer be released</i>.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">CLOSE-06<span class="pri p2">P2</span></td>
+<td><b>Bank error does not half-close</b><ol><li>Stop the bank; click Close the day.</li></ol></td>
+<td><ul><li>Red toast <i>the bank did not close the day…</i>. Day stays open; retrying after restart works.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">CLOSE-07<span class="pri p2">P2</span></td>
+<td><b>Next day&#x27;s data changed</b><ol><li>Start a run on the new day; compare Admin → Data ingestion rows with the previous day.</li></ol></td>
+<td><ul><li>Queue history row count grew; outcomes grew; accounts behind today differs slightly.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr></tbody></table></section><section class="area"><h2><span class="code">RPT</span>Daily report</h2><p class="intro">Location: <code>/report</code> or Manager → <b>Daily report</b> / <b>Today's report</b>.</p>
+<table class="cases"><thead><tr><th style="width:11%">ID</th><th style="width:40%">Check and steps</th><th style="width:35%">Expected result</th><th style="width:14%">Result</th></tr></thead><tbody><tr><td class="id">RPT-01<span class="pri p1">P1</span></td>
+<td><b>Live report while the day is open</b><ol><li>Open today's report before closing.</li></ol></td>
+<td><ul><li>Amber pill <b>Live</b>: <i>the day is still open — this report updates as decisions are made</i>.</li><li>Approve one more row in Manager, refresh report: Decided count increases.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">RPT-02<span class="pri p1">P1</span></td>
+<td><b>Final report after close</b><ol><li>Open the closed date.</li></ol></td>
+<td><ul><li>Green <b>Final</b> pill with closed by and time. Numbers no longer change when you refresh.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">RPT-03<span class="pri p1">P1</span></td>
+<td><b>Totals match Manager</b><ol><li>Compare report tiles with Manager tiles for the same run.</li></ol></td>
+<td><ul><li>Recommended, approved, changed, rejected, undecided, sent, estimated avoided loss are identical.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">RPT-04<span class="pri p1">P1</span></td>
+<td><b>Team and queues table</b><ol><li>Read <i>Team and queues</i>.</li></ol></td>
+<td><ul><li>One row per collector (including those not working) plus Automated SMS; shifts, planned and plannable minutes and decision counts per person match the Team queues tab.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">RPT-05<span class="pri p2">P2</span></td>
+<td><b>Runs this day</b><ol><li>After a re-plan day, read <i>Runs this day</i>.</li></ol></td>
+<td><ul><li>Lists every run; superseded ones say <i>replaced by …</i>; the re-plan says <i>re-plan of …</i>.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">RPT-06<span class="pri p1">P1</span></td>
+<td><b>What happened next</b><ol><li>Open yesterday's (closed) report after the day is closed.</li></ol></td>
+<td><ul><li><i>Carried out N / N</i>; <i>Reached the member</i> percentage; <i>Caught up within 30 days: not yet known</i> with the date outcomes arrive (business date + 30).</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">RPT-07<span class="pri p2">P2</span></td>
+<td><b>Day by day table</b><ol><li>Scroll to the bottom; click another day.</li></ol></td>
+<td><ul><li>All days listed with status open/closed; clicking loads that day and updates the URL.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">RPT-08<span class="pri p3">P3</span></td>
+<td><b>Print</b><ol><li>Click <b>Print / save as PDF</b>.</li></ol></td>
+<td><ul><li>Print preview hides the top bar; sections are not cut mid-card.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr></tbody></table></section><section class="area"><h2><span class="code">ADM</span>Admin Console</h2><p class="intro">Location: <code>/admin</code>. For checking what each agent did.</p>
+<table class="cases"><thead><tr><th style="width:11%">ID</th><th style="width:40%">Check and steps</th><th style="width:35%">Expected result</th><th style="width:14%">Result</th></tr></thead><tbody><tr><td class="id">ADM-01<span class="pri p1">P1</span></td>
+<td><b>Stage detail tabs</b><ol><li>Click each stage card; open Outputs, Agent &amp; tool calls, Data.</li></ol></td>
+<td><ul><li>Outputs: metrics and tables. Calls: every event with kind, agent, tool, module, ms. Data: tables with row counts.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">ADM-02<span class="pri p1">P1</span></td>
+<td><b>PII is masked</b><ol><li>Data ingestion → Data → <code>landing_members</code>.</li></ol></td>
+<td><ul><li>first/last name, phone, email columns show <i>••• masked (PII)</i>.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">ADM-03<span class="pri p2">P2</span></td>
+<td><b>Trace filter</b><ol><li>Click an agent chip (e.g. Policy) above the live trace.</li></ol></td>
+<td><ul><li>Only that agent's events and handoffs to it are shown.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">ADM-04<span class="pri p2">P2</span></td>
+<td><b>Ownership enforced</b><ol><li>Agents panel at the bottom.</li></ol></td>
+<td><ul><li>Each of 8 agents lists its tools; Tool registry shows owner per tool. No tool owned by the Explanation Agent is an engine.* tool.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">ADM-05<span class="pri p1">P1</span></td>
+<td><b>LLM calls panel (Gemini key set)</b><ol><li>Select a run made with Gemini → <b>LLM calls</b> panel → click a row.</li></ol></td>
+<td><ul><li>1–2 calls (draft; rewrite if drafts failed checks). Detail shows status, model, HTTP 200, latency, tokens, system instruction, prompt, raw response, parsed JSON.</li><li>Prompt contains no account token (acc_…), name, balance or number from an account.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">ADM-06<span class="pri p2">P2</span></td>
+<td><b>LLM calls panel (no key)</b><ol><li>Run with no GEMINI_API_KEY.</li></ol></td>
+<td><ul><li>Panel says <i>No LLM calls in this run — it used template (…)</i>. Run still completes; templates marked fallback.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">ADM-07<span class="pri p2">P2</span></td>
+<td><b>LLM failure falls back</b><ol><li>Put an invalid GEMINI_API_KEY in .env, restart, run.</li></ol></td>
+<td><ul><li>Run completes. LLM calls panel shows status failed with HTTP 400/403 and error text. Worklist uses fallback templates.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">ADM-08<span class="pri p3">P3</span></td>
+<td><b>Links</b><ol><li>Click Configuration, Manager Console, Demo.</li></ol></td>
+<td><ul><li>Each opens the right page.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr></tbody></table></section><section class="area"><h2><span class="code">CFG</span>Configuration editor</h2><p class="intro">Location: Admin → <b>Configuration</b> (<code>/admin/config</code>). <b>Always restore any change you save during testing</b> (CFG-09).</p>
+<table class="cases"><thead><tr><th style="width:11%">ID</th><th style="width:40%">Check and steps</th><th style="width:35%">Expected result</th><th style="width:14%">Result</th></tr></thead><tbody><tr><td class="id">CFG-01<span class="pri p1">P1</span></td>
+<td><b>Files and guide</b><ol><li>Open the page.</li></ol></td>
+<td><ul><li>Left: Scenario Pack (collections_delinquency <i>in use</i>, npa_early_warning <i>not used</i>), Institution Pack, Run Config.</li><li>Section chips with coloured risk dots; guide panel explains the section.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">CFG-02<span class="pri p1">P1</span></td>
+<td><b>Guide follows the cursor</b><ol><li>Click inside <code>capacity:</code> on the line <code>planning_buffer</code>.</li></ol></td>
+<td><ul><li>Guide shows <i>Team size and daily limits</i>, Read by chips, and highlights <code>planning_buffer</code> with its meaning.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">CFG-03<span class="pri p1">P1</span></td>
+<td><b>Schema error with line</b><ol><li>Change <code>planning_buffer: 0.10</code> to <code>0.7</code> → <b>Check changes</b>.</li></ol></td>
+<td><ul><li>Red <i>1 problem(s) must be fixed before saving</i>; message <i>Input should be less than 0.5</i>; a <i>line NN</i> link jumps to the line; gutter number red; Save disabled.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">CFG-04<span class="pri p1">P1</span></td>
+<td><b>YAML syntax error</b><ol><li>Remove one space of indentation under <code>capacity:</code> → Check.</li></ol></td>
+<td><ul><li><i>YAML syntax</i> error with a line number and advice about indentation.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">CFG-05<span class="pri p1">P1</span></td>
+<td><b>Error across files</b><ol><li>Rename the rule set <code>sms_consent:</code> to <code>sms_ok:</code> → Check.</li></ol></td>
+<td><ul><li><i>Across packs</i> error: action SMS requires unknown eligibility rules ['sms_consent'].</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">CFG-06<span class="pri p2">P2</span></td>
+<td><b>Unknown data field is warned</b><ol><li>Change a rule's <code>field: dpd</code> to <code>field: days_late</code> → Check.</li></ol></td>
+<td><ul><li>Valid but a warning: <i>rule field 'days_late' is not a known data field; the next run will stop</i>.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">CFG-07<span class="pri p2">P2</span></td>
+<td><b>Engine compatibility</b><ol><li>Scenario Pack: change <code>id: CALL</code> to <code>id: VISIT</code> → Check.</li></ol></td>
+<td><ul><li>Error <i>Engine compatibility</i>: action id(s) ['VISIT'] are not known… Save disabled.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">CFG-08<span class="pri p1">P1</span></td>
+<td><b>Valid change and save</b><ol><li>Set planning_buffer 0.12 → Check → Save… → type a reason → Save.</li></ol></td>
+<td><ul><li>Check lists the change <i>0.1 → 0.12</i> with meaning and effect. Save needs a reason (fewer than 5 characters is refused).</li><li>Toast <i>Saved. The next run uses configuration …</i>; hash chip changes; <i>1 earlier version(s)</i>.</li><li>Next run: Configuration stage shows plannable minutes at 88%.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">CFG-09<span class="pri p1">P1</span></td>
+<td><b>Restore a version</b><ol><li>Earlier versions… → pick the version → Check → Save with reason <i>restore after test</i>.</li></ol></td>
+<td><ul><li>Editor loads the older text; check passes; after saving the file is back to the original value.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">CFG-10<span class="pri p2">P2</span></td>
+<td><b>Edited in two tabs</b><ol><li>Open the same file in two tabs; save a change in tab A; save a different change in tab B.</li></ol></td>
+<td><ul><li>Tab B is refused: <i>this file changed on disk after you opened it; reload it and apply your edit again</i>.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">CFG-11<span class="pri p2">P2</span></td>
+<td><b>No save during a run</b><ol><li>Start a run; immediately try to save a valid change.</li></ol></td>
+<td><ul><li>Refused: <i>run … is in progress; it would stop on a configuration change</i>.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">CFG-12<span class="pri p3">P3</span></td>
+<td><b>Unsaved edits guard</b><ol><li>Edit text, then click another file or close the tab.</li></ol></td>
+<td><ul><li>Confirmation asking to discard edits. <b>Discard edits</b> restores the file text.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">CFG-13<span class="pri p2">P2</span></td>
+<td><b>Config change is audited</b><ol><li>After CFG-08, run database check G4 (section 6).</li></ol></td>
+<td><ul><li>Latest events include <i>config.changed</i> by the name you entered. Manager → Audit trail still shows <i>Hash chain verified</i>.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr></tbody></table></section><section class="area"><h2><span class="code">GOV</span>Governance rules</h2><p class="intro">These protect members. A failure here is always P1.</p>
+<table class="cases"><thead><tr><th style="width:11%">ID</th><th style="width:40%">Check and steps</th><th style="width:35%">Expected result</th><th style="width:14%">Result</th></tr></thead><tbody><tr><td class="id">GOV-01<span class="pri p1">P1</span></td>
+<td><b>Suppressed members never recommended</b><ol><li>SQL check G1 in section 6 (or ask a developer).</li></ol></td>
+<td><ul><li>Zero recommended accounts with deceased, bankruptcy, cease-and-desist, litigation, fraud hold or do-not-call.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">GOV-02<span class="pri p1">P1</span></td>
+<td><b>One contact per member per day</b><ol><li>SQL check G2.</li></ol></td>
+<td><ul><li>No member appears with more than one contact action in a run's worklist.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">GOV-03<span class="pri p1">P1</span></td>
+<td><b>Zero violations</b><ol><li>Admin → Policy &amp; governance stage.</li></ol></td>
+<td><ul><li>Metric <i>Violations (optimised) 0</i>; trace note <i>Optimised plan independently verified: zero violations</i>.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">GOV-04<span class="pri p1">P1</span></td>
+<td><b>No number written by the AI</b><ol><li>Manager → Model health → Governance tiles.</li></ol></td>
+<td><ul><li><i>Unstamped numbers 0</i>; <i>Provenance complete N / N</i>.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">GOV-05<span class="pri p1">P1</span></td>
+<td><b>Audit chain intact</b><ol><li>Manager → Audit trail.</li></ol></td>
+<td><ul><li>Green <i>Hash chain verified</i>; events for published, approvals, releases, day closed, roster saved.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">GOV-06<span class="pri p2">P2</span></td>
+<td><b>Hardship always escalated</b><ol><li>Filter Action = HARDSHIP.</li></ol></td>
+<td><ul><li>Every row carries the HARDSHIP OFFER flag and is skipped by bulk approve.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr></tbody></table></section><section class="area"><h2><span class="code">OTH</span>Guided tour, comparison and model pages</h2>
+<table class="cases"><thead><tr><th style="width:11%">ID</th><th style="width:40%">Check and steps</th><th style="width:35%">Expected result</th><th style="width:14%">Result</th></tr></thead><tbody><tr><td class="id">OTH-01<span class="pri p2">P2</span></td>
+<td><b>Guided tour replay</b><ol><li>Open /guide → <b>Replay the latest run</b>.</li></ol></td>
+<td><ul><li>Stages light up in order with plain-language feed lines; chapters 4–7 fill with numbers from the run.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">OTH-02<span class="pri p3">P3</span></td>
+<td><b>Technical detail toggle</b><ol><li>Toggle <b>Technical detail</b>.</li></ol></td>
+<td><ul><li>Tool names and module names appear/disappear; setting survives a refresh.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">OTH-03<span class="pri p2">P2</span></td>
+<td><b>Sort vs Optimised and benchmark</b><ol><li>Manager → Sort vs Optimised → Run synthetic benchmark.</li></ol></td>
+<td><ul><li>Three policy cards; after benchmark: true value tiles, lift vs risk sort, capture of oracle, estimate ÷ truth ratio.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">OTH-04<span class="pri p3">P3</span></td>
+<td><b>Model health</b><ol><li>Manager → Model health.</li></ol></td>
+<td><ul><li>Qini per action, decile table with action selector, feasibility checks, solver details.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr></tbody></table></section><section class="area"><h2><span class="code">NFR</span>Usability, layout and performance</h2>
+<table class="cases"><thead><tr><th style="width:11%">ID</th><th style="width:40%">Check and steps</th><th style="width:35%">Expected result</th><th style="width:14%">Result</th></tr></thead><tbody><tr><td class="id">NFR-01<span class="pri p2">P2</span></td>
+<td><b>Phone width</b><ol><li>DevTools device toolbar 375 px wide: /manager, /report, /admin/config, /guide.</li></ol></td>
+<td><ul><li>No sideways page scroll (tables may scroll inside their box); buttons usable; team drawer rows stack.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">NFR-02<span class="pri p3">P3</span></td>
+<td><b>Dark mode</b><ol><li>Switch OS to dark mode; reload pages.</li></ol></td>
+<td><ul><li>All text readable; no white-on-white or black-on-black.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">NFR-03<span class="pri p2">P2</span></td>
+<td><b>Run duration</b><ol><li>Time RUN-01 with and without Gemini.</li></ol></td>
+<td><ul><li>Without LLM ≤ 30 s; with Gemini ≤ 120 s. Re-plan ≤ 15 s without LLM.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">NFR-04<span class="pri p3">P3</span></td>
+<td><b>Keyboard</b><ol><li>Tab through the team drawer and config editor; press Esc on drawers.</li></ol></td>
+<td><ul><li>Visible focus ring; Esc closes drawers; Tab inside the YAML editor inserts two spaces; Ctrl/Cmd+Enter runs Check.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr><tr><td class="id">NFR-05<span class="pri p2">P2</span></td>
+<td><b>Errors are understandable</b><ol><li>Collect every red toast seen during testing.</li></ol></td>
+<td><ul><li>Each says what went wrong and what to do. Log any toast that is raw JSON, a stack trace or unclear.</li></ul></td>
+<td class="res"><span>☐ Pass</span><span>☐ Fail</span><span>☐ Blocked</span><span class="line">Defect</span></td></tr></tbody></table></section>
+</section>
+
+<section class="chapter">
+  <h2 class="ch">6 · Optional database checks</h2>
+  <p>For testers comfortable with SQL. Open the files read-only in <i>DB Browser for SQLite</i> (File → Open Database Read Only). <b>Never edit these files</b> — the audit tables refuse changes by design and editing others corrupts test data. Replace <code>RUN</code> with a run id.</p>
+  <table class="grid"><tbody>
+    <tr><td style="width:45mm">Engine database</td><td class="mono">kamat/data/engine/lastmile.db</td></tr>
+    <tr><td>Bank database</td><td class="mono">kamat/data/bank/bank.db</td></tr>
+  </tbody></table>
+  <div class='sql'><h4><span class='code'>G1</span>Suppressed accounts in a worklist (expect 0)</h4><pre>-- engine DB: data/engine/lastmile.db. Replace RUN.
+SELECT COUNT(*) FROM recommendations
+WHERE run_id = &#x27;RUN&#x27; AND alternatives_json LIKE &#x27;%suppressed:%&#x27;;</pre></div><div class='sql'><h4><span class='code'>G2</span>Members with more than one contact (expect no rows)</h4><pre>SELECT member_token, COUNT(*) n FROM recommendations
+WHERE run_id = &#x27;RUN&#x27; GROUP BY member_token HAVING n &gt; 1;</pre></div><div class='sql'><h4><span class='code'>G3</span>Minutes per collector vs shift</h4><pre>SELECT collector_id, COUNT(*) tasks,
+       SUM(json_extract(facts_json, &#x27;$.minutes.value&#x27;)) minutes
+FROM recommendations WHERE run_id = &#x27;RUN&#x27; GROUP BY collector_id;</pre></div><div class='sql'><h4><span class='code'>G4</span>Latest audit events</h4><pre>SELECT seq, run_id, event_type, actor, created_at FROM audit_events ORDER BY seq DESC LIMIT 20;</pre></div><div class='sql'><h4><span class='code'>G5</span>LLM calls of a run</h4><pre>SELECT id, purpose, status, http_status, latency_ms, total_tokens FROM llm_calls WHERE run_id = &#x27;RUN&#x27;;</pre></div><div class='sql'><h4><span class='code'>G6</span>Bank: actions and how they went (bank DB: data/bank/bank.db)</h4><pre>SELECT ACTION_CD, EXECUTION_STATUS, COUNT(*), SUM(RPC_IND)
+FROM collection_actions GROUP BY 1, 2;</pre></div>
+</section>
+
+<section class="chapter">
+  <h2 class="ch">7 · Known behaviour that is not a bug</h2>
+  <table class="grid"><thead><tr><th style="width:62mm">You may see</th><th>Why</th></tr></thead><tbody>
+    <tr><td>Business date ahead of the real calendar</td><td>Every <i>Close the day</i> moves the simulated bank forward one day, regardless of the clock.</td></tr>
+    <tr><td>Most tasks are SMS; few hardship referrals</td><td>SMS uses no collector time. Payment plans are usually worth more per minute than hardship referrals.</td></tr>
+    <tr><td>Planned minutes a few below plannable (e.g. 322 of 324)</td><td>Tasks are 12, 25 or 45 minutes; the leftover minutes cannot fit another task.</td></tr>
+    <tr><td>Run takes about a minute with Gemini</td><td>Each Gemini call takes 20–25 seconds; there can be two (draft + rewrite).</td></tr>
+    <tr><td>Some explanations say <i>fallback template</i></td><td>Gemini output that fails the checks, or no key, uses standard wording by design.</td></tr>
+    <tr><td><i>Caught up within 30 days: not yet known</i></td><td>Outcomes only exist 30 business days after the actions.</td></tr>
+    <tr><td>Estimated dollar values look large versus the benchmark</td><td>Model estimates are about 2× optimistic; this is documented. Do not log it as a defect.</td></tr>
+    <tr><td>Re-planned run reuses stages 1, 3 and 4 with 0 ms</td><td>Data and model are copied from the parent run on purpose.</td></tr>
+    <tr><td>Everyone appears as manager.demo / admin.demo</td><td>There is no login in this build.</td></tr>
+    <tr><td><code>/demo</code> page claims (e.g. fixed ROI, “0 harmful”)</td><td>Known outdated page, out of scope.</td></tr>
+  </tbody></table>
+  <div class="box bad"><b>Always a P1 defect</b>, even if it looks small: a suppressed (deceased, bankruptcy, do-not-call…) member recommended; one member with two contacts the same day; a number in an explanation without a source; a surname, phone or email visible outside the bank; a released action that can still be changed; audit chain not verified; a collector's queue over their shift before any manager edits.</div>
+</section>
+
+<section>
+  <h2 class="ch" style="margin-top:9mm">8 · Templates</h2>
+  <h3>8.1 Defect report</h3>
+  <table class="grid"><tbody>
+    <tr><td style="width:40mm"><b>Defect ID</b></td><td>LM-___</td></tr>
+    <tr><td><b>Title</b></td><td>Short and specific: <i>“Bulk approve includes escalated HARDSHIP rows”</i></td></tr>
+    <tr><td><b>Test case</b></td><td>e.g. DEC-06</td></tr>
+    <tr><td><b>Priority</b></td><td>P1 / P2 / P3 (section 2)</td></tr>
+    <tr><td><b>Environment</b></td><td>Build/date, Chrome version, Gemini key on/off, business date</td></tr>
+    <tr><td><b>Run id</b></td><td>run_…</td></tr>
+    <tr><td><b>Steps to reproduce</b></td><td>Numbered, starting from a known state (e.g. “after reset 3.4”)</td></tr>
+    <tr><td><b>Expected</b></td><td>Copy from the test case</td></tr>
+    <tr><td><b>Actual</b></td><td>What happened, exact message text</td></tr>
+    <tr><td><b>Reproducible</b></td><td>Always / Sometimes (x of y) / Once</td></tr>
+    <tr><td><b>Evidence</b></td><td>Screenshots, browser console lines, server traceback</td></tr>
+    <tr><td><b>Status</b></td><td>New → Assigned → Fixed → Retest → Closed / Reopened</td></tr>
+  </tbody></table>
+  <h3>8.2 Daily status (send at end of each test day)</h3>
+<pre>Date / build:
+Cases executed today:        Pass:     Fail:     Blocked:
+Cumulative:  executed __ of 108   P1 passed __ of 55
+New defects:   P1 __  P2 __  P3 __   (list ids + titles)
+Retested:      fixed __  reopened __
+Blockers:
+Plan for tomorrow:</pre>
+
+  <h2 class="ch" style="margin-top:9mm">9 · Exit criteria and sign-off</h2>
+  <table class="grid"><tbody>
+    <tr><td style="width:10mm">☐</td><td>All <b>55 P1</b> cases executed and passed (retest pass counts)</td></tr>
+    <tr><td>☐</td><td>At least 90% of all 108 cases executed</td></tr>
+    <tr><td>☐</td><td>No open P1 defects; open P2 defects agreed with the product owner</td></tr>
+    <tr><td>☐</td><td>One full business day completed end to end: team → run → re-plan → decide → release → close → final report → next day carried forward</td></tr>
+    <tr><td>☐</td><td>Configuration files restored to their original values (CFG-09)</td></tr>
+    <tr><td>☐</td><td>Tracking sheet, evidence folder and defect list handed to the developer lead</td></tr>
+  </tbody></table>
+  <div class="sign" style="margin-top:14mm"><div>Tester — name, signature, date</div><div>Developer lead — name, signature, date</div><div>Product owner — name, signature, date</div></div>
+</section>
+</body></html>
