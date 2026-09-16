@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="/static/console.css">
+<link rel="stylesheet" href="/static/app.css">
 <style>
   .how{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0;margin-bottom:14px}
   .how > div{padding:12px 16px;border-right:1px solid var(--line)}
@@ -52,7 +52,7 @@
   .chg{font-family:var(--mono);font-size:12px}
   .chg del{color:var(--bad);text-decoration:line-through} .chg ins{color:var(--good);text-decoration:none}
 
-  .guide{position:sticky;top:64px}
+  .guide{position:sticky;top:calc(var(--top-h) + 14px)}
   .guide .panel-b h3{margin:0 0 4px;font-size:15px}
   .guide p{margin:6px 0;font-size:12.5px;line-height:1.55;color:var(--ink-2)}
   .guide .lbl{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-top:12px}
@@ -68,13 +68,10 @@
 </style>
 </head>
 <body>
-<header class="topbar">
-  <div class="brand"><b>Last Mile</b><span>Configuration</span></div>
-  <div class="chips" id="hashChip"></div>
-  <div class="spacer"></div>
-  <a class="btn" href="/admin">← Admin Console</a>
-  <a class="btn" href="/manager">Manager Console →</a>
-</header>
+<div id="pageActions" hidden>
+  <span class="chips" id="hashChip"></span>
+</div>
+
 
 <main class="page">
   <section class="panel how" aria-label="How configuration works">
@@ -95,7 +92,7 @@
       </div>
       <div class="toolbar">
         <button class="btn primary" id="checkBtn">Check changes</button>
-        <button class="btn good" id="saveBtn" disabled>Save…</button>
+        <button class="btn good needs-write needs-admin" id="saveBtn" disabled>Save…</button>
         <button class="btn" id="discardBtn" disabled>Discard edits</button>
         <span class="dirty" id="dirty"></span>
         <div class="spacer"></div>
@@ -122,6 +119,7 @@
 </dialog>
 
 <script src="/static/common.js"></script>
+<script src="/static/shell.js"></script>
 <script src="/static/config.js"></script>
 </body>
 </html>

@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="/static/console.css">
+<link rel="stylesheet" href="/static/app.css">
 <style>
   .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:12px}
   .summary .tile{background:var(--panel);box-shadow:var(--shadow)}
@@ -113,22 +113,17 @@
 </style>
 </head>
 <body>
-<header class="topbar">
-  <div class="brand"><b>Last Mile</b><span>Manager Console</span></div>
-  <div class="chips" id="runChips"></div>
-  <div class="spacer"></div>
+<div id="pageActions" hidden>
   <select class="input" id="runSelect" aria-label="Select run"></select>
-  <a class="btn" href="/report" id="reportLink">Daily report</a>
-  <a class="btn" href="/demo">✨ Demo Showcase</a>
-  <a class="btn" href="/admin">← Admin Console</a>
-</header>
+</div>
+
 
 <main class="page">
   <section class="panel day" id="dayPanel" aria-label="Today's business day"><div class="empty">Loading today…</div></section>
   <section class="summary" id="summary"></section>
   <div class="actions-row">
-    <button class="btn good" id="bulkApprove">Approve all non-escalated</button>
-    <button class="btn primary" id="release">Release approved to bank</button>
+    <button class="btn good needs-write" id="bulkApprove">Approve all non-escalated</button>
+    <button class="btn primary needs-write" id="release">Release approved to bank</button>
     <span class="muted" id="actionsNote">Nothing reaches a member until it is approved here and released.</span>
   </div>
 
@@ -173,6 +168,7 @@
 </aside>
 
 <script src="/static/common.js"></script>
+<script src="/static/shell.js"></script>
 <script src="/static/manager.js"></script>
 </body>
 </html>

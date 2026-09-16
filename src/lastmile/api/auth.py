@@ -229,22 +229,39 @@ LOGIN_HTML = """<!doctype html>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Sign in · Last Mile</title>
 <style>
-:root{--bg:#F3F5F8;--panel:#fff;--line:#DCE1E8;--ink:#141A21;--ink-3:#6E7884;--primary:#14505F;--on-primary:#fff;--bad:#A23C36;--bad-soft:#F7E3E1}
-@media (prefers-color-scheme:dark){:root{--bg:#0E1217;--panel:#151A21;--line:#29313B;--ink:#E8EBEF;--ink-3:#7D8794;--primary:#62B4C4;--on-primary:#0B1A1E;--bad:#E0766D;--bad-soft:#321918}}
+/* Self-contained: the stylesheets live behind the sign-in gate, so this page carries its own. */
+:root{--ground:#EEF2F2;--surface:#FFFFFF;--surface-2:#F6F9F9;--line:#DBE4E4;--line-strong:#C0CDCD;
+  --ink:#11262A;--ink-2:#44585B;--ink-3:#6C7E80;--brand:#10535E;--on-brand:#fff;--bad:#9E3B34;--bad-soft:#F8E4E1;
+  --sh:0 1px 2px rgba(16,32,36,.06),0 20px 50px -30px rgba(16,32,36,.45)}
+@media (prefers-color-scheme:dark){:root{--ground:#0B1113;--surface:#121A1D;--surface-2:#172124;--line:#243336;--line-strong:#35484C;
+  --ink:#E6EEEE;--ink-2:#AEBFC0;--ink-3:#7E9294;--brand:#5FB6C0;--on-brand:#05181C;--bad:#E0776E;--bad-soft:#321A18;
+  --sh:0 1px 2px rgba(0,0,0,.5),0 24px 60px -34px rgba(0,0,0,.95)}}
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px 16px;background:var(--bg);color:var(--ink);
-  font:14px/1.5 "Archivo","Helvetica Neue",Arial,sans-serif}
-form{width:100%;max-width:360px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:28px}
-h1{margin:0;font-size:20px}.sub{margin:2px 0 22px;color:var(--ink-3);font-size:13px}
-label{display:block;font-weight:600;font-size:12.5px;margin:14px 0 6px}
-input{width:100%;padding:10px 12px;font:inherit;color:inherit;background:transparent;border:1px solid var(--line);border-radius:6px}
-input:focus{outline:2px solid var(--primary);outline-offset:1px}
-button{width:100%;margin-top:22px;padding:11px;font:inherit;font-weight:600;border:0;border-radius:6px;background:var(--primary);color:var(--on-primary);cursor:pointer}
-.err{margin:0 0 4px;padding:8px 10px;border-radius:6px;background:var(--bad-soft);color:var(--bad);font-size:13px}
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:32px 16px;background:var(--ground);color:var(--ink);
+  font:14px/1.55 "Archivo","Inter","Helvetica Neue",Arial,sans-serif}
+.card{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--sh);
+  padding:28px 28px 24px}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.mark{width:34px;height:34px;border-radius:9px;background:var(--brand);color:var(--on-brand);display:grid;place-items:center;
+  font-weight:800;font-size:14px;letter-spacing:-.02em}
+.brand b{display:block;font-size:16px;letter-spacing:-.01em}
+.brand small{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+h1{margin:0;font-size:19px;letter-spacing:-.01em}
+.sub{margin:4px 0 20px;color:var(--ink-3);font-size:13px}
+label{display:block;font-weight:600;font-size:12px;margin:14px 0 6px;color:var(--ink-2)}
+input{width:100%;padding:10px 12px;font:inherit;color:inherit;background:var(--surface-2);border:1px solid var(--line-strong);border-radius:7px}
+input:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
+button{width:100%;margin-top:22px;padding:11px;font:inherit;font-weight:600;border:0;border-radius:7px;background:var(--brand);
+  color:var(--on-brand);cursor:pointer}
+button:hover{filter:brightness(1.08)}
+.err{margin:0 0 4px;padding:9px 11px;border-radius:7px;background:var(--bad-soft);color:var(--bad);font-size:13px}
+.roles{margin:20px 0 0;padding-top:16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-3);line-height:1.6}
+.roles b{color:var(--ink-2)}
 </style></head>
 <body>
-<form method="post" action="/login">
-  <h1>Last Mile</h1><p class="sub">Sign in to the consoles</p>
+<form class="card" method="post" action="/login">
+  <div class="brand"><span class="mark">LM</span><div><b>Last Mile</b><small>Collections decisions</small></div></div>
+  <h1>Sign in</h1><p class="sub">Use the account your administrator gave you.</p>
   {{error}}
   <input type="hidden" name="next" value="{{next}}">
   <label for="username">Username</label>
@@ -252,6 +269,9 @@ button{width:100%;margin-top:22px;padding:11px;font:inherit;font-weight:600;bord
   <label for="password">Password</label>
   <input id="password" name="password" type="password" autocomplete="current-password" required>
   <button type="submit">Sign in</button>
+  <p class="roles"><b>admin</b> — everything, including saving configuration.<br>
+    <b>manager</b> — runs the business day: team, runs, approvals, release.<br>
+    <b>guest</b> — read-only.</p>
 </form>
 </body></html>"""
 

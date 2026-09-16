@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="/static/console.css">
+<link rel="stylesheet" href="/static/app.css">
 <style>
   main.page{max-width:1180px}
   .r-head{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:flex-end;padding:18px 20px}
@@ -22,23 +22,23 @@
   .trend td,.trend th{white-space:nowrap}
   .stamp{display:inline-flex;align-items:center;gap:6px}
   @media print{
-    .topbar,.no-print{display:none!important}
-    body{background:#fff} .panel{box-shadow:none;break-inside:avoid} main.page{padding:0}
-    .tbl-wrap{max-height:none!important;overflow:visible}
+    .side,.top,.scrim,.no-print{display:none!important}
+    body{background:#fff;display:block}
+    .panel{box-shadow:none;break-inside:avoid} main.page{padding:0;max-width:none}
+    .tbl-wrap{max-height:none!important;overflow:visible;border-color:#ccc}
   }
 </style>
 </head>
 <body>
-<header class="topbar">
-  <div class="brand"><b>Last Mile</b><span>Daily report</span></div>
-  <div class="spacer"></div>
-  <label class="muted" for="dateSelect">Business day</label>
+<div id="pageActions" hidden>
+  <label class="sr-only" for="dateSelect">Business day</label>
   <select class="input" id="dateSelect" aria-label="Business day"></select>
   <button class="btn" id="printBtn">Print / save as PDF</button>
-  <a class="btn" href="/manager">← Manager Console</a>
-</header>
+</div>
+
 <main class="page" id="report"><div class="empty">Loading…</div></main>
 <script src="/static/common.js"></script>
+<script src="/static/shell.js"></script>
 <script src="/static/report.js"></script>
 </body>
 </html>

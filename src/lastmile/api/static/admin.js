@@ -3,17 +3,6 @@ const S = { runId: null, run: null, stages: [], events: [], lastSeq: 0, stage: n
 
 const KIND_LABEL = { api: "API", tool: "TOOL", llm: "LLM", handoff: "HANDOFF", decision: "DECISION", human: "HUMAN", denied: "DENIED" };
 
-async function loadStatus() {
-  try {
-    const s = await api("/api/status");
-    $("#statusChips").innerHTML = `
-      <span class="chip"><i class="dot ${s.bank.ok ? "ok" : "bad"}"></i>Bank API ${s.bank.ok ? `· as of ${esc(s.bank.as_of)}` : "unreachable"}</span>
-      <span class="chip"><i class="dot ${s.llm_mode.startsWith("gemini") ? "ok" : "warn"}"></i>LLM · ${esc(s.llm_mode)}</span>
-      <span class="chip">${esc(s.scenario)} · ${esc(s.institution)}</span>
-      <span class="chip mono" title="Current configuration hash">cfg ${esc(fmt.short(s.config_hash, 12))}</span>`;
-  } catch (e) { $("#statusChips").innerHTML = `<span class="chip"><i class="dot bad"></i>${esc(e.message)}</span>`; }
-}
-
 async function loadRuns(selectId) {
   const runs = await api("/api/runs");
   const sel = $("#runSelect");
@@ -47,12 +36,13 @@ async function refresh() {
   renderBanner(); renderRail(); renderDetail(); renderTrace(ev.length > 0); renderAgentCalls();
   if (ev.some((e) => e.kind === "llm") || S.llmFor !== S.runId) loadLlmCalls();
   if (S.run.status !== "running") {
-    if (S.poll) { clearInterval(S.poll); S.poll = null; loadRuns(S.runId); loadStatus(); }
+    if (S.poll) { clearInterval(S.poll); S.poll = null; loadRuns(S.runId); Shell.loadStatus(); }
   }
 }
 
 function renderBanner() {
   const r = S.run;
+  Shell.setContext(`${r.run_id} · ${r.status.replace(/_/g, " ")}`);
   const dur = r.finished_at ? ((new Date(r.finished_at) - new Date(r.started_at)) / 1000).toFixed(1) + " s" : "running…";
   $("#runBanner").innerHTML = `
     <span class="rid">${esc(r.run_id)}</span>${statusPill(r.status)}
@@ -240,4 +230,7 @@ $("#startRun").onclick = async () => {
   finally { $("#startRun").disabled = false; }
 };
 
-loadStatus(); loadAgents(); loadRuns(new URLSearchParams(location.search).get("run"));
+Shell.mount({ page: "admin", title: "Runs & agents" }).then(() => {
+  loadAgents();
+  loadRuns(new URLSearchParams(location.search).get("run"));
+});

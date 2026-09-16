@@ -23,6 +23,7 @@ async function openFile(kind, id) {
   C.file = f; C.original = f.text; C.check = f.check; C.section = null; C.field = null;
   history.replaceState(null, "", `/admin/config?kind=${kind}&id=${id}`);
   $$(".file").forEach((b) => b.classList.toggle("on", b.dataset.k === kind && b.dataset.id === id));
+  Shell.setContext(`${f.pack.title} · ${f.id}.yaml`);
   $("#fileHead").innerHTML = `<span class="eyebrow">${esc(f.pack.title)}</span><h2 class="mono">${esc(f.path)}</h2>
     ${f.active ? '<span class="pill good">used by the next run</span>' : '<span class="pill">not used by the default run</span>'}
     <span class="muted">${f.history.length} earlier version(s)</span>`;
@@ -218,4 +219,4 @@ $("#historySel").onchange = (e) => loadVersion(e.target.value);
 $("#dlgClose").onclick = () => $("#saveDlg").close();
 $("#dlgSave").onclick = doSave;
 window.addEventListener("beforeunload", (e) => { if (C.file && dirty()) { e.preventDefault(); e.returnValue = ""; } });
-init();
+Shell.mount({ page: "config", title: "Configuration" }).then(init);

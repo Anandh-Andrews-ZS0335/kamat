@@ -42,6 +42,15 @@ plain language, one member's journey, the honest results, and live checks of eac
 For operators open `/admin` or `/manager` (or `/demo`), press **Run Pipeline**, and watch the agents work (~10s).
 When it reaches *awaiting approval*, open the **Manager Console**.
 
+### The consoles
+
+`/manager`, `/report`, `/admin` and `/admin/config` share one application shell (`static/app.css`, `static/shell.js`):
+a left sidebar (Today, Daily reports, Runs & agents, Configuration, Guided tour, Bank API) with a badge for undecided
+recommendations, a top bar with the page title, business date, bank and LLM status and the configuration hash, and a
+user menu showing the signed-in account and role with a light/dark/system theme switch. The shell reads `/api/me`
+and hides what the role may not do: guests see no write actions, managers see no *Save* in the configuration editor.
+The client-facing pages (`/guide`, `/demo`) keep their own presentation layout and `console.css`.
+
 ### The manager's business day (`/manager`)
 
 The top of the Manager Console walks through the day, and nothing moves on its own:

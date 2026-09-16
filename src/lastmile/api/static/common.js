@@ -66,11 +66,13 @@ function kvHTML(obj) {
   return `<dl class="kv">${Object.entries(obj || {}).map(([k, v]) => `<dt>${esc(k.replace(/_/g, " "))}</dt><dd>${esc(fmt.value(v))}</dd>`).join("")}</dl>`;
 }
 
-// Signed-in user: a chip and Sign out button in the page header; the role is also set on <body> for styling.
+// Signed-in user. The consoles show this in the app shell; pages without a shell (the guided tour, the demo)
+// get a small floating chip so signing out is always reachable.
 const currentUser = fetch("/api/me").then((r) => r.ok ? r.json() : null).catch(() => null);
 currentUser.then((me) => {
   if (!me) return;
   document.body.dataset.role = me.role;
+  if (document.getElementById("userBtn")) return;               // the app shell renders the user menu itself
   const who = document.getElementById("dlgWho");
   if (who) who.value = me.username;
   const bar = document.querySelector("header.topbar, header.g-top");

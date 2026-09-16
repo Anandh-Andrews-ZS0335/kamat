@@ -27,9 +27,7 @@ async function selectRun(id) {
 async function loadWorklist() {
   M.data = await api(`/api/runs/${M.runId}/worklist`);
   const d = M.data, s = d.summary;
-  $("#reportLink").href = `/report?date=${encodeURIComponent(d.run.as_of_date || "")}`;
-  $("#runChips").innerHTML = `${statusPill(d.run.status)}<span class="chip">as of ${esc(d.run.as_of_date)}</span>
-    <span class="chip mono">${esc(d.run.model_run_id || "")}</span><span class="chip">LLM · ${esc(d.run.llm_mode || "")}</span>`;
+  $("#runSelect").title = `${d.run.run_id} · model ${d.run.model_run_id || "–"} · LLM ${d.run.llm_mode || "–"}`;
   const dec = s.decisions || {};
   const total = s.selected || 1;
   const bar = [["approved", "var(--good)"], ["edited", "var(--primary)"], ["rejected", "var(--bad)"]]
@@ -327,6 +325,10 @@ async function loadDay() {
   try { D.day = await api("/api/day"); }
   catch (e) { $("#dayPanel").innerHTML = `<div class="day-msg" style="padding-top:12px"><div class="callout bad">${esc(e.message)}</div></div>`; return; }
   renderDay();
+  if (D.day.business_date) {
+    Shell.setContext(`${niceDate(D.day.business_date)} · ${D.day.closed ? "day closed" : (D.day.run ? D.day.run.status.replace(/_/g, " ") : "no run yet")}`);
+    Shell.setPending(D.day.counts ? D.day.counts.pending : 0);
+  }
   const running = D.day.run && D.day.run.status === "running";
   if (running && !D.poll) D.poll = setInterval(pollRun, 1500);
 }
@@ -366,31 +368,31 @@ function renderDay() {
     msgs.push(`<div class="callout">${run.parent_run_id ? "Re-planning for the new team. The bank's data and the model are reused, so this takes seconds." :
       "The agents are pulling today's data, scoring every account and building a queue for each collector. This usually takes under a minute."}</div>`);
   } else if (t.source !== "saved" && !run) {
-    primary = `<button class="btn primary" id="dayTeam">Confirm today's team</button><button class="btn" id="dayStart">Start with this team</button>`;
+    primary = `<button class="btn primary needs-write" id="dayTeam">Confirm today's team</button><button class="btn needs-write" id="dayStart">Start with this team</button>`;
     msgs.push(`<div class="callout">Before the agents plan the day, check who is working. ${t.source === "carried_forward"
       ? `The team below is <b>carried forward</b> from ${esc(t.note ? t.note.replace("carried forward from ", "") : "the last saved day")}.`
       : `No team has been saved yet, so the <b>default team</b> from the configuration is shown.`}
       Each collector's queue is planned to fit their own shift.</div>`);
   } else if (!run) {
-    primary = `<button class="btn primary" id="dayStart">Start today's run</button>`;
+    primary = `<button class="btn primary needs-write" id="dayStart">Start today's run</button>`;
   } else if (d.team_changed_since_run) {
-    primary = `<button class="btn primary" id="dayReplan">Re-plan for the new team</button>`;
+    primary = `<button class="btn primary needs-write" id="dayReplan">Re-plan for the new team</button>`;
     msgs.push(`<div class="callout warn"><b>The team changed after this worklist was made.</b> Re-planning chooses members again for the new team
       and replaces the current worklist${c.items - c.pending > 0 ? ` — the <b>${c.items - c.pending}</b> decision(s) made so far will need to be made again` : ""}.
       It reuses today's data and model, so it takes seconds.</div>`);
   } else if (c.pending) {
     msgs.push(`<div class="callout">${c.pending} of ${c.items} recommendations still need a decision. Review them below, or open <b>Team queues</b> to work collector by collector.</div>`);
-    if (c.ready) primary = `<button class="btn primary" id="dayRelease">Release ${c.ready} approved</button>`;
+    if (c.ready) primary = `<button class="btn primary needs-write" id="dayRelease">Release ${c.ready} approved</button>`;
   } else if (c.ready) {
-    primary = `<button class="btn primary" id="dayRelease">Release ${c.ready} approved to the bank</button>`;
+    primary = `<button class="btn primary needs-write" id="dayRelease">Release ${c.ready} approved to the bank</button>`;
   } else {
-    primary = `<button class="btn primary" id="dayClose">Close the day</button>`;
+    primary = `<button class="btn primary needs-write" id="dayClose">Close the day</button>`;
     msgs.push(`<div class="callout good">Everything is decided${c.released ? ` and ${c.released} action(s) are with the bank` : ""}.
       Closing the day freezes today's report and moves the bank to the next business day.</div>`);
   }
   const secondary = [
-    !running && !d.closed && primary.indexOf("dayTeam") < 0 ? `<button class="btn" id="dayTeam2">Edit today's team</button>` : "",
-    !running && !d.closed && primary.indexOf("dayClose") < 0 && run ? `<button class="btn" id="dayClose2">Close the day</button>` : "",
+    !running && !d.closed && primary.indexOf("dayTeam") < 0 ? `<button class="btn needs-write" id="dayTeam2">Edit today's team</button>` : "",
+    !running && !d.closed && primary.indexOf("dayClose") < 0 && run ? `<button class="btn needs-write" id="dayClose2">Close the day</button>` : "",
     `<a class="btn" href="/report?date=${encodeURIComponent(d.business_date)}">Today's report</a>`,
   ].join("");
 
@@ -475,7 +477,7 @@ function renderTeam(savedInfo) {
         <span class="plan">${c.present ? fmt.int(c.shift_minutes * (1 - buf)) + " min" : "off"}</span>
         <button class="btn small" data-f="remove" title="Remove ${esc(c.name)}" aria-label="Remove ${esc(c.name)}">✕</button>
       </div>`; }).join("")}
-    <div style="margin:10px 0 14px"><button class="btn small" id="teamAdd">+ Add collector</button></div>
+    <div style="margin:10px 0 14px"><button class="btn small needs-write" id="teamAdd">+ Add collector</button></div>
     <div class="tiles">
       <div class="tile"><div class="k">Working today</div><div class="v">${working.length} of ${rows.length}</div></div>
       <div class="tile"><div class="k">Shift minutes</div><div class="v">${fmt.int(total)}</div><div class="s">${(total / 60).toFixed(1)} hours in total</div></div>
@@ -485,7 +487,7 @@ function renderTeam(savedInfo) {
     <div class="section-title">Note for the report <span class="muted">optional</span></div>
     <input class="input" id="teamNote" style="width:100%" placeholder="e.g. Lena on leave, Marcus leaves at 1pm" maxlength="300">
     <div style="display:flex;gap:8px;align-items:center;margin-top:12px">
-      <button class="btn primary" id="teamSave">Save today's team</button><span class="muted" id="teamMsg"></span></div>
+      <button class="btn primary needs-write" id="teamSave">Save today's team</button><span class="muted" id="teamMsg"></span></div>
     <div id="teamAfter" style="margin-top:12px">${savedInfo || ""}</div>
     ${D.teamHistory.length ? `<div class="section-title">Saved today</div>${tableHTML(D.teamHistory.map((h) => ({
       saved_at: fmt.time(h.saved_at).slice(0, 8), by: h.saved_by, working: h.collectors.filter((c) => c.present).length,
@@ -572,4 +574,11 @@ $("#release").onclick = async () => {
   catch (e) { toast(e.message, "bad"); }
 };
 
-loadDay().then(() => loadRuns(new URLSearchParams(location.search).get("run")));
+Shell.mount({ page: "manager", title: "Today" })
+  .then(() => {
+    if (Shell.user && Shell.user.role === "guest") {
+      $("#actionsNote").textContent = "Signed in as guest: you can read everything. Approving, releasing and closing the day need a manager account.";
+    }
+    return loadDay();
+  })
+  .then(() => loadRuns(new URLSearchParams(location.search).get("run")));

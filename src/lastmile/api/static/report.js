@@ -26,6 +26,7 @@ async function init() {
 async function load(date) {
   R.date = date;
   history.replaceState(null, "", `/report?date=${encodeURIComponent(date)}`);
+  Shell.setContext(longDate(date));
   $("#report").innerHTML = `<div class="empty">Loading…</div>`;
   try { render(await api(`/api/reports/${encodeURIComponent(date)}`)); }
   catch (e) { $("#report").innerHTML = `<div class="callout bad">${esc(e.message)}</div>`; }
@@ -134,4 +135,4 @@ document.addEventListener("click", (e) => {
 });
 $("#dateSelect").onchange = (e) => e.target.value && load(e.target.value);
 $("#printBtn").onclick = () => window.print();
-init();
+Shell.mount({ page: "report", title: "Daily report" }).then(init);
