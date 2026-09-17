@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Last Mile · Business KPIs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/static/app.css">
+<style>
+  :root{ --s1:#00809A; --s2:#C26F12; --grid:#E4EBEB; }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --s1:#2AA3B3; --s2:#C87F22; --grid:#223034; } }
+  :root[data-theme="dark"]{ --s1:#2AA3B3; --s2:#C87F22; --grid:#223034; }
+
+  .truth{display:flex;flex-wrap:wrap;gap:var(--s2) var(--s4);align-items:center;padding:var(--s3) var(--s4);margin-bottom:var(--s4)}
+  .truth span{font-size:12.5px;color:var(--ink-2)}
+  .kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:var(--s3);margin-bottom:var(--s5)}
+  .kcard{display:grid;gap:8px;align-content:start;padding:var(--s4);text-decoration:none;color:inherit}
+  .kcard:hover{border-color:var(--line-strong)}
+  .kcard .q{display:flex;gap:10px;align-items:baseline}
+  .kcard .n{font:700 11px/1 var(--mono);color:var(--ink-3);flex:none}
+  .kcard .q b{font-size:13.5px;line-height:1.35}
+  .kcard .big{font:600 26px/1.1 var(--mono);letter-spacing:-.02em}
+  .kcard .sub{font-size:12px;color:var(--ink-3);line-height:1.45}
+  .kcard .foot{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .sec{margin-top:var(--s5);scroll-margin-top:calc(var(--top-h) + 16px)}
+  .sec .panel-h h2{font-size:14px}
+  .explain{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--s3) var(--s5);font-size:12.5px;color:var(--ink-2)}
+  .explain b{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:2px}
+  .chart{position:relative}
+  .chart svg{display:block;width:100%;height:auto;overflow:visible}
+  .chart .axis{fill:var(--ink-3);font-size:11px;font-family:var(--mono)}
+  .chart .gridline{stroke:var(--grid);stroke-width:1}
+  .chart .base{stroke:var(--line-strong);stroke-width:1}
+  .chart .lbl{fill:var(--ink-2);font-size:11.5px;font-weight:600}
+  .chart .wait{fill:var(--surface-3)}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--ink-2);margin:0 0 8px}
+  .legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+  .tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r);
+    box-shadow:var(--sh-2);padding:7px 9px;font-size:12px;white-space:nowrap;z-index:5;display:none}
+  .tip b{display:block;font-family:var(--mono);font-size:11px;color:var(--ink-3);font-weight:500}
+  .tip .row{display:flex;align-items:center;gap:6px}
+  .tip i{width:8px;height:8px;border-radius:50%;display:inline-block}
+  details.tbl summary{cursor:pointer;font-size:12px;color:var(--ink-3);margin-top:8px}
+  .two{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(260px,1fr);gap:var(--s4);align-items:start}
+  @media (max-width:980px){.two{grid-template-columns:1fr}}
+  .finding{border-left:3px solid var(--warn);background:var(--warn-soft);padding:10px 13px;border-radius:0 var(--r) var(--r) 0;font-size:12.5px}
+</style>
+</head>
+<body>
+<div id="pageActions" hidden>
+  <label class="sr-only" for="windowSel">Period</label>
+  <select class="input" id="windowSel">
+    <option value="30">Last 30 business days</option>
+    <option value="60" selected>Last 60 business days</option>
+    <option value="120">Last 120 business days</option>
+  </select>
+</div>
+
+<main class="page">
+  <div class="page-head"><div>
+    <h2>Business KPIs</h2>
+    <p>Seven questions about collections, answered from what Last Mile and the bank recorded. Each one says how it is
+      measured, where the numbers come from, and how far they can be trusted.</p>
+  </div></div>
+  <section class="panel truth" id="truth"><span class="muted">Loading…</span></section>
+  <div class="kgrid" id="cards"></div>
+  <div id="details"></div>
+</main>
+
+<script src="/static/common.js"></script>
+<script src="/static/shell.js"></script>
+<script src="/static/kpis.js"></script>
+</body>
+</html>

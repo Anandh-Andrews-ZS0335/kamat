@@ -581,4 +581,8 @@ Shell.mount({ page: "manager", title: "Today" })
     }
     return loadDay();
   })
-  .then(() => loadRuns(new URLSearchParams(location.search).get("run")));
+  .then(() => loadRuns(new URLSearchParams(location.search).get("run")))
+  .then(() => {   // deep link from Business KPIs: open one customer's explanation
+    const account = new URLSearchParams(location.search).get("account");
+    if (account && M.runId) openAccount(account);
+  });

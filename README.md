@@ -68,6 +68,20 @@ The top of the Manager Console walks through the day, and nothing moves on its o
 
 A bank seeded before this existed cannot move day by day: run `make seed` once (and `make clean-runs` if old runs confuse you).
 
+### Business KPIs (`/kpis`)
+
+Seven questions for a business analyst, each with how it is measured, where the numbers come from and how far to
+trust it: money recovered per collector hour, accounts that caught up, contacts followed by a worse outcome (beside
+accounts not contacted), collector time used, contact-cap breaches (Last Mile's plans and the bank's actual log),
+customer impact, and a link from any released action to its explanation. Outcomes appear 30 days after an action;
+until then days show as waiting. There is no random holdout yet, so results are shown as observed, not caused.
+
+To see it with data on the simulated bank, operate some business days (run, approve, release, close):
+
+```bash
+uv run python scripts/simulate_days.py --days 35 --yes
+```
+
 ### Onboarding a new bank (`/admin/onboarding`)
 
 Banks run different predictive models - a scorecard sends grade letters, a logistic, random forest or gradient-boosted

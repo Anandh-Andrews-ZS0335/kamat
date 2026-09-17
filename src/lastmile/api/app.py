@@ -24,7 +24,7 @@ from lastmile.agents import crew, provenance
 from lastmile.agents.llm.factory import get_llm
 from lastmile.agents.tools import build_registry
 from lastmile.agents.trace import Tracer
-from lastmile.api import auth, config_editor, daily, onboarding, services
+from lastmile.api import auth, config_editor, daily, kpis, onboarding, services
 from lastmile.config.resolve import resolve
 from lastmile.config.settings import ROOT
 from lastmile.governance import approvals, audit, policy, release
@@ -66,6 +66,7 @@ app.include_router(auth.router)
 app.include_router(daily.router)
 app.include_router(config_editor.router)
 app.include_router(onboarding.router)
+app.include_router(kpis.router)
 db.init()
 
 
@@ -99,6 +100,11 @@ def manager_page():
 @app.get("/report", include_in_schema=False)
 def report_page():
     return page("report.html")
+
+
+@app.get("/kpis", include_in_schema=False)
+def kpis_page():
+    return page("kpis.html")
 
 
 @app.get("/admin/onboarding", include_in_schema=False)

@@ -9,6 +9,7 @@ const ICONS = {
   agents: '<svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="2"/><path d="M12 8V5M9 3h6M8.5 13h.01M15.5 13h.01M9 16.5h6"/></svg>',
   config: '<svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h6M14 17h6M4 12h2M10 12h10"/><circle cx="16" cy="7" r="2"/><circle cx="12" cy="17" r="2"/><circle cx="8" cy="12" r="2"/></svg>',
   guide: '<svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5A2.5 2.5 0 0 1 4 20.5z"/></svg>',
+  kpi: '<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
   plug: '<svg viewBox="0 0 24 24"><path d="M9 2v6M15 2v6M6 8h12v4a6 6 0 0 1-12 0zM12 18v4"/></svg>',
   demo: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
   bank: '<svg viewBox="0 0 24 24"><path d="M3 10 12 4l9 6M5 10v9M19 10v9M9 10v9M15 10v9M3 21h18"/></svg>',
@@ -22,6 +23,7 @@ const NAV = [
   { group: "Operate", items: [
     { id: "manager", href: "/manager", label: "Today", icon: "today", title: "Business day, worklist and approvals" },
     { id: "report", href: "/report", label: "Daily reports", icon: "report", title: "One page per business day" },
+    { id: "kpis", href: "/kpis", label: "Business KPIs", icon: "kpi", title: "Recovery, cures, customer impact and contact rules over time" },
   ]},
   { group: "Build", items: [
     { id: "admin", href: "/admin", label: "Runs & agents", icon: "agents", title: "Every stage, agent and tool call" },
