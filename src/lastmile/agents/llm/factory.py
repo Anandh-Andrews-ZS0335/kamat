@@ -13,4 +13,7 @@ def get_llm() -> tuple[LLMClient | None, str]:
         return GeminiClient(s["gemini_api_key"], s["gemini_model"], s["timeout_s"]), f"gemini:{s['gemini_model']}"
     if s["provider"] == "gemini":
         return None, "template (GEMINI_API_KEY not set)"
+    if s["provider"] == "ollama":
+        from lastmile.agents.llm.ollama import OllamaClient
+        return OllamaClient(s["ollama_base_url"], s["ollama_model"], s["timeout_s"]), f"ollama:{s['ollama_model']}"
     return None, f"template (provider '{s['provider']}' not implemented)"

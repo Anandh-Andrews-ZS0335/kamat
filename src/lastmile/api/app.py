@@ -87,6 +87,12 @@ def guide_page():
     return page("guide.html")
 
 
+@app.get("/presentation", include_in_schema=False)
+def presentation_page():
+    """A concise, client-facing introduction to the collections decision."""
+    return page("risk-score-presentation.html")
+
+
 @app.get("/admin", include_in_schema=False)
 def admin_page():
     return page("admin.html")

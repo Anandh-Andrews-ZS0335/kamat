@@ -1,0 +1,5 @@
+# Run Config for Harbor Community Bank (onboarded 2026-09-17).
+run:
+  scenario: collections_delinquency
+  institution: harbor_community_bank
+  as_of: null

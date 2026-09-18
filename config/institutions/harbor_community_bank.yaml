@@ -1,0 +1,233 @@
+# Institution Pack for Harbor Community Bank.
+# Proposed by the Onboarding Agent (session onb_20260917T142042_064d), approved by admin on 2026-09-17T14:24:29.729+00:00.
+# Data mapping and risk-score reading came from the bank's API. Business rules (LGD table, capacity,
+# contact policy, eligibility, escalation, reason codes) were copied from the reference institution:
+# confirm them with the bank before live use.
+institution:
+  id: harbor_community_bank
+  name: Harbor Community Bank
+  type: bank
+  customer_noun: customer
+  currency: USD
+source:
+  base_url_env: HARBOR_COMMUNITY_BANK_API_URL
+  default_base_url: http://127.0.0.1:8002
+  page_size: 5000
+  feeds:
+    scores: /v2/risk/pd-scores
+    accounts: /v2/lending/loans
+    members: /v2/crm/customers
+    consents: /v2/crm/contact-permissions
+    queue_history: /v2/collections/worklog
+    outcomes: /v2/collections/results
+  release_endpoint: /v2/collections/instructions
+  health_endpoint: /v2/status
+  catalogue_endpoint: /v2/catalogue
+  simulation_endpoint: /v2/sim/close-business-day
+field_map:
+  scores:
+    account_id: acct_ref
+    risk_grade: pd_180d
+    score_date: scored_on
+    model_version: model_id
+    pd_horizon_days: horizon_days
+  accounts:
+    account_id: acct_ref
+    member_id: cust_ref
+    product: product_type
+    secured: is_secured
+    orig_amt: original_amount
+    curr_bal: outstanding
+    dpd: days_overdue
+    min_payment: min_due
+    status: loan_state
+    litigation: in_litigation
+    fraud_hold: fraud_flag
+    hardship_active: hardship_now
+    hardship_plans_12m: hardship_count_12m
+    ptp_kept_rate_12m: promise_kept_ratio
+    complaints_12m: complaints_last_year
+    pmts_missed_12m: missed_payments_12m
+    mos_since_last_pmt: months_since_payment
+  members:
+    member_id: cust_ref
+    first_name: given_name
+    last_name: family_name
+    phone: mobile_no
+    email: email_address
+    language: preferred_language
+    tenure_mos: months_as_customer
+    direct_deposit: salary_credited
+    deceased: deceased_flag
+    bankruptcy: bankruptcy_flag
+    cease_desist: cease_contact_flag
+  consents:
+    member_id: cust_ref
+    phone_consent: may_call
+    sms_consent: may_text
+    email_consent: may_email
+    dnc: do_not_call
+    contacts_7d: contacts_last_7d
+    last_rpc_date: last_reached_on
+  queue_history:
+    queue_date: worked_on
+    account_id: acct_ref
+    member_id: cust_ref
+    dpd_at_t: days_overdue_then
+    balance_at_t: balance_then
+    risk_grade_at_t: pd_180d_then
+    pmts_missed_12m_at_t: missed_payments_then
+    mos_since_last_pmt_at_t: months_since_payment_then
+    action: treatment
+    rpc: reached_customer
+  outcomes:
+    account_id: acct_ref
+    queue_date: worked_on
+    cured_30d: recovered_within_30d
+    amt_paid_30d: paid_within_30d
+pii_fields:
+- email
+- first_name
+- last_name
+- phone
+pd_calibration:
+  input_type: probability
+  band_to_pd: {}
+  source_horizon_days: 180
+  horizon_method: constant_hazard
+lgd_table:
+  default: 0.65
+  rows:
+  - product: AUTO
+    secured: 1
+    dpd_min: 0
+    dpd_max: 89
+    lgd: 0.32
+  - product: AUTO
+    secured: 1
+    dpd_min: 90
+    dpd_max: 9999
+    lgd: 0.45
+  - product: PERS
+    secured: 0
+    dpd_min: 0
+    dpd_max: 89
+    lgd: 0.68
+  - product: PERS
+    secured: 0
+    dpd_min: 90
+    dpd_max: 9999
+    lgd: 0.8
+  - product: CARD
+    secured: 0
+    dpd_min: 0
+    dpd_max: 89
+    lgd: 0.74
+  - product: CARD
+    secured: 0
+    dpd_min: 90
+    dpd_max: 9999
+    lgd: 0.85
+capacity:
+  agents: 5
+  minutes_per_agent: 360
+  sms_per_day_max: 400
+  hardship_slots_per_day: 20
+  planning_buffer: 0.1
+contact_policy:
+  max_attempts_per_7d: 7
+  max_contacts_per_member_per_day: 1
+suppression:
+- deceased
+- bankruptcy
+- cease_desist
+- litigation
+- fraud_hold
+- dnc
+eligibility:
+  sms_consent:
+    all:
+    - field: sms_consent
+      op: eq
+      value: 1
+    any: []
+  phone_consent:
+    all:
+    - field: phone_consent
+      op: eq
+      value: 1
+    any: []
+  plan_eligible:
+    all:
+    - field: dpd
+      op: gte
+      value: 30
+    - field: hardship_active
+      op: eq
+      value: 0
+    any: []
+  hardship_eligible:
+    all:
+    - field: dpd
+      op: gte
+      value: 60
+    - field: dpd
+      op: lte
+      value: 150
+    - field: hardship_active
+      op: eq
+      value: 0
+    - field: hardship_plans_12m
+      op: lt
+      value: 2
+    - field: product
+      op: in
+      value:
+      - AUTO
+      - PERS
+      - CARD
+    any: []
+data_quality:
+  max_score_age_days: 2
+  max_null_fraction: 0.02
+  min_rows:
+    scores: 100
+    accounts: 100
+    queue_history: 1000
+  required_fields:
+    scores:
+    - account_id
+    - risk_grade
+    - score_date
+    accounts:
+    - account_id
+    - member_id
+    - product
+    - curr_bal
+    - dpd
+    - status
+    members:
+    - member_id
+    - deceased
+    - bankruptcy
+    - cease_desist
+    consents:
+    - member_id
+    - phone_consent
+    - sms_consent
+    - dnc
+  valid_grades: []
+escalation:
+  exposure_threshold: 30000.0
+  max_interval_width: 0.3
+  escalate_actions:
+  - HARDSHIP
+approval:
+  reason_codes:
+  - ALREADY_CONTACTED
+  - IN_HARDSHIP
+  - WRONG_ACTION
+  - NEVER_RESPONDS
+  - TONE
+  - PREFER_OTHER_ACCOUNT
+  - OTHER

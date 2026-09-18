@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Last Mile | From risk to the right action</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:opsz,wght@5..1200,600;5..1200,700&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#10221f;--muted:#5c6d68;--paper:#f6f3eb;--mint:#dff1e7;--green:#176b4d;--deep:#0c382b;--lime:#c8e764;--coral:#e47859;--line:#cbd6ce;--white:#fffefa}
+  *{box-sizing:border-box} html,body{margin:0;min-height:100%;background:#e8e5dc;color:var(--ink);font-family:Manrope,Arial,sans-serif}
+  .deck{width:min(1400px,100vw);margin:0 auto;background:var(--paper);box-shadow:0 15px 50px rgba(12,56,43,.2);overflow:hidden}
+  .top{height:56px;padding:0 5.3%;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(16,34,31,.12);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:800}
+  .brand{color:var(--green)} .counter{font-family:"DM Mono",monospace;letter-spacing:0}
+  .slides{position:relative;min-height:min(720px,calc(100vh - 56px));}
+  .slide{display:none;min-height:min(720px,calc(100vh - 56px));padding:clamp(38px,5vw,76px) 8%;position:relative;overflow:hidden}
+  .slide.active{display:block;animation:in .35s ease-out}@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .eyebrow{margin:0 0 15px;color:var(--green);font-size:13px;letter-spacing:.14em;text-transform:uppercase;font-weight:800}
+  h1,h2,h3,p{margin-top:0}h1,h2{font-family:"Playfair Display",Georgia,serif;letter-spacing:-.04em;font-weight:600}h1{font-size:clamp(45px,6.3vw,88px);line-height:.98;max-width:10.8ch;margin-bottom:26px}h2{font-size:clamp(35px,4.3vw,60px);line-height:1.04;max-width:15ch;margin-bottom:22px}h3{font-size:18px;line-height:1.3;margin-bottom:8px}.lead{font-size:clamp(18px,2vw,25px);line-height:1.5;max-width:50ch;color:#40554e}.small{font-size:14px;line-height:1.55;color:var(--muted)}
+  .cover{background:var(--deep);color:var(--white);display:grid;align-content:center}.cover:after{content:"";position:absolute;width:47vw;height:47vw;border-radius:50%;right:-18vw;top:-12vw;background:var(--lime);opacity:.96}.cover:before{content:"01";position:absolute;right:9%;bottom:8%;z-index:1;color:var(--mint);font:500 clamp(100px,20vw,280px)/1 "DM Mono",monospace;opacity:.14}.cover .eyebrow{color:var(--lime)}.cover .lead{color:#c8d8d0;position:relative;z-index:1}.cover h1{position:relative;z-index:1}.cover .tag{position:relative;z-index:1;margin-top:24px;color:var(--lime);font-weight:700}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:clamp(32px,7vw,100px);align-items:center}.question{font:700 clamp(21px,2.4vw,32px)/1.25 Manrope,Arial,sans-serif;max-width:16ch}.answer{border-left:5px solid var(--lime);padding:24px 0 24px 26px;font:600 clamp(24px,3vw,43px)/1.18 "Playfair Display",Georgia,serif;color:var(--deep)}
+  .case{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;margin-top:26px}.person{padding:26px;background:var(--white);border:1px solid var(--line);border-top:7px solid var(--coral)}.person.good{border-top-color:var(--green)}.score{font:500 43px/1 "DM Mono",monospace;color:var(--coral);margin-bottom:18px}.good .score{color:var(--green)}.person p{font-size:16px;line-height:1.48;color:#4d615b;margin:0}.same{align-self:center;font:600 19px/1.4 Manrope,Arial,sans-serif;color:var(--green);text-align:center}
+  .risk{background:var(--mint)}.risk h2{max-width:11ch}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:36px}.tile{background:var(--white);padding:27px 22px;min-height:196px}.tile .n{font:500 17px "DM Mono",monospace;color:var(--green);display:block;margin-bottom:28px}.tile h3{font-size:18px}.tile p{font-size:14px;color:var(--muted);line-height:1.48;margin-bottom:0}
+  .formula{background:var(--deep);color:var(--white);display:grid;align-content:center}.formula h2{max-width:13ch}.formula .eyebrow{color:var(--lime)}.formula .lead{color:#cfddd6}.equation{font:600 clamp(28px,4vw,55px)/1.3 "Playfair Display",Georgia,serif;color:var(--lime);margin:28px 0}.equation span{color:var(--white)}.formula .footnote{font:13px/1.5 "DM Mono",monospace;color:#b5c9c0;max-width:75ch}
+  .guardrails{background:#f0ede4}.rules{display:grid;grid-template-columns:1.15fr 1fr;gap:2px;margin-top:30px;background:var(--line)}.rule{background:var(--white);padding:23px 27px;display:grid;grid-template-columns:35px 1fr;gap:15px}.icon{width:30px;height:30px;border-radius:50%;background:var(--lime);display:grid;place-items:center;color:var(--deep);font-weight:800}.rule p{font-size:14px;line-height:1.45;color:var(--muted);margin:4px 0 0}
+  .close{background:var(--green);color:var(--white);display:grid;align-content:center}.close h2{max-width:14ch}.close .eyebrow{color:var(--lime)}.close .lead{color:#d5e2dc}.sequence{display:flex;gap:0;margin-top:35px;max-width:1050px}.step{flex:1;border-top:2px solid rgba(255,255,255,.3);padding:16px 18px 0 0;margin-right:18px}.step b{display:block;color:var(--lime);font:500 14px "DM Mono",monospace;margin-bottom:10px}.step span{font-size:15px;line-height:1.35;color:#e1ebe6}
+  .controls{position:absolute;right:5.3%;bottom:28px;display:flex;gap:9px}.controls button{border:1px solid rgba(16,34,31,.2);background:var(--white);color:var(--ink);width:42px;height:42px;border-radius:50%;font-size:21px;cursor:pointer}.controls button:hover{background:var(--lime)}.formula .controls button,.close .controls button,.cover .controls button{border-color:rgba(255,255,255,.3);background:transparent;color:var(--white)}
+  @media(max-width:760px){.slides,.slide{min-height:calc(100vh - 56px)}.slide{padding:42px 7% 82px}.split,.rules{grid-template-columns:1fr}.case,.grid4{grid-template-columns:1fr 1fr}.same{display:none}.tile{min-height:160px;padding:20px 16px}.tile .n{margin-bottom:16px}.sequence{display:grid;grid-template-columns:1fr 1fr;gap:12px}.step{margin:0}.cover:after{width:70vw;height:70vw;right:-32vw;top:-9vw}}
+  @media(max-width:460px){.case,.grid4{grid-template-columns:1fr}.slide{overflow:auto}.slides,.slide{min-height:calc(100vh - 56px)}}
+</style>
+</head>
+<body>
+<main class="deck" aria-label="Last Mile presentation">
+  <header class="top"><span class="brand">Last Mile · Collections intelligence</span><span class="counter" id="counter">01 / 06</span></header>
+  <div class="slides">
+    <section class="slide cover active">
+      <p class="eyebrow">Collections decisioning</p>
+      <h1>Risk tells us who may miss a payment.</h1>
+      <p class="lead">A collections team still needs to decide who to contact today, which action to use, and whether that contact will actually help.</p>
+      <p class="tag">From prediction to a responsible action</p>
+    </section>
+    <section class="slide">
+      <p class="eyebrow">The gap in a risk-only queue</p>
+      <div class="split">
+        <div><h2>One score cannot make a complete decision</h2><p class="question">A risk model asks: “Who is likely to default?”</p></div>
+        <div class="answer">A collections manager needs: “Which action has the best chance of improving this member’s outcome, within today’s limits?”</div>
+      </div>
+      <div class="case">
+        <article class="person"><div class="score">High risk</div><h3>Member A</h3><p>Will catch up without intervention. A collector call consumes scarce time without changing the outcome.</p></article>
+        <div class="same">Same risk rating.<br>Different decision.</div>
+        <article class="person good"><div class="score">High risk</div><h3>Member B</h3><p>Can keep a payment plan if contacted today. The right conversation can prevent an avoidable loss.</p></article>
+      </div>
+    </section>
+    <section class="slide risk">
+      <p class="eyebrow">What a prescription considers</p>
+      <h2>The decision combines risk with the conditions around an action</h2>
+      <div class="grid4">
+        <article class="tile"><span class="n">01</span><h3>Expected loss</h3><p>Exposure, probability of default and loss given default show what is at stake.</p></article>
+        <article class="tile"><span class="n">02</span><h3>Incremental impact</h3><p>Uplift estimates whether a specific action changes the likelihood of cure compared with no action.</p></article>
+        <article class="tile"><span class="n">03</span><h3>Action fit</h3><p>Recent payment history, delinquency, prior contacts and response patterns help select SMS, call, plan or hardship support.</p></article>
+        <article class="tile"><span class="n">04</span><h3>Member context</h3><p>Consent, contact preference, payment-plan eligibility and vulnerability signals determine what may be appropriate.</p></article>
+      </div>
+    </section>
+    <section class="slide formula">
+      <p class="eyebrow">The economic decision</p>
+      <h2>Each eligible option gets a value estimate</h2>
+      <p class="equation">Action value <span>=</span> uplift × expected loss <span>−</span> action cost</p>
+      <p class="lead">The planner compares actions for each account. It favours the action expected to make the most meaningful difference, rather than simply contacting the highest-risk account first.</p>
+      <p class="footnote">Expected loss = 12-month PD × exposure × LGD. Uplift uses observed historical outcomes after 30 days.</p>
+    </section>
+    <section class="slide guardrails">
+      <p class="eyebrow">Constraints are part of the decision</p>
+      <h2>A useful recommendation must also be permissible and deliverable</h2>
+      <div class="rules">
+        <article class="rule"><span class="icon">✓</span><div><h3>Consent and suppression</h3><p>SMS and calls require the relevant consent. Do-not-contact, deceased, bankruptcy, litigation and fraud-hold records stay out of the queue.</p></div></article>
+        <article class="rule"><span class="icon">✓</span><div><h3>Contact policy</h3><p>Each member receives at most one contact per day, with a seven-attempt limit in the current policy.</p></div></article>
+        <article class="rule"><span class="icon">✓</span><div><h3>Collector capacity</h3><p>The optimiser allocates available shift minutes across collectors. It cannot create more calls than the team can handle.</p></div></article>
+        <article class="rule"><span class="icon">✓</span><div><h3>Human approval</h3><p>A manager can approve, edit or reject every recommendation before any action reaches the bank.</p></div></article>
+      </div>
+    </section>
+    <section class="slide close">
+      <p class="eyebrow">The collection decision</p>
+      <h2>A risk score starts the conversation. It does not finish it.</h2>
+      <p class="lead">Last Mile turns portfolio risk into a prioritised, actionable and governed worklist for the collection team.</p>
+      <div class="sequence"><div class="step"><b>01</b><span>Identify accounts at risk</span></div><div class="step"><b>02</b><span>Estimate the effect of each action</span></div><div class="step"><b>03</b><span>Apply policy, eligibility and capacity limits</span></div><div class="step"><b>04</b><span>Let a manager decide what to release</span></div></div>
+    </section>
+    <nav class="controls" aria-label="Slide navigation"><button id="prev" aria-label="Previous slide">←</button><button id="next" aria-label="Next slide">→</button></nav>
+  </div>
+</main>
+<script>
+  const slides=[...document.querySelectorAll('.slide')],counter=document.querySelector('#counter');let current=0;
+  function show(index){current=(index+slides.length)%slides.length;slides.forEach((slide,i)=>slide.classList.toggle('active',i===current));counter.textContent=`${String(current+1).padStart(2,'0')} / ${String(slides.length).padStart(2,'0')}`}
+  document.querySelector('#prev').onclick=()=>show(current-1);document.querySelector('#next').onclick=()=>show(current+1);
+  document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='PageDown')show(current+1);if(e.key==='ArrowLeft'||e.key==='PageUp')show(current-1)});
+</script>
+</body>
+</html>

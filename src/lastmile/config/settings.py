@@ -24,5 +24,7 @@ def llm_settings() -> dict:
         "provider": os.environ.get("LLM_PROVIDER", "gemini").lower(),
         "gemini_api_key": os.environ.get("GEMINI_API_KEY", ""),
         "gemini_model": os.environ.get("GEMINI_MODEL", "gemini-2.5-flash"),
+        "ollama_base_url": os.environ.get("OLLAMA_BASE_URL", os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")),
+        "ollama_model": os.environ.get("OLLAMA_MODEL", "llama3.2"),
         "timeout_s": float(os.environ.get("LLM_TIMEOUT_S", "45")),
     }
