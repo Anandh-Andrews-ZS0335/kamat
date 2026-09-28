@@ -1,0 +1,257 @@
+
+<!-- saved from url=(0164)file:///private/tmp/claude-1898557507/-Users-anandh-andrews-zuci-workspace-Hackfest-2026/2683fae6-5f2b-4999-a7bd-5a974aea7f26/scratchpad/last-mile-architecture.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Last Mile Solution Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link rel="stylesheet" href="./Last Mile Solution Architecture_files/css2">
+<style>
+:root{
+  --ground:#EEF3F3; --surface:#FFFFFF; --surface-2:#F5F8F8; --ink:#10252A; --ink-2:#42575A; --ink-3:#6A7D7F; --line:#C9D6D6;
+  --teal:#11606B; --teal-soft:#DDEDEF; --violet:#6A4DA3; --violet-soft:#ECE6F6; --amber:#8A5E14; --amber-soft:#F5EBD8;
+  --sans:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0C1315; --surface:#131C1F; --surface-2:#172226; --ink:#E4EDED; --ink-2:#AFC0C1; --ink-3:#7F9395; --line:#2C3D41;
+  --teal:#6CC0C9; --teal-soft:#10333A; --violet:#B89EE6; --violet-soft:#241C35; --amber:#D9A758; --amber-soft:#2C2416;
+}}
+:root[data-theme="dark"]{
+  --ground:#0C1315; --surface:#131C1F; --surface-2:#172226; --ink:#E4EDED; --ink-2:#AFC0C1; --ink-3:#7F9395; --line:#2C3D41;
+  --teal:#6CC0C9; --teal-soft:#10333A; --violet:#B89EE6; --violet-soft:#241C35; --amber:#D9A758; --amber-soft:#2C2416;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.6 var(--sans);padding-inline:20px;padding-block:32px 64px}
+.wrap{max-width:1460px;margin:0 auto;display:grid;gap:28px}
+header{display:grid;gap:8px;max-width:78ch}
+.kicker{font:500 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+h1{margin:0;font-size:clamp(26px,3.4vw,36px);letter-spacing:-.015em;line-height:1.15;text-wrap:balance}
+h2{margin:0 0 10px;font-size:18px;letter-spacing:-.005em}
+p{margin:0}
+.lede{color:var(--ink-2)}
+figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;overflow-x:auto}
+figure svg{display:block;width:100%;min-width:1100px;height:auto;font-family:var(--sans)}
+figcaption{margin-top:10px;font-size:13.5px;color:var(--ink-3);max-width:100ch}
+
+/* svg classes */
+.box{fill:var(--surface);stroke:var(--line);stroke-width:1.2}
+.zone{fill:var(--surface-2);stroke:var(--line);stroke-width:1.2}
+.gate{fill:var(--amber-soft);stroke:var(--amber);stroke-width:1.2}
+.api{fill:var(--surface-2);stroke:var(--ink-3);stroke-width:1.2}
+.agent{fill:var(--teal-soft);stroke:var(--teal);stroke-width:1.4}
+.bank{fill:var(--surface);stroke:var(--ink-2);stroke-width:1.4}
+.llm{fill:var(--violet-soft);stroke:var(--violet);stroke-width:1.6}
+.store{fill:var(--surface);stroke:var(--ink-3);stroke-width:1.2}
+.tool{fill:var(--surface);stroke:var(--line);stroke-width:1.2}
+.t{fill:var(--ink);font-size:13px;font-weight:600}
+.s{fill:var(--ink-3);font-size:11px}
+.m{fill:var(--ink-3);font-size:10.5px;font-family:var(--mono)}
+.lbl{fill:var(--ink-3);font-size:10.5px;font-weight:700;letter-spacing:.12em}
+.lbl-teal{fill:var(--teal)} .lbl-violet{fill:var(--violet)} .lbl-amber{fill:var(--amber)}
+.edge{stroke:var(--ink-2);stroke-width:1.4;fill:none}
+.edge-llm{stroke:var(--violet);stroke-width:1.8;fill:none}
+.sep{stroke:var(--ink-3);stroke-width:1;stroke-dasharray:4 4;fill:none}
+.head{fill:var(--ink-2)} .head-llm{fill:var(--violet)}
+.el{fill:var(--ink-2);font-size:11px}
+.el-llm{fill:var(--violet);font-size:11px;font-weight:600}
+
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px}
+.card ol,.card ul{margin:0;padding-left:20px;display:grid;gap:6px;font-size:14px}
+.card li b{font-weight:600}
+code{font-family:var(--mono);font-size:.88em}
+.tag{display:inline-block;font:600 11px/1.6 var(--mono);padding:0 6px;border-radius:4px}
+.tag.ai{background:var(--violet-soft);color:var(--violet)}
+</style>
+
+</head><body><div class="wrap">
+<header>
+  <span class="kicker">Hackfest'26 · Tech track · Solution architecture</span>
+  <h1>Last Mile: from a bank's risk prediction to an approved collections action</h1>
+  <p class="lede">Banks send data over their own APIs. Eight agents run a fixed daily pipeline on top of deterministic
+    maths, a person approves every action, and an LLM is used in exactly two places — never for a number, never with customer data.</p>
+</header>
+
+<figure>
+<svg viewBox="0 0 1440 850" role="img" aria-label="Solution architecture: users sign in through a gate to six consoles on the engine API; the Supervisor runs eight agents in order, pulling feeds from bank APIs, calling deterministic tools and writing to four stores; the LLM is reached only by the Explanation and Onboarding agents; approved actions return to the bank.">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="head"></path>
+    </marker>
+    <marker id="arr-llm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="head-llm"></path>
+    </marker>
+  </defs>
+
+  <!-- people -->
+  <rect class="box" x="268" y="16" width="200" height="52" rx="7"></rect>
+  <text class="t" x="368" y="38" text-anchor="middle">Collections manager</text>
+  <text class="s" x="368" y="55" text-anchor="middle">team · approve · release · close day</text>
+  <rect class="box" x="494" y="16" width="200" height="52" rx="7"></rect>
+  <text class="t" x="594" y="38" text-anchor="middle">Admin</text>
+  <text class="s" x="594" y="55" text-anchor="middle">runs · configuration · onboarding</text>
+  <rect class="box" x="720" y="16" width="200" height="52" rx="7"></rect>
+  <text class="t" x="820" y="38" text-anchor="middle">Guest</text>
+  <text class="s" x="820" y="55" text-anchor="middle">read-only</text>
+  <rect class="box" x="946" y="16" width="200" height="52" rx="7"></rect>
+  <text class="t" x="1046" y="38" text-anchor="middle">Client / judges</text>
+  <text class="s" x="1046" y="55" text-anchor="middle">guided tour · demo</text>
+  <path class="edge" d="M368,68 V84 M594,68 V84 M820,68 V84 M1046,68 V84 M368,84 H1046"></path>
+  <path class="edge" d="M708,84 V122" marker-end="url(#arr)"></path>
+  <text class="el" x="716" y="106">HTTPS</text>
+
+  <!-- engine container -->
+  <rect class="zone" x="248" y="96" width="920" height="724" rx="12"></rect>
+  <text class="lbl" x="268" y="114">LAST MILE ENGINE · FastAPI :8000</text>
+
+  <!-- gate -->
+  <rect class="gate" x="268" y="124" width="880" height="36" rx="6"></rect>
+  <text class="t" x="708" y="147" text-anchor="middle">Sign-in gate · roles admin / manager / guest · checked on every page and API call</text>
+
+  <!-- consoles -->
+  <text class="lbl" x="268" y="176">CONSOLES</text>
+  <g>
+    <rect class="box" x="268" y="182" width="130" height="58" rx="7"></rect><text class="t" x="333" y="206" text-anchor="middle">Today</text><text class="s" x="333" y="224" text-anchor="middle">worklist · queues</text>
+    <rect class="box" x="418" y="182" width="130" height="58" rx="7"></rect><text class="t" x="483" y="206" text-anchor="middle">Daily reports</text><text class="s" x="483" y="224" text-anchor="middle">frozen per day</text>
+    <rect class="box" x="568" y="182" width="130" height="58" rx="7"></rect><text class="t" x="633" y="206" text-anchor="middle">Runs &amp; agents</text><text class="s" x="633" y="224" text-anchor="middle">trace · LLM calls</text>
+    <rect class="box" x="718" y="182" width="130" height="58" rx="7"></rect><text class="t" x="783" y="206" text-anchor="middle">Configuration</text><text class="s" x="783" y="224" text-anchor="middle">YAML, checked</text>
+    <rect class="box" x="868" y="182" width="130" height="58" rx="7"></rect><text class="t" x="933" y="206" text-anchor="middle">Onboard a bank</text><text class="s" x="933" y="224" text-anchor="middle">review proposal</text>
+    <rect class="box" x="1018" y="182" width="130" height="58" rx="7"></rect><text class="t" x="1083" y="206" text-anchor="middle">Guide &amp; demo</text><text class="s" x="1083" y="224" text-anchor="middle">client view</text>
+  </g>
+
+  <!-- api -->
+  <rect class="api" x="268" y="256" width="880" height="34" rx="6"></rect>
+  <text class="t" x="708" y="278" text-anchor="middle">Engine API · runs · day &amp; roster · approvals · release · reports · config · onboarding</text>
+  <path class="edge" d="M316,290 V328" marker-end="url(#arr)"></path>
+  <text class="el" x="324" y="314">start run</text>
+
+  <!-- agents -->
+  <text class="lbl lbl-teal" x="1148" y="318" text-anchor="end">AGENTS · FIXED DAILY PIPELINE</text>
+  <g>
+    <rect class="agent" x="268" y="330" width="96" height="66" rx="7"></rect><text class="t" x="316" y="358" text-anchor="middle">Supervisor</text><text class="s" x="316" y="376" text-anchor="middle">orders stages</text>
+    <rect class="agent" x="380" y="330" width="96" height="66" rx="7"></rect><text class="t" x="428" y="358" text-anchor="middle">Ingestion</text><text class="s" x="428" y="376" text-anchor="middle">pull 6 feeds</text>
+    <rect class="agent" x="492" y="330" width="96" height="66" rx="7"></rect><text class="t" x="540" y="358" text-anchor="middle">Configuration</text><text class="s" x="540" y="376" text-anchor="middle">rules · roster</text>
+    <rect class="agent" x="604" y="330" width="96" height="66" rx="7"></rect><text class="t" x="652" y="358" text-anchor="middle">Data Steward</text><text class="s" x="652" y="376" text-anchor="middle">gates · tokens</text>
+    <rect class="agent" x="716" y="330" width="96" height="66" rx="7"></rect><text class="t" x="764" y="358" text-anchor="middle">Feature</text><text class="s" x="764" y="376" text-anchor="middle">PD · features</text>
+    <rect class="agent" x="828" y="330" width="96" height="66" rx="7"></rect><text class="t" x="876" y="358" text-anchor="middle">Decision</text><text class="s" x="876" y="376" text-anchor="middle">model · optimise</text>
+    <rect class="agent" x="940" y="330" width="96" height="66" rx="7"></rect><text class="t" x="988" y="358" text-anchor="middle">Policy</text><text class="s" x="988" y="376" text-anchor="middle">verify · audit</text>
+    <rect class="agent" x="1052" y="330" width="96" height="66" rx="7"></rect><text class="t" x="1100" y="358" text-anchor="middle">Explanation</text><text class="s" x="1100" y="376" text-anchor="middle">reasons</text>
+  </g>
+  <path class="edge" d="M364,363 H378" marker-end="url(#arr)"></path>
+  <path class="edge" d="M476,363 H490" marker-end="url(#arr)"></path>
+  <path class="edge" d="M588,363 H602" marker-end="url(#arr)"></path>
+  <path class="edge" d="M700,363 H714" marker-end="url(#arr)"></path>
+  <path class="edge" d="M812,363 H826" marker-end="url(#arr)"></path>
+  <path class="edge" d="M924,356 H938" marker-end="url(#arr)"></path>
+  <path class="edge" d="M940,372 H926" marker-end="url(#arr)"></path>
+  <path class="edge" d="M1036,363 H1050" marker-end="url(#arr)"></path>
+  <!-- publish loop -->
+  <path class="edge" d="M1100,396 V416 H316 V398" marker-end="url(#arr)"></path>
+  <text class="el" x="1148" y="432" text-anchor="end">publish worklist → Today console, a person approves every action</text>
+
+  <!-- onboarding agent -->
+  <rect class="agent" x="268" y="440" width="300" height="52" rx="7"></rect>
+  <text class="t" x="418" y="462" text-anchor="middle">Onboarding Agent · once per new bank</text>
+  <text class="s" x="418" y="480" text-anchor="middle">read API → map → check → admin approves a new pack</text>
+
+  <!-- tools separator -->
+  <path class="sep" d="M268,508 H1148"></path>
+  <text class="lbl" x="268" y="526">TOOLS · DETERMINISTIC CODE, NO LLM</text>
+  <g>
+    <rect class="tool" x="268" y="534" width="96" height="56" rx="6"></rect><text class="t" x="316" y="557" text-anchor="middle">Uplift model</text><text class="m" x="316" y="575" text-anchor="middle">boosted ×6</text>
+    <rect class="tool" x="380" y="534" width="96" height="56" rx="6"></rect><text class="t" x="428" y="557" text-anchor="middle">Value</text><text class="m" x="428" y="575" text-anchor="middle">uplift×loss</text>
+    <rect class="tool" x="492" y="534" width="96" height="56" rx="6"></rect><text class="t" x="540" y="557" text-anchor="middle">Optimiser</text><text class="m" x="540" y="575" text-anchor="middle">MIP · CBC</text>
+    <rect class="tool" x="604" y="534" width="96" height="56" rx="6"></rect><text class="t" x="652" y="557" text-anchor="middle">Queues</text><text class="m" x="652" y="575" text-anchor="middle">bin packing</text>
+    <rect class="tool" x="716" y="534" width="96" height="56" rx="6"></rect><text class="t" x="764" y="557" text-anchor="middle">Monte Carlo</text><text class="m" x="764" y="575" text-anchor="middle">2,000 days</text>
+    <rect class="tool" x="828" y="534" width="96" height="56" rx="6"></rect><text class="t" x="876" y="557" text-anchor="middle">Shift sim</text><text class="m" x="876" y="575" text-anchor="middle">SimPy</text>
+    <rect class="tool" x="940" y="534" width="96" height="56" rx="6"></rect><text class="t" x="988" y="557" text-anchor="middle">Rules</text><text class="m" x="988" y="575" text-anchor="middle">fail-closed</text>
+    <rect class="tool" x="1052" y="534" width="96" height="56" rx="6"></rect><text class="t" x="1100" y="557" text-anchor="middle">Audit chain</text><text class="m" x="1100" y="575" text-anchor="middle">SHA-256</text>
+  </g>
+
+  <!-- stores -->
+  <text class="lbl" x="268" y="624">STORES</text>
+  <g>
+    <rect class="store" x="268" y="632" width="205" height="76" rx="6"></rect><path class="sep" d="M268,646 H473" style="stroke-dasharray:none"></path>
+    <text class="t" x="280" y="668">SQLite</text><text class="s" x="280" y="686">runs · trace · approvals · rosters</text><text class="s" x="280" y="700">reports · llm_calls · audit</text>
+    <rect class="store" x="493" y="632" width="205" height="76" rx="6"></rect><path class="sep" d="M493,646 H698" style="stroke-dasharray:none"></path>
+    <text class="t" x="505" y="668">Parquet artifacts</text><text class="s" x="505" y="686">every intermediate table,</text><text class="s" x="505" y="700">per run, for inspection</text>
+    <rect class="store" x="718" y="632" width="205" height="76" rx="6"></rect><path class="sep" d="M718,646 H923" style="stroke-dasharray:none"></path>
+    <text class="t" x="730" y="668">Identity vault</text><text class="s" x="730" y="686">names · phones (PII), kept apart;</text><text class="s" x="730" y="700">read only at release</text>
+    <rect class="store" x="943" y="632" width="205" height="76" rx="6"></rect><path class="sep" d="M943,646 H1148" style="stroke-dasharray:none"></path>
+    <text class="t" x="955" y="668">Config packs (YAML)</text><text class="s" x="955" y="686">scenario · institution · run</text><text class="s" x="955" y="700">versioned, hashed per run</text>
+  </g>
+
+
+  <!-- banks -->
+  <text class="lbl" x="24" y="318">BANK SYSTEMS</text>
+  <rect class="bank" x="24" y="330" width="196" height="96" rx="8"></rect>
+  <text class="t" x="36" y="354">Riverbend Credit Union</text>
+  <text class="m" x="36" y="372">:8001 · /api/v1</text>
+  <text class="s" x="36" y="392">scorecard: grades A–E</text>
+  <text class="s" x="36" y="410">feeds out · actions in</text>
+  <rect class="bank" x="24" y="450" width="196" height="96" rx="8"></rect>
+  <text class="t" x="36" y="474">Harbor Community Bank</text>
+  <text class="m" x="36" y="492">:8002 · /v2</text>
+  <text class="s" x="36" y="512">boosted model: 180-day PD</text>
+  <text class="s" x="36" y="530">other paths &amp; columns</text>
+  <!-- feeds in -->
+  <path class="edge" d="M220,378 H232 M220,498 H232 M232,498 V300 H310 M322,300 H428 V328" marker-end="url(#arr)"></path>
+  <!-- release out -->
+  <path class="edge" d="M268,273 H200 V328" marker-end="url(#arr)"></path>
+  <text class="el" x="24" y="266">approved actions · close day</text>
+  <!-- onboarding reads harbor -->
+  <path class="edge" d="M268,480 H246 V560 H122 V548" marker-end="url(#arr)"></path>
+  <text class="el" x="24" y="578">reads /openapi.json</text>
+  <text class="el" x="24" y="592">+ 300-row samples</text>
+
+  <text class="el" x="258" y="415" transform="rotate(-90 258 415)" text-anchor="middle">6 feeds</text>
+
+  <!-- llm -->
+  <text class="lbl lbl-violet" x="1196" y="318">EXTERNAL AI</text>
+  <rect class="llm" x="1196" y="330" width="220" height="96" rx="8"></rect>
+  <text class="t" x="1208" y="354">Gemini 2.5 Flash</text>
+  <text class="s" x="1208" y="374">writes wording · proposes mappings</text>
+  <text class="s" x="1208" y="392">never writes a number</text>
+  <text class="s" x="1208" y="410">never sees customer data</text>
+  <path class="edge-llm" d="M1148,352 H1194" marker-end="url(#arr-llm)"></path>
+  <text class="el-llm" x="1208" y="446">① segment × action → draft</text>
+  <text class="el-llm" x="1208" y="462">   templates, checked, 1 retry</text>
+  <path class="edge-llm" d="M568,466 H1180 V414 H1194" marker-end="url(#arr-llm)"></path>
+  <text class="el-llm" x="874" y="458" text-anchor="middle">② column profiles (shapes only) → endpoints, mapping, score type</text>
+</svg>
+<figcaption>Read top to bottom: people sign in, consoles call the engine API, the Supervisor runs the agents in order,
+  agents call deterministic tools and write to stores. Grey arrows are data and control; the two violet arrows are the only
+  places an LLM is involved. Left: banks send feeds in and receive approved actions; right: the LLM.</figcaption>
+</figure>
+
+<div class="cols">
+  <section class="card">
+    <h2>A business day, end to end</h2>
+    <ol>
+      <li>The <b>manager</b> confirms today's team and starts the run.</li>
+      <li><b>Ingestion</b> pulls six feeds from the bank; <b>Configuration</b> applies the rules and roster.</li>
+      <li><b>Data Steward</b> runs 13 quality gates and moves personal data to the vault.</li>
+      <li><b>Feature</b> turns grades or probabilities into default risk and builds model data.</li>
+      <li><b>Decision</b> scores uplift, asks <b>Policy</b> what is allowed, optimises and fits each collector's shift.</li>
+      <li><b>Policy</b> re-verifies the plan and audits it; <b>Explanation</b> writes checked reasons.</li>
+      <li>The manager approves, releases to the bank, and closes the day.</li>
+    </ol>
+  </section>
+  <section class="card">
+    <h2>Where AI is used — and where it is not</h2>
+    <ul>
+      <li><span class="tag ai">① LLM</span> Explanation wording: it sees segment × action pairs, writes templates with placeholders; figures are filled from sourced facts.</li>
+      <li><span class="tag ai">② LLM</span> Onboarding a bank: it sees column shapes and ranges, proposes endpoints, mapping and score type; checks and an admin decide.</li>
+      <li>Everything else — model, dollar values, optimisation, simulation, rules, audit — is deterministic code: same input, same output.</li>
+    </ul>
+  </section>
+  <section class="card">
+    <h2>Boundaries that protect members</h2>
+    <ul>
+      <li><b>Sign-in gate</b> on every page and API call; guests cannot change anything.</li>
+      <li><b>Identity vault:</b> models and the LLM work on tokens; names return only to write the call script at release.</li>
+      <li><b>Rules run twice:</b> before planning (fail-closed) and after (independent verification).</li>
+      <li><b>Human approval</b> before any action reaches the bank; every decision is in the hash-chained audit.</li>
+    </ul>
+  </section>
+</div>
+</div>
+</body></html>

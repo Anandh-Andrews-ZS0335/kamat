@@ -67,4 +67,6 @@ def test_factory_selects_ollama(monkeypatch):
     assert isinstance(llm, OllamaClient)
     assert llm.model == "mistral"
     assert llm.base_url == "http://localhost:11434"
-    assert desc == "ollama:mistral"
+    # the display label names no vendor - the consoles show that a model wrote it, not whose.
+    # provider and model are still recorded on every call in llm_calls, so an auditor can tell.
+    assert desc == "llm" and "ollama" not in desc and "mistral" not in desc

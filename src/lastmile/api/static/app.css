@@ -259,8 +259,7 @@ table.tbl{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px}
 .drawer-h{display:flex;align-items:center;gap:10px;padding:var(--s3) var(--s4);border-bottom:1px solid var(--line)}
 .drawer-b{overflow-y:auto;padding:var(--s4) var(--s4) 48px}
 
-/* role gating: guests read, managers cannot save configuration */
-body[data-role="guest"] .needs-write{display:none!important}
+/* role gating: a manager runs the day but cannot open configuration or onboarding */
 body[data-role="manager"] .needs-admin{display:none!important}
 .role-note{font-size:11.5px;color:var(--ink-3)}
 

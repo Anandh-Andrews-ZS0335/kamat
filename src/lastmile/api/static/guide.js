@@ -132,7 +132,7 @@ function narrate(e) {
     "audit.append": () => `Recorded this step in the tamper-evident audit log.`,
     "provenance.build_facts": () => `Attached a source to every figure that will appear in an explanation.`,
     "llm.draft_templates": () => (o.rewrite ? `Sent the wording that failed the checks back to the AI, with the reasons, for <b>one</b> rewrite.`
-      : String(o.mode || "").startsWith("gemini")
+      : !String(o.mode || "template").startsWith("template")
       ? `Asked the AI to draft reasons and call scripts — <b>without sharing any member's details</b>.`
       : `Used the approved standard wording for reasons and scripts (no AI model is connected).`),
     "provenance.validate_templates": () => { const n = (String(e.message || "").match(/(\d+) LLM draft\(s\) rejected/) || [])[1];

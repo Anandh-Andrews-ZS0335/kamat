@@ -8,6 +8,7 @@ const ICONS = {
   report: '<svg viewBox="0 0 24 24"><path d="M6 3h9l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v6h6M9 14h6M9 17h4"/></svg>',
   agents: '<svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="2"/><path d="M12 8V5M9 3h6M8.5 13h.01M15.5 13h.01M9 16.5h6"/></svg>',
   config: '<svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h6M14 17h6M4 12h2M10 12h10"/><circle cx="16" cy="7" r="2"/><circle cx="12" cy="17" r="2"/><circle cx="8" cy="12" r="2"/></svg>',
+  users: '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2"/><path d="M3 20a6 6 0 0 1 12 0M15 20a4 4 0 0 1 6 0"/></svg>',
   guide: '<svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5A2.5 2.5 0 0 1 4 20.5z"/></svg>',
   kpi: '<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
   plug: '<svg viewBox="0 0 24 24"><path d="M9 2v6M15 2v6M6 8h12v4a6 6 0 0 1-12 0zM12 18v4"/></svg>',
@@ -21,26 +22,22 @@ const ICONS = {
 
 const NAV = [
   { group: "Operate", items: [
-    { id: "manager", href: "/manager", label: "Today", icon: "today", title: "Business day, worklist and approvals" },
-    { id: "report", href: "/report", label: "Daily reports", icon: "report", title: "One page per business day" },
-    { id: "kpis", href: "/kpis", label: "Business KPIs", icon: "kpi", title: "Recovery, cures, customer impact and contact rules over time" },
+    { id: "manager", href: "/manager", label: "Today", icon: "today", title: "Business day, worklist and approvals", roles: ["manager"] },
+    { id: "agent", href: "/agent", label: "My queue", icon: "worklist", title: "Your assigned queue for today", roles: ["collector"] },
+    { id: "report", href: "/report", label: "Daily results", icon: "report", title: "Daily performance and outcomes", roles: ["manager"] },
   ]},
-  { group: "Build", items: [
-    { id: "admin", href: "/admin", label: "Runs & agents", icon: "agents", title: "Every stage, agent and tool call" },
-    { id: "config", href: "/admin/config", label: "Configuration", icon: "config", title: "The three YAML rule packs" },
-    { id: "onboarding", href: "/admin/onboarding", label: "Onboard a bank", icon: "plug", title: "Let the Onboarding Agent connect a new bank" },
-  ]},
-  { group: "Explain", items: [
-    { id: "guide", href: "/guide", label: "Guided tour", icon: "guide", title: "Plain-language walkthrough for clients" },
-    { id: "demo", href: "/demo", label: "Demo showcase", icon: "demo", title: "The showcase deck for presentations" },
-    { id: "bankdocs", href: "http://127.0.0.1:8001/docs", label: "Bank API", icon: "bank", title: "The bank's own API documentation", external: true },
+  { group: "Manage", items: [
+    { id: "admin", href: "/admin", label: "Runs & pipeline", icon: "agents", title: "Pipeline stages, agents and tool calls for today's run", roles: ["manager"] },
+    { id: "onboarding", href: "/admin/onboarding", label: "Onboard a bank", icon: "plug", title: "Connect and validate a new bank", roles: ["admin"] },
+    { id: "config", href: "/admin/config", label: "Bank configuration", icon: "config", title: "Bank, scenario and run rules", roles: ["admin"] },
+    { id: "users", href: "/admin/users", label: "Users & access", icon: "users", title: "Console accounts; a manager adds collection agents", roles: ["admin", "manager"] },
   ]},
 ];
 
 const ROLE_NOTE = {
   admin: "Full access, including saving configuration.",
-  manager: "Runs the business day. Can read configuration but not save it.",
-  guest: "Read-only. Nothing can be changed or released.",
+  manager: "Runs the business day and adds collection agents. No access to configuration or onboarding.",
+  collector: "Works only the queue assigned to them for today.",
 };
 
 const Shell = {
@@ -56,11 +53,7 @@ const Shell = {
       <div class="scrim" id="scrim"></div>
       <aside class="side" id="side" aria-label="Main">
         <a class="side-brand" href="/manager"><span class="mark">LM</span><span><b>Last Mile</b><small>Collections</small></span></a>
-        <nav class="side-nav">${NAV.map((g) => `<div class="side-group">${g.group}</div>` + g.items.map((i) => `
-          <a class="side-link ${i.id === page ? "on" : ""}" href="${i.href}" title="${esc(i.title)}"${i.external ? ' target="_blank" rel="noopener"' : ""}
-             ${i.id === page ? 'aria-current="page"' : ""}>${ICONS[i.icon]}<span>${esc(i.label)}</span>
-             ${i.id === "manager" ? '<span class="badge hidden" id="navPending"></span>' : ""}</a>`).join("")).join("")}
-        </nav>
+        <nav class="side-nav" id="sideNav"></nav>
         <div class="side-foot">
           <div class="env"><span>Business day</span><b id="envDate">—</b></div>
           <button class="icon-btn" id="collapseBtn" title="Collapse or expand the sidebar" aria-label="Collapse or expand the sidebar">
@@ -87,9 +80,8 @@ const Shell = {
                 <button data-theme="dark" type="button">Dark</button>
                 <button data-theme="system" type="button">System</button>
               </div>
-              <div class="sep"></div>
-              <a class="row" href="/guide" role="menuitem">${ICONS.guide}Guided tour</a>
-              <a class="row" href="/report" role="menuitem">${ICONS.report}Daily reports</a>
+              <div class="sep" id="menuReportSep" hidden></div>
+              <a class="row" href="/report" role="menuitem" id="menuReport" hidden>${ICONS.report}Daily results</a>
               <div class="sep"></div>
               <form method="post" action="/logout"><button class="row" type="submit" role="menuitem">Sign out</button></form>
             </div>
@@ -114,6 +106,8 @@ const Shell = {
     this.applyTheme(localStorage.getItem("lm.theme") || "system");   // now the buttons exist, mark the active one
 
     await Promise.all([this.loadUser(), this.loadStatus()]);
+    this.renderStatus();
+    this.renderNavigation(page);
     return this;
   },
 
@@ -128,33 +122,50 @@ const Shell = {
     const u = this.user;
     if (!u) return;
     document.body.dataset.role = u.role;
-    const initials = u.username.slice(0, 2).toUpperCase();
+    const initials = (u.display_name || u.username).slice(0, 2).toUpperCase();
     $("#avatar").textContent = initials;
-    $("#userName").textContent = u.username;
+    $("#userName").textContent = u.display_name || u.username;
     $("#userRole").textContent = u.role;
     $("#menuName").textContent = `${u.username} · ${u.role}`;
     $("#menuRole").textContent = ROLE_NOTE[u.role] || "";
+    for (const id of ["#menuReport", "#menuReportSep"]) $(id).hidden = u.role !== "manager";
     const who = document.getElementById("dlgWho");        // configuration editor: who is saving
     if (who) who.value = u.username;
   },
 
-  // The environment strip: which bank day the engine is on, whether the bank answers, and which LLM writes wording.
+  // Which bank day the engine is on, whether the bank answers, and which LLM writes the wording.
   async loadStatus() {
-    let s = null;
-    try { s = await api("/api/status"); } catch { /* shown as unreachable below */ }
-    this.status = s;
+    try { this.status = await api("/api/status"); } catch { this.status = null; }
+  },
+
+  // The environment strip. Whether the bank API and the LLM are up is a platform question, so the
+  // health chips are the administrator's: a manager approving work and a collection agent working a
+  // queue can do nothing with them, and a red dot they cannot act on only undermines the numbers.
+  renderStatus() {
+    const s = this.status;
     const chips = $("#shellStatus");
     if (!s) { chips.innerHTML = `<span class="chip"><i class="dot bad"></i>Engine unreachable</span>`; return; }
-    const llmOk = String(s.llm_mode || "").startsWith("gemini");
+    $("#envDate").textContent = s.bank.ok ? s.bank.as_of : "bank offline";
+    if (!$("#shellContext").textContent) $("#shellContext").textContent = `${s.institution} · ${s.scenario}`;
+    if (!this.user || this.user.role !== "admin") { chips.innerHTML = ""; return; }
+    const llmOk = !String(s.llm_mode || "template").startsWith("template");
     chips.innerHTML = `
       <span class="chip" title="The bank's business date"><i class="dot ${s.bank.ok ? "ok" : "bad"}"></i>${s.bank.ok ? `Bank · ${esc(s.bank.as_of)}` : "Bank unreachable"}</span>
       <span class="chip" title="Which model writes the explanation wording"><i class="dot ${llmOk ? "ok" : "warn"}"></i>${esc(s.llm_mode)}</span>
       <span class="chip mono" title="Configuration the next run will use">cfg ${esc(String(s.config_hash || "").slice(0, 8))}</span>`;
-    $("#envDate").textContent = s.bank.ok ? s.bank.as_of : "bank offline";
-    if (!$("#shellContext").textContent) $("#shellContext").textContent = `${s.institution} · ${s.scenario}`;
   },
 
   setContext(text) { $("#shellContext").textContent = text || ""; },
+
+  renderNavigation(page) {
+    const role = this.user ? this.user.role : "";     // signed out: show nothing until /api/me answers
+    const groups = NAV.map((group) => ({ ...group, items: group.items.filter((item) => item.roles.includes(role)) }))
+      .filter((group) => group.items.length);
+    $("#sideNav").innerHTML = groups.map((group) => `<div class="side-group">${group.group}</div>` + group.items.map((item) => `
+      <a class="side-link ${item.id === page ? "on" : ""}" href="${item.href}" title="${esc(item.title)}"
+         ${item.id === page ? 'aria-current="page"' : ""}>${ICONS[item.icon]}<span>${esc(item.label)}</span>
+         ${item.id === "manager" ? '<span class="badge hidden" id="navPending"></span>' : ""}</a>`).join("")).join("");
+  },
 
   // Count of undecided recommendations, shown on the sidebar's Today item.
   setPending(n) {

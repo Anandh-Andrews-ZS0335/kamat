@@ -1,0 +1,508 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Collections Data Inventory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+:root{
+  --ground:#EDF2F2; --surface:#FFFFFF; --surface-2:#F4F8F8; --sunk:#E4ECEC;
+  --ink:#0F2429; --ink-2:#41565A; --ink-3:#697C7F; --line:#C7D5D5; --line-2:#DDE7E7;
+  --teal:#11606B; --teal-soft:#DCECEE; --violet:#63479C; --violet-soft:#EAE4F5;
+  --amber:#875B12; --amber-soft:#F5EAD6; --rust:#9C3B26; --rust-soft:#F7E4DF;
+  --sans:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+  --serif:"IBM Plex Serif",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0B1214; --surface:#121B1E; --surface-2:#172226; --sunk:#0D1618;
+  --ink:#E3ECEC; --ink-2:#AEC0C1; --ink-3:#7D9294; --line:#2B3C40; --line-2:#1F2D31;
+  --teal:#6BBFC8; --teal-soft:#0F323A; --violet:#B69CE4; --violet-soft:#241C35;
+  --amber:#D7A557; --amber-soft:#2C2416; --rust:#E0846B; --rust-soft:#341913;
+}}
+:root[data-theme="dark"]{
+  --ground:#0B1214; --surface:#121B1E; --surface-2:#172226; --sunk:#0D1618;
+  --ink:#E3ECEC; --ink-2:#AEC0C1; --ink-3:#7D9294; --line:#2B3C40; --line-2:#1F2D31;
+  --teal:#6BBFC8; --teal-soft:#0F323A; --violet:#B69CE4; --violet-soft:#241C35;
+  --amber:#D7A557; --amber-soft:#2C2416; --rust:#E0846B; --rust-soft:#341913;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.6 var(--sans);
+  padding-inline:20px;padding-block:36px 72px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:34px}
+.kicker{font:600 11.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--teal)}
+h1{margin:0;font:600 clamp(28px,3.6vw,40px)/1.14 var(--serif);letter-spacing:-.015em;text-wrap:balance}
+h2{margin:0;font:600 clamp(20px,2.2vw,25px)/1.2 var(--serif);letter-spacing:-.01em;text-wrap:balance}
+h3{margin:0;font:600 16px/1.35 var(--sans);letter-spacing:-.005em}
+p{margin:0}
+a{color:var(--teal)}
+.lede{color:var(--ink-2);font-size:17px;max-width:70ch}
+header{display:grid;gap:12px}
+section{display:grid;gap:16px}
+.sec-head{display:grid;gap:8px;max-width:78ch}
+.sec-head p{color:var(--ink-2)}
+.num{font:600 11.5px/1 var(--mono);color:var(--ink-3);letter-spacing:.12em}
+hr{border:0;border-top:1px solid var(--line);margin:0}
+
+/* strip of figures */
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.strip div{background:var(--surface);padding:15px 17px;display:grid;gap:3px}
+.strip b{font:600 26px/1 var(--sans);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.strip span{font-size:12.5px;color:var(--ink-3);line-height:1.4}
+
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:10px;
+  align-content:start}
+.card ul,.card ol{margin:0;padding-left:19px;display:grid;gap:7px;font-size:14px;color:var(--ink-2)}
+.card li b,.card li strong{color:var(--ink);font-weight:600}
+.card > p{font-size:14px;color:var(--ink-2)}
+
+/* tables */
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:13.5px}
+caption{text-align:left;padding:14px 16px 0;font-size:13px;color:var(--ink-3)}
+th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line-2);vertical-align:top}
+thead th{position:sticky;top:0;background:var(--surface-2);font:600 11.5px/1.3 var(--mono);letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);border-bottom:1px solid var(--line);z-index:1}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--surface-2)}
+td.f{font-family:var(--mono);font-size:12.5px;white-space:nowrap;color:var(--ink)}
+th.grp{background:var(--sunk);font:600 11.5px/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-2);padding:8px 14px;border-bottom:1px solid var(--line)}
+td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* badges */
+.b{display:inline-block;font:600 10.5px/1.7 var(--mono);letter-spacing:.05em;padding:0 7px;border-radius:4px;
+  white-space:nowrap;border:1px solid transparent;text-transform:uppercase}
+.b-rule{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
+.b-model{background:var(--teal-soft);color:var(--teal);border-color:var(--teal)}
+.b-money{background:var(--ink);color:var(--surface)}
+.b-label{background:transparent;color:var(--ink);border-color:var(--ink)}
+.b-shown{background:var(--surface-2);color:var(--ink-3);border-color:var(--line)}
+.b-unused{background:transparent;color:var(--rust);border:1px dashed var(--rust)}
+.b-pii{background:var(--violet-soft);color:var(--violet);border-color:var(--violet)}
+.b-key{background:transparent;color:var(--ink-3);border:1px dotted var(--ink-3)}
+.bs{display:flex;gap:4px;flex-wrap:wrap}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);align-items:center}
+.legend span.i{display:inline-flex;gap:6px;align-items:center}
+
+/* callouts */
+.note{border-left:3px solid var(--teal);background:var(--surface);border-radius:0 8px 8px 0;padding:14px 18px;
+  display:grid;gap:6px;font-size:14px;color:var(--ink-2)}
+.note.warn{border-left-color:var(--rust)}
+.note.gate{border-left-color:var(--amber)}
+.note b{color:var(--ink)}
+.note h3{margin-bottom:2px}
+code{font-family:var(--mono);font-size:.87em;background:var(--surface-2);padding:1px 5px;border-radius:4px;
+  border:1px solid var(--line-2)}
+.note code,td code{background:transparent;border:0;padding:0}
+footer{color:var(--ink-3);font-size:13px;display:grid;gap:6px;max-width:80ch}
+@media (max-width:520px){ body{padding-inline:16px} .strip b{font-size:22px} }
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="kicker">Hackfest'26 · Last Mile · Response to technical review</span>
+  <h1>What the bank sends us, and what we should ask for next</h1>
+  <p class="lede">Every parameter Last Mile receives today, traced to the decision it actually
+    changes — then the data we do not yet receive, what each one would add, and which parts of
+    that are realistic for the hackfest rather than for a real bank programme.</p>
+</header>
+
+<div class="strip">
+  <div><b>54</b><span>parameters received across 6 feeds</span></div>
+  <div><b>16</b><span>reach the uplift model as features</span></div>
+  <div><b>23</b><span>drive a rule, not a model</span></div>
+  <div><b>3</b><span>collected today and never used</span></div>
+  <div><b>1</b><span>outcome label: cured within 30 days</span></div>
+</div>
+
+<hr>
+
+<!-- 1 ------------------------------------------------------------------ -->
+<section>
+  <div class="sec-head">
+    <span class="num">01</span>
+    <h2>What we actually predict</h2>
+    <p>Three different predictions get confused with each other in collections. Only the third
+      one is ours, and it is the one the whole system is built around.</p>
+  </div>
+  <div class="cards">
+    <div class="card">
+      <h3>Risk of default — the bank's, not ours</h3>
+      <p>Probability the account defaults. The bank's own model produces it and sends it in the
+        <code>scores</code> feed. We never retrain it. Riverbend sends grades A–E; Harbor sends a
+        180-day probability. We calibrate whatever arrives onto one scale
+        (<code>pd_12m</code>, <code>pd_h</code>).</p>
+      <p><b>Used for:</b> how much money is at stake, not who to call.</p>
+    </div>
+    <div class="card">
+      <h3>Base cure probability — ours</h3>
+      <p>P(the account catches up within 30 days <em>if we do nothing</em>). Learnt from history
+        where the action recorded was <code>NONE</code>.</p>
+      <p><b>Used for:</b> separating people who will recover anyway from people who need help.</p>
+    </div>
+    <div class="card" style="border-color:var(--teal);border-width:1.5px">
+      <h3>Uplift — ours, and the real answer</h3>
+      <p>For each account and each of SMS, CALL, PLAN and HARDSHIP:
+        <b>P(cure | we do this) − P(cure | we do nothing)</b>, with a low–high interval from six
+        bagged models.</p>
+      <p><b>Used for:</b> choosing the action. This is the prediction the mentor's question is
+        asking about.</p>
+    </div>
+  </div>
+
+  <div class="scroll">
+    <table>
+      <caption>The output the system produces, per delinquent account, per business day</caption>
+      <thead><tr><th style="width:30%">Output</th><th style="width:30%">Shape</th><th>Where it comes from</th></tr></thead>
+      <tbody>
+        <tr><td><b>Recommended action</b></td><td>one of SMS · CALL · PLAN · HARDSHIP · none today</td><td>the optimiser's choice among actions that policy allows</td></tr>
+        <tr><td><b>Uplift for that action</b></td><td>e.g. +7.4 points, range +3.1 to +11.8</td><td>bagged T-learner; the range is the spread across 6 bags</td></tr>
+        <tr><td><b>Expected value</b></td><td>dollars, e.g. $412</td><td><code>uplift × (pd_12m × exposure × lgd) − cash cost</code></td></tr>
+        <tr><td><b>Segment</b></td><td>Persuadable · Sure Thing · Lost Cause · Sleeping Dog</td><td>thresholds on uplift and base cure</td></tr>
+        <tr><td><b>Rank, collector, queue position</b></td><td>integer, collector id, integer</td><td>MIP optimiser, then bin-packing into each person's shift</td></tr>
+        <tr><td><b>A sentence saying why</b></td><td>text, every figure sourced</td><td>LLM writes the wording, facts are filled from stamped values</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <b>Why uplift and not "who is most likely to pay".</b> A ranking by risk sends collectors to
+    the people most likely to default, many of whom will default whatever we do. A ranking by
+    likelihood-to-pay sends them to people who would have paid anyway. Uplift ranks by
+    <em>difference the call makes</em>, which is the only one of the three that describes the
+    value of a collector's hour.
+  </div>
+</section>
+
+<hr>
+
+<!-- 2 ------------------------------------------------------------------ -->
+<section>
+  <div class="sec-head">
+    <span class="num">02</span>
+    <h2>Every parameter we receive today</h2>
+    <p>Six feeds, 54 fields, pulled over the bank's own HTTP API each morning. The badge says
+      what each field <em>changes</em> — a field that only appears on a screen is not a field
+      that improves a decision.</p>
+  </div>
+
+  <div class="legend">
+    <span class="i"><span class="b b-rule">rule</span> decides eligibility or suppression</span>
+    <span class="i"><span class="b b-model">model</span> reaches the uplift model</span>
+    <span class="i"><span class="b b-money">money</span> enters the value equation</span>
+    <span class="i"><span class="b b-label">label</span> training treatment or outcome</span>
+    <span class="i"><span class="b b-pii">pii</span> personal data, held in the vault</span>
+    <span class="i"><span class="b b-shown">shown</span> display or call script only</span>
+    <span class="i"><span class="b b-key">key</span> join key</span>
+    <span class="i"><span class="b b-unused">unused</span> received, never read</span>
+  </div>
+
+  <div class="scroll">
+    <table>
+      <thead><tr><th style="width:21%">Field</th><th style="width:15%">Role</th><th>What it is, and the decision it changes</th></tr></thead>
+      <tbody>
+        <tr><th class="grp" colspan="3">scores — the bank's own risk model output (5)</th></tr>
+        <tr><td class="f">account_id</td><td><span class="bs"><span class="b b-key">key</span></span></td><td>Joins to accounts.</td></tr>
+        <tr><td class="f">risk_grade</td><td><span class="bs"><span class="b b-money">money</span><span class="b b-model">model</span></span></td><td>Grade A–E or a probability. Calibrated to <code>pd_12m</code> for the loss figure and to <code>pd_h</code> for the model feature <code>risk_pd_at_t</code>.</td></tr>
+        <tr><td class="f">score_date</td><td><span class="bs"><span class="b b-rule">rule</span></span></td><td>A run fails if the score is older than 2 days. Stale risk is worse than no risk.</td></tr>
+        <tr><td class="f">model_version</td><td><span class="bs"><span class="b b-shown">shown</span></span></td><td>Stamped on the run so a later reader knows which bank model produced the input.</td></tr>
+        <tr><td class="f">pd_horizon_days</td><td><span class="bs"><span class="b b-money">money</span></span></td><td>Lets a 180-day probability be converted to 12 months by constant hazard. This is the field that made a second bank possible.</td></tr>
+
+        <tr><th class="grp" colspan="3">accounts — the delinquent book (17)</th></tr>
+        <tr><td class="f">account_id</td><td><span class="bs"><span class="b b-key">key</span></span></td><td>Primary key of the decision.</td></tr>
+        <tr><td class="f">member_id</td><td><span class="bs"><span class="b b-key">key</span><span class="b b-rule">rule</span></span></td><td>Contact limits apply per person, not per account, so this is what the daily cap groups by.</td></tr>
+        <tr><td class="f">product</td><td><span class="bs"><span class="b b-money">money</span><span class="b b-rule">rule</span><span class="b b-model">model</span></span></td><td>AUTO / PERS / CARD. Picks the LGD row, gates hardship eligibility, and becomes two model flags.</td></tr>
+        <tr><td class="f">secured</td><td><span class="bs"><span class="b b-money">money</span></span></td><td>A secured auto loan recovers 32% better than an unsecured card. Picks the LGD row.</td></tr>
+        <tr><td class="f">orig_amt</td><td><span class="bs"><span class="b b-model">model</span></span></td><td>Original loan or limit. A proxy for the customer's original capacity.</td></tr>
+        <tr><td class="f">curr_bal</td><td><span class="bs"><span class="b b-money">money</span></span></td><td>The exposure in the value equation. <b>Excluded from model features</b> — today's balance leaks the outcome.</td></tr>
+        <tr><td class="f">dpd</td><td><span class="bs"><span class="b b-rule">rule</span><span class="b b-money">money</span></span></td><td>Days past due. Gates plan (≥30) and hardship (60–150), and picks the LGD band. The model sees <code>dpd_at_t</code> instead, never today's.</td></tr>
+        <tr><td class="f">min_payment</td><td><span class="bs"><span class="b b-shown">shown</span></span></td><td>Appears in the call script: "the minimum payment due is …".</td></tr>
+        <tr><td class="f">status</td><td><span class="bs"><span class="b b-rule">rule</span></span></td><td>Only DELINQUENT accounts enter the portfolio. Excluded from features as a leak.</td></tr>
+        <tr><td class="f">litigation</td><td><span class="bs"><span class="b b-rule">rule</span></span></td><td>Suppressed outright. No score can override it.</td></tr>
+        <tr><td class="f">fraud_hold</td><td><span class="bs"><span class="b b-rule">rule</span></span></td><td>Suppressed outright.</td></tr>
+        <tr><td class="f">hardship_active</td><td><span class="bs"><span class="b b-rule">rule</span></span></td><td>Someone already on a plan is not offered another one.</td></tr>
+        <tr><td class="f">hardship_plans_12m</td><td><span class="bs"><span class="b b-rule">rule</span></span></td><td>Two plans in a year and hardship stops being offered.</td></tr>
+        <tr><td class="f">ptp_kept_rate_12m</td><td><span class="bs"><span class="b b-model">model</span></span></td><td>Share of promises to pay that were kept. The single most behavioural field we get.</td></tr>
+        <tr><td class="f">complaints_12m</td><td><span class="bs"><span class="b b-model">model</span></span></td><td>Model feature, and the customer-impact KPI reads it.</td></tr>
+        <tr><td class="f">pmts_missed_12m</td><td><span class="bs"><span class="b b-model">model</span></span></td><td>Model feature via its point-in-time twin.</td></tr>
+        <tr><td class="f">mos_since_last_pmt</td><td><span class="bs"><span class="b b-model">model</span></span></td><td>Model feature via its point-in-time twin.</td></tr>
+
+        <tr><th class="grp" colspan="3">members — the customer master (11)</th></tr>
+        <tr><td class="f">member_id</td><td><span class="bs"><span class="b b-key">key</span></span></td><td>Joins accounts and consents.</td></tr>
+        <tr><td class="f">first_name</td><td><span class="bs"><span class="b b-pii">pii</span><span class="b b-shown">shown</span></span></td><td>Goes to the identity vault; returns only to write the call script at release.</td></tr>
+        <tr><td class="f">last_name</td><td><span class="bs"><span class="b b-pii">pii</span></span></td><td>Vault only. Never reaches a model or the LLM.</td></tr>
+        <tr><td class="f">phone</td><td><span class="bs"><span class="b b-pii">pii</span></span></td><td>Vault only; read at release so the bank can dial.</td></tr>
+        <tr><td class="f">email</td><td><span class="bs"><span class="b b-pii">pii</span></span></td><td>Vault only.</td></tr>
+        <tr><td class="f">language</td><td><span class="bs"><span class="b b-unused">unused</span></span></td><td><b>Received and ignored.</b> Carried into the vault, never used to pick a script or a channel.</td></tr>
+        <tr><td class="f">tenure_mos</td><td><span class="bs"><span class="b b-model">model</span></span></td><td>Months as a customer. A long relationship responds differently to a call.</td></tr>
+        <tr><td class="f">direct_deposit</td><td><span class="bs"><span class="b b-model">model</span></span></td><td>Salary paid into the bank. Our closest thing to an income signal.</td></tr>
+        <tr><td class="f">deceased</td><td><span class="bs"><span class="b b-rule">rule</span></span></td><td>Suppressed outright.</td></tr>
+        <tr><td class="f">bankruptcy</td><td><span class="bs"><span class="b b-rule">rule</span></span></td><td>Suppressed outright.</td></tr>
+        <tr><td class="f">cease_desist</td><td><span class="bs"><span class="b b-rule">rule</span></span></td><td>Suppressed outright.</td></tr>
+
+        <tr><th class="grp" colspan="3">consents — contact permission (7)</th></tr>
+        <tr><td class="f">member_id</td><td><span class="bs"><span class="b b-key">key</span></span></td><td>Join key.</td></tr>
+        <tr><td class="f">phone_consent</td><td><span class="bs"><span class="b b-rule">rule</span></span></td><td>Required by CALL, PLAN and HARDSHIP. Without it those actions do not exist for that person.</td></tr>
+        <tr><td class="f">sms_consent</td><td><span class="bs"><span class="b b-rule">rule</span></span></td><td>Required by SMS.</td></tr>
+        <tr><td class="f">email_consent</td><td><span class="bs"><span class="b b-unused">unused</span></span></td><td><b>Received and ignored</b> — joined into the portfolio, but there is no email action to gate.</td></tr>
+        <tr><td class="f">dnc</td><td><span class="bs"><span class="b b-rule">rule</span></span></td><td>Suppressed outright.</td></tr>
+        <tr><td class="f">contacts_7d</td><td><span class="bs"><span class="b b-rule">rule</span></span></td><td>Enforces at most 7 attempts in 7 days.</td></tr>
+        <tr><td class="f">last_rpc_date</td><td><span class="bs"><span class="b b-unused">unused</span></span></td><td><b>Received and ignored</b> — we recompute recency from queue history instead, which misses contact made outside the collections queue.</td></tr>
+
+        <tr><th class="grp" colspan="3">queue_history — who was worked, when, and with what (10)</th></tr>
+        <tr><td class="f">queue_date</td><td><span class="bs"><span class="b b-label">label</span></span></td><td>The as-of date of each training row. Everything else in the row must be true on this date.</td></tr>
+        <tr><td class="f">account_id · member_id</td><td><span class="bs"><span class="b b-key">key</span></span></td><td>Join keys.</td></tr>
+        <tr><td class="f">dpd_at_t</td><td><span class="bs"><span class="b b-model">model</span></span></td><td>Days past due <em>on that day</em> — the point-in-time value the model is allowed to see.</td></tr>
+        <tr><td class="f">balance_at_t</td><td><span class="bs"><span class="b b-model">model</span></span></td><td>Balance on that day.</td></tr>
+        <tr><td class="f">risk_grade_at_t</td><td><span class="bs"><span class="b b-model">model</span></span></td><td>The bank's score on that day, calibrated to <code>risk_pd_at_t</code>.</td></tr>
+        <tr><td class="f">pmts_missed_12m_at_t</td><td><span class="bs"><span class="b b-model">model</span></span></td><td>Point-in-time payment misses.</td></tr>
+        <tr><td class="f">mos_since_last_pmt_at_t</td><td><span class="bs"><span class="b b-model">model</span></span></td><td>Point-in-time payment recency.</td></tr>
+        <tr><td class="f">action</td><td><span class="bs"><span class="b b-label">label</span></span></td><td><b>The treatment.</b> Without variation in this column there is no uplift model at all.</td></tr>
+        <tr><td class="f">rpc</td><td><span class="bs"><span class="b b-model">model</span></span></td><td>Whether the customer was actually reached. Feeds <code>rpc_rate_90d</code> and the reach-rate KPI.</td></tr>
+
+        <tr><th class="grp" colspan="3">outcomes — what happened next (4)</th></tr>
+        <tr><td class="f">account_id · queue_date</td><td><span class="bs"><span class="b b-key">key</span></span></td><td>Joins back to the worked day.</td></tr>
+        <tr><td class="f">cured_30d</td><td><span class="bs"><span class="b b-label">label</span></span></td><td><b>The outcome the model learns.</b> Published only once 30 days have passed, so a label cannot leak into its own training row.</td></tr>
+        <tr><td class="f">amt_paid_30d</td><td><span class="bs"><span class="b b-shown">shown</span></span></td><td>Money recovered. Drives the value-per-collector-hour KPI; deliberately kept out of features.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr>
+
+<!-- 3 ------------------------------------------------------------------ -->
+<section>
+  <div class="sec-head">
+    <span class="num">03</span>
+    <h2>Of those 54, sixteen reach the model</h2>
+    <p>The uplift model is deliberately narrow. Seven of its sixteen inputs are derived rather
+      than received — contact behaviour is computed from queue history, because the bank does
+      not send it as a field.</p>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th style="width:24%">Feature</th><th style="width:18%">Origin</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td class="f">dpd_at_t</td><td>received</td><td rowspan="5" style="vertical-align:middle;color:var(--ink-2)">Straight from <code>queue_history</code>, already point-in-time.</td></tr>
+        <tr><td class="f">balance_at_t</td><td>received</td></tr>
+        <tr><td class="f">pmts_missed_12m_at_t</td><td>received</td></tr>
+        <tr><td class="f">mos_since_last_pmt_at_t</td><td>received</td></tr>
+        <tr><td class="f">orig_amt</td><td>received</td></tr>
+        <tr><td class="f">ptp_kept_rate_12m</td><td>received</td><td>Promise-keeping. The strongest behavioural field available to us.</td></tr>
+        <tr><td class="f">complaints_12m</td><td>received</td><td>A count, not dated — so we cannot tell whether a complaint followed a contact.</td></tr>
+        <tr><td class="f">tenure_mos</td><td>received</td><td>Relationship length.</td></tr>
+        <tr><td class="f">direct_deposit</td><td>received</td><td>Flag, not an amount. The weakest possible income signal.</td></tr>
+        <tr><td class="f">risk_pd_at_t</td><td>derived</td><td>The bank's score on that day, calibrated to a common probability scale.</td></tr>
+        <tr><td class="f">contacts_30d</td><td>derived</td><td>Counted from queue history — contact fatigue.</td></tr>
+        <tr><td class="f">rpc_rate_90d</td><td>derived</td><td>How reachable this person has been.</td></tr>
+        <tr><td class="f">days_since_last_contact</td><td>derived</td><td>Recency of the last attempt.</td></tr>
+        <tr><td class="f">product_auto · product_card</td><td>derived</td><td>Two flags from one product code.</td></tr>
+        <tr><td class="f">member_accounts</td><td>derived</td><td>How many delinquent accounts this person holds — a crude total-burden signal.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note gate">
+    <h3>Five fields are banned from the model on purpose</h3>
+    <p><code>curr_bal</code>, <code>dpd</code>, <code>status</code>, <code>cured_30d</code> and
+      <code>amt_paid_30d</code> describe the account <em>after</em> the decision window. A request
+      for any of them raises an error rather than silently training a model that scores 0.95 and
+      is worthless. Any new field proposed below has to survive the same test.</p>
+  </div>
+</section>
+
+<hr>
+
+<!-- 4 ------------------------------------------------------------------ -->
+<section>
+  <div class="sec-head">
+    <span class="num">04</span>
+    <h2>Three fields arrive and are thrown away</h2>
+    <p>The cheapest improvement available. No new bank integration, no new consent — the data is
+      already crossing the wire.</p>
+  </div>
+  <div class="cards">
+    <div class="card">
+      <h3><code>language</code></h3>
+      <p><b>What we do now:</b> carry it to the vault, then ignore it.</p>
+      <p><b>What it should do:</b> choose the script language and, plausibly, the channel — an
+        SMS in the wrong language is a wasted contact that still counts against the daily cap.</p>
+      <p><b>Effort:</b> small. It is a template-selection key, not a model feature.</p>
+    </div>
+    <div class="card">
+      <h3><code>email_consent</code></h3>
+      <p><b>What we do now:</b> join it into the portfolio and never read it.</p>
+      <p><b>What it should do:</b> gate an EMAIL action, which does not exist yet. Email costs
+        near-zero minutes, so adding it widens what the optimiser can do with a fixed team.</p>
+      <p><b>Effort:</b> medium — a new action needs a cost, an uplift arm and history to learn from.</p>
+    </div>
+    <div class="card">
+      <h3><code>last_rpc_date</code></h3>
+      <p><b>What we do now:</b> ignore it, and recompute recency from the collections queue.</p>
+      <p><b>What it should do:</b> capture contact that happened <em>outside</em> the collections
+        queue. This is exactly the blind spot behind our 20 over-cap customer-days — we cannot see
+        the bank's own contacts, so we cannot count them.</p>
+      <p><b>Effort:</b> small, and it closes a live compliance gap.</p>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+<!-- 5 ------------------------------------------------------------------ -->
+<section>
+  <div class="sec-head">
+    <span class="num">05</span>
+    <h2>Section A — what a real bank could supply</h2>
+    <p>A proposal, not a commitment. Each row says which layer would consume it and what it
+      would plausibly improve. "Improves" means a better-targeted action, not automatically a
+      better number — section 07 is honest about the difference.</p>
+  </div>
+
+  <div class="scroll">
+    <table>
+      <thead><tr><th style="width:20%">Data</th><th style="width:13%">Consumed by</th><th style="width:34%">What it adds</th><th>Cost and risk</th></tr></thead>
+      <tbody>
+        <tr><th class="grp" colspan="4">Payment and transaction behaviour — structured, highest value per unit of effort</th></tr>
+        <tr><td><b>Payment time series</b><br><span style="color:var(--ink-3);font-size:12.5px">amount and date of every payment, 24 months</span></td><td>uplift features</td><td>Replaces three coarse fields (<code>pmts_missed_12m</code>, <code>mos_since_last_pmt</code>, <code>ptp_kept_rate_12m</code>) with a trajectory: is this person sliding, stable or recovering? Partial payments are a strong intent signal we cannot see at all today.</td><td>Low risk, already inside the bank. Volume is the only real cost.</td></tr>
+        <tr><td><b>Salary / income credits</b><br><span style="color:var(--ink-3);font-size:12.5px">date and amount, not just the flag</span></td><td>uplift features<br>+ timing</td><td>Turns <code>direct_deposit</code> from a yes/no into "paid on the 28th, roughly $3,100". Calling two days after payday is a different action from calling two days before.</td><td>Sensitive. Needs a purpose test; some jurisdictions treat it as affordability data.</td></tr>
+        <tr><td><b>Other balances at the same bank</b></td><td>uplift features<br>+ value</td><td>Total exposure and total burden per person, rather than per account. Today <code>member_accounts</code> is a count with no amounts behind it.</td><td>Low. Internal data, one more join.</td></tr>
+        <tr><td><b>Failed direct debits / NSF events</b></td><td>uplift features</td><td>A bounced payment is an attempt to pay that failed — behaviourally the opposite of a missed payment, and we currently score them the same.</td><td>Low.</td></tr>
+
+        <tr><th class="grp" colspan="4">Contact and interaction — structured</th></tr>
+        <tr><td><b>Per-attempt call logs</b><br><span style="color:var(--ink-3);font-size:12.5px">time, duration, disposition, collector</span></td><td>uplift features<br>+ capacity<br>+ KPI 4</td><td>Three things at once: real handling times instead of our fixed 12/25/45-minute assumptions, best-time-to-call per person, and the collector-effect we currently cannot separate from the action effect.</td><td>Low risk, real integration work. <b>This is the single biggest gap</b> — it also closes a measurement gap we have already flagged.</td></tr>
+        <tr><td><b>SMS delivery and reply events</b></td><td>uplift features</td><td>Today an SMS is assumed delivered. Delivery failure and reply are both observable and both predictive.</td><td>Low.</td></tr>
+        <tr><td><b>Inbound contact</b><br><span style="color:var(--ink-3);font-size:12.5px">customer calls us, logs into the app, uses the portal</span></td><td>uplift features<br>+ suppression</td><td>Someone who logged in yesterday to look at their balance does not need the same call as someone who has gone quiet for 40 days. Also a natural suppression: do not cold-call a person who is mid-way through self-service.</td><td>Low. Usually a different system inside the bank, so integration is the cost.</td></tr>
+        <tr><td><b>All contact, not just collections</b></td><td>policy engine</td><td>Directly fixes the cap breach we measured: 20 customer-days where a Last Mile action and the bank's own contact landed on the same day. We enforce the cap on our half only.</td><td>Low technically, political internally — it needs one owner for "contacts today".</td></tr>
+
+        <tr><th class="grp" colspan="4">Unstructured — where an LLM earns its place</th></tr>
+        <tr><td><b>Call recordings → transcripts</b></td><td>enrichment →<br>uplift features</td><td>Per call: was a promise made and in what words, was hardship mentioned, was there anger or distress, was a dispute raised. Today all of that collapses into one bit — <code>rpc</code>, reached or not.</td><td><b>High sensitivity.</b> Recording consent, ASR cost, and the transcript is full of personal data. Only derived flags should leave the enrichment step.</td></tr>
+        <tr><td><b>Collector free-text notes</b></td><td>enrichment →<br>uplift features</td><td>Cheaper than recordings and already typed by a human who was on the call. "Says he'll pay on the 3rd" is a promise the structured data never captures.</td><td>Medium. Notes are messy and contain names; the same shape-only discipline applies.</td></tr>
+        <tr><td><b>Complaint and hardship correspondence</b></td><td>enrichment →<br>policy engine</td><td>Dated complaint events, which our customer-impact KPI currently cannot produce — it can only show a 12-month total. A vulnerability signal found in text should <em>suppress</em>, not re-rank.</td><td>Medium. This one should feed a rule, not a score.</td></tr>
+
+        <tr><th class="grp" colspan="4">External and contextual</th></tr>
+        <tr><td><b>Credit bureau refresh</b></td><td>uplift features<br>+ value</td><td>Delinquency with other lenders, recent credit-seeking, and a current bureau score. Tells us whether this is one account in trouble or a person in trouble.</td><td>Per-pull cost, permissible-purpose rules, and a refresh cadence that will not match our daily cycle.</td></tr>
+        <tr><td><b>Payday and billing calendar</b></td><td>optimiser</td><td>Pure timing. Costs nothing, needs no personal data, and changes which day an action is scheduled rather than which action it is.</td><td>Very low. A plausible quick win.</td></tr>
+        <tr><td><b>Collector skill and tenure</b></td><td>assignment</td><td>The packer treats every collector as interchangeable. They are not: a hardship referral and a first-reminder call need different people.</td><td>Low data cost; an HR-sensitive conversation, because it implies measuring collectors.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note gate">
+    <h3>The collection agent can now be the source</h3>
+    <p>Since this page was written, the <b>collection agent console</b> has been built: an agent signs
+      in, sees only the queue assigned to them, and may re-order their own work before release. What it
+      does <em>not</em> yet have is a way to record what happened on each attempt — so every
+      contact-and-interaction row in the table above still has to come from the bank rather than from
+      the person who made the call. Adding outcome capture on that console is the cheapest route to
+      most of that group.</p>
+  </div>
+
+  <div class="note">
+    <h3>Where agents do the gathering — answering the "can agents enrich?" question directly</h3>
+    <p><b>Already built:</b> the Onboarding Agent reads a bank's OpenAPI description, profiles its
+      columns as <em>value shapes</em> rather than values, proposes the mapping, and an admin
+      approves it. Adding a new feed is a review, not a code change. It mapped Harbor's 54 fields
+      correctly on the first run.</p>
+    <p><b>The natural next agent:</b> an <b>Enrichment Agent</b> that turns unstructured text into
+      a small number of structured, dated flags — <code>promise_made</code>,
+      <code>promise_date</code>, <code>hardship_mentioned</code>, <code>dispute_raised</code>,
+      <code>distress_signal</code>. The LLM reads text and emits flags; it never emits a
+      probability, a dollar figure or a decision. Those flags then enter the uplift model as
+      ordinary point-in-time features and are subject to the same leakage guard as every other
+      field.</p>
+    <p><b>The discipline that has to travel with it:</b> a flag extracted from a call on day 40
+      may not appear on a training row dated day 12. Text enrichment is the easiest place in this
+      whole system to build a model that looks excellent and is cheating.</p>
+  </div>
+</section>
+
+<hr>
+
+<!-- 6 ------------------------------------------------------------------ -->
+<section>
+  <div class="sec-head">
+    <span class="num">06</span>
+    <h2>Section B — what we can actually add before the hackfest</h2>
+    <p>The subset of the above that we control, because our synthetic banks generate their own
+      data. Ordered by effort. Nothing here needs a real bank to agree to anything.</p>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th style="width:5%">#</th><th style="width:25%">Change</th><th style="width:34%">What it demonstrates</th><th>Work involved</th></tr></thead>
+      <tbody>
+        <tr><td class="n">1</td><td><b>Use the three unused fields</b></td><td>That we audit our own inputs. <code>last_rpc_date</code> in particular closes a real compliance gap we found and reported.</td><td>Small. Config and two feature joins.</td></tr>
+        <tr><td class="n">2</td><td><b>Dated complaint and opt-out events</b><br><span style="color:var(--ink-3);font-size:12.5px">new feed, replaces a 12-month count</span></td><td>Turns the customer-impact KPI from "we cannot tell" into a measured number, and lets the model learn which contacts actually generate complaints.</td><td>Small–medium. A generator change plus a new canonical feed.</td></tr>
+        <tr><td class="n">3</td><td><b>Per-attempt call log with real durations</b></td><td>Removes the fixed 12/25/45-minute assumption that currently limits KPI 4, and makes the shift simulation honest.</td><td>Medium. Generator, feed, capacity model, packer. <b>Cheaper now</b> — the collection agent console exists and only needs an outcome-capture step.</td></tr>
+        <tr><td class="n">4</td><td><b>Payment event stream</b><br><span style="color:var(--ink-3);font-size:12.5px">every payment, not 12-month summaries</span></td><td>Lets us show a trajectory feature beating three summary fields — a concrete, measurable "more data improved the prediction" result.</td><td>Medium.</td></tr>
+        <tr><td class="n">5</td><td><b>Collector notes on worked accounts</b><br><span style="color:var(--ink-3);font-size:12.5px">synthetic free text</span></td><td>The Enrichment Agent end to end: text in, dated flags out, flags in the model, LLM never near a number. This is the clearest demonstration of "AI where a rule is not enough".</td><td>Medium–large, and the most interesting to watch.</td></tr>
+        <tr><td class="n">6</td><td><b>A randomised holdout</b><br><span style="color:var(--ink-3);font-size:12.5px">not new data — a change to how we act</span></td><td>Nothing else on this list lets us prove Last Mile <em>caused</em> anything. Five per cent of eligible accounts deliberately left alone turns three observed KPIs into measured ones.</td><td>Small to build, and it is the highest-value item here.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note warn">
+    <p><b>If only one thing gets built, build number 6.</b> Items 1–5 make the prediction better.
+      Item 6 is the only one that lets anyone verify that it got better. A richer model with no
+      holdout produces a more confident claim, not a more credible one.</p>
+  </div>
+</section>
+
+<hr>
+
+<!-- 7 ------------------------------------------------------------------ -->
+<section>
+  <div class="sec-head">
+    <span class="num">07</span>
+    <h2>What more data will not fix</h2>
+    <p>The review asks whether broader data improves the prediction. Mostly yes — but a causal
+      model has a different bottleneck from a risk model, and it is worth being straight about it.</p>
+  </div>
+  <div class="cards">
+    <div class="card">
+      <h3>Uplift is limited by variation in treatment, not by feature count</h3>
+      <p>The model learns from differences between what happened to contacted and
+        uncontacted accounts. If the bank has always called the same kind of customer, no number
+        of new columns will separate the effect of the call from the kind of person who gets
+        called. Five per cent randomisation buys more accuracy here than fifty new fields.</p>
+    </div>
+    <div class="card">
+      <h3>Feedback moves at 30 days, whatever we add</h3>
+      <p>The outcome is "cured within 30 days", so a change made today is measurable in a month.
+        Richer inputs do not speed that up. Shorter-horizon secondary outcomes — a payment within
+        7 days, a kept promise — would, and they are worth adding for that reason alone.</p>
+    </div>
+    <div class="card">
+      <h3>Every new field widens the compliance surface</h3>
+      <p>Income, bureau data and call recordings each carry their own purpose limits and consent
+        requirements. The architecture holds up — personal data stays in the vault, the model
+        works on tokens, the LLM sees shapes — but adding a field is a permission question before
+        it is an engineering question.</p>
+    </div>
+    <div class="card">
+      <h3>More signal makes leakage easier, not harder</h3>
+      <p>The five banned fields exist because the obvious ones are easy to spot. A promise flag
+        extracted from a call that happened after the decision date is not obvious, and it will
+        produce a beautiful, useless model. Point-in-time discipline has to grow with the data,
+        which is why the leakage guard raises an error instead of logging a warning.</p>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+<footer>
+  <p><b>Sources.</b> Field list from <code>src/lastmile/ingest/onboarding.py</code>
+    (<code>CANONICAL</code>) and the two institution packs in <code>config/institutions/</code>.
+    Model features and exclusions from <code>config/scenarios/collections_delinquency.yaml</code>.
+    Usage verified by reading the code, not by assumption — which is how the three unused fields
+    in section 04 were found.</p>
+  <p>Sections 05 and 06 are proposals. Nothing in them is built today.</p>
+</footer>
+
+</div>

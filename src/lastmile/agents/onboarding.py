@@ -88,7 +88,7 @@ def register(r: Registry) -> None:
         return {"title": title, "paths": paths}, {"title": title, "endpoints": len(paths),
                                                    "_message": f"'{title}' publishes {len(paths)} endpoints"}
 
-    @r.register("llm.onboard_plan", "lastmile.agents.llm  (Gemini)", ONBOARDING,
+    @r.register("llm.onboard_plan", "lastmile.agents.llm", ONBOARDING,
                 "Decide which endpoint is the status check, the catalogue, each feed and the action receiver", "llm")
     def plan(ctx, api: dict, feedback: list[str] | None = None):
         prompt = {"api_title": api["title"], "api_paths": api["paths"], "feed_roles": ob.FEED_ROLES,
@@ -134,7 +134,7 @@ def register(r: Registry) -> None:
         return profiles, {"feeds": {k: len(v["columns"]) for k, v in profiles.items()},
                           "_message": f"profiled {sum(len(v['columns']) for v in profiles.values())} columns privately"}
 
-    @r.register("llm.onboard_map", "lastmile.agents.llm  (Gemini)", ONBOARDING,
+    @r.register("llm.onboard_map", "lastmile.agents.llm", ONBOARDING,
                 "Map bank columns to Last Mile fields, decide what the risk score is and which fields are personal", "llm")
     def map_fields(ctx, profiles: dict, catalogue: dict, plan: dict, previous: dict | None = None,
                    problems: list[str] | None = None):
@@ -190,7 +190,7 @@ class OnboardingAgent(Agent):
 
     def run(self, base_url: str) -> dict:
         if self.ctx.llm is None:
-            raise OnboardingError("onboarding needs an LLM: set GEMINI_API_KEY (the mapping decisions are made by the model)")
+            raise OnboardingError("onboarding needs a language model configured; the mapping decisions are made by it")
         api = self.use("onboard.read_api_description", input_summary={"base_url": base_url})
 
         plan, sampled = None, None

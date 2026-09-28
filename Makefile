@@ -4,7 +4,7 @@ setup:        ## install Python 3.11 and all dependencies
 	uv sync
 	@test -f .env || cp .env.example .env
 
-users:        ## create admin / manager / guest accounts with random passwords (paste output into .env)
+users:        ## create admin / manager / collector accounts with random passwords (paste output into .env)
 	uv run python -m lastmile.api.auth users
 
 seed:         ## regenerate both simulated banks (Riverbend and Harbor)

@@ -1,0 +1,189 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Last Mile at a Glance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+:root{
+  --ground:#EDF2F2; --surface:#FFFFFF; --surface-2:#F4F8F8; --sunk:#E4ECEC;
+  --ink:#0F2429; --ink-2:#41565A; --ink-3:#697C7F; --line:#C7D5D5; --line-2:#DDE7E7;
+  --teal:#11606B; --teal-soft:#DCECEE; --violet:#63479C; --violet-soft:#EAE4F5;
+  --amber:#875B12; --amber-soft:#F5EAD6; --rust:#9C3B26; --rust-soft:#F7E4DF;
+  --sans:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+  --serif:"IBM Plex Serif",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0B1214; --surface:#121B1E; --surface-2:#172226; --sunk:#0D1618;
+  --ink:#E3ECEC; --ink-2:#AEC0C1; --ink-3:#7D9294; --line:#2B3C40; --line-2:#1F2D31;
+  --teal:#6BBFC8; --teal-soft:#0F323A; --violet:#B69CE4; --violet-soft:#241C35;
+  --amber:#D7A557; --amber-soft:#2C2416; --rust:#E0846B; --rust-soft:#341913;
+}}
+:root[data-theme="dark"]{
+  --ground:#0B1214; --surface:#121B1E; --surface-2:#172226; --sunk:#0D1618;
+  --ink:#E3ECEC; --ink-2:#AEC0C1; --ink-3:#7D9294; --line:#2B3C40; --line-2:#1F2D31;
+  --teal:#6BBFC8; --teal-soft:#0F323A; --violet:#B69CE4; --violet-soft:#241C35;
+  --amber:#D7A557; --amber-soft:#2C2416; --rust:#E0846B; --rust-soft:#341913;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.6 var(--sans);
+  padding-inline:20px;padding-block:36px 72px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:34px}
+.kicker{font:600 11.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--teal)}
+h1{margin:0;font:600 clamp(28px,3.6vw,40px)/1.14 var(--serif);letter-spacing:-.015em;text-wrap:balance}
+h2{margin:0;font:600 clamp(20px,2.2vw,25px)/1.2 var(--serif);letter-spacing:-.01em;text-wrap:balance}
+h3{margin:0;font:600 16px/1.35 var(--sans);letter-spacing:-.005em}
+p{margin:0}
+a{color:var(--teal)}
+.lede{color:var(--ink-2);font-size:17px;max-width:70ch}
+header{display:grid;gap:12px}
+section{display:grid;gap:16px}
+.sec-head{display:grid;gap:8px;max-width:78ch}
+.sec-head p{color:var(--ink-2)}
+.num{font:600 11.5px/1 var(--mono);color:var(--ink-3);letter-spacing:.12em}
+hr{border:0;border-top:1px solid var(--line);margin:0}
+
+/* strip of figures */
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.strip div{background:var(--surface);padding:15px 17px;display:grid;gap:3px}
+.strip b{font:600 26px/1 var(--sans);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.strip span{font-size:12.5px;color:var(--ink-3);line-height:1.4}
+
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:10px;
+  align-content:start}
+.card ul,.card ol{margin:0;padding-left:19px;display:grid;gap:7px;font-size:14px;color:var(--ink-2)}
+.card li b,.card li strong{color:var(--ink);font-weight:600}
+.card > p{font-size:14px;color:var(--ink-2)}
+
+/* tables */
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:13.5px}
+caption{text-align:left;padding:14px 16px 0;font-size:13px;color:var(--ink-3)}
+th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line-2);vertical-align:top}
+thead th{position:sticky;top:0;background:var(--surface-2);font:600 11.5px/1.3 var(--mono);letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);border-bottom:1px solid var(--line);z-index:1}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--surface-2)}
+td.f{font-family:var(--mono);font-size:12.5px;white-space:nowrap;color:var(--ink)}
+th.grp{background:var(--sunk);font:600 11.5px/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-2);padding:8px 14px;border-bottom:1px solid var(--line)}
+td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* badges */
+.b{display:inline-block;font:600 10.5px/1.7 var(--mono);letter-spacing:.05em;padding:0 7px;border-radius:4px;
+  white-space:nowrap;border:1px solid transparent;text-transform:uppercase}
+.b-rule{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
+.b-model{background:var(--teal-soft);color:var(--teal);border-color:var(--teal)}
+.b-money{background:var(--ink);color:var(--surface)}
+.b-label{background:transparent;color:var(--ink);border-color:var(--ink)}
+.b-shown{background:var(--surface-2);color:var(--ink-3);border-color:var(--line)}
+.b-unused{background:transparent;color:var(--rust);border:1px dashed var(--rust)}
+.b-pii{background:var(--violet-soft);color:var(--violet);border-color:var(--violet)}
+.b-key{background:transparent;color:var(--ink-3);border:1px dotted var(--ink-3)}
+.bs{display:flex;gap:4px;flex-wrap:wrap}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);align-items:center}
+.legend span.i{display:inline-flex;gap:6px;align-items:center}
+
+/* callouts */
+.note{border-left:3px solid var(--teal);background:var(--surface);border-radius:0 8px 8px 0;padding:14px 18px;
+  display:grid;gap:6px;font-size:14px;color:var(--ink-2)}
+.note.warn{border-left-color:var(--rust)}
+.note.gate{border-left-color:var(--amber)}
+.note b{color:var(--ink)}
+.note h3{margin-bottom:2px}
+code{font-family:var(--mono);font-size:.87em;background:var(--surface-2);padding:1px 5px;border-radius:4px;
+  border:1px solid var(--line-2)}
+.note code,td code{background:transparent;border:0;padding:0}
+footer{color:var(--ink-3);font-size:13px;display:grid;gap:6px;max-width:80ch}
+@media (max-width:520px){ body{padding-inline:16px} .strip b{font-size:22px} }
+</style>
+<style>
+figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;overflow-x:auto}
+figure svg{display:block;width:100%;height:auto;min-width:1040px;font-family:var(--sans)}
+.box{fill:var(--surface);stroke:var(--line);stroke-width:1.3}
+.zone{fill:var(--surface-2);stroke:var(--line);stroke-width:1.3}
+.gate{fill:var(--amber-soft);stroke:var(--amber);stroke-width:1.6}
+.agent{fill:var(--teal-soft);stroke:var(--teal);stroke-width:1.6}
+.bank{fill:var(--surface);stroke:var(--ink-2);stroke-width:1.6}
+.pm{fill:var(--ink);stroke:none}
+.pml{fill:var(--surface);font:700 15px var(--mono)}
+.llmdot{fill:var(--violet-soft);stroke:var(--violet);stroke-width:2}
+text.llmtag{fill:var(--violet);font:700 12px var(--mono);letter-spacing:.04em}
+text.vnote{fill:var(--violet);font-size:11.5px;font-style:italic}
+text.st{fill:var(--ink);font-size:19px;font-weight:600;letter-spacing:-.01em}
+text.dt{fill:var(--ink);font-size:15px;font-weight:600}
+text.ss{fill:var(--ink-2);font-size:13.5px}
+text.stag{fill:var(--ink-3);font:700 10.5px var(--mono);letter-spacing:.11em}
+text.lbl2{fill:var(--ink-3);font:700 11px var(--mono);letter-spacing:.12em}
+text.flow2{fill:var(--ink-2);font-size:13px;font-style:italic}
+.edge2{stroke:var(--ink-2);stroke-width:1.8;fill:none}
+.write{stroke:var(--teal);stroke-width:1.8;fill:none;stroke-dasharray:8 5}
+.keys{display:flex;gap:20px;flex-wrap:wrap;font-size:13.5px;color:var(--ink-2);align-items:center;margin-top:4px}
+.keys .i{display:inline-flex;gap:8px;align-items:center}
+.sw{width:14px;height:14px;border-radius:4px;flex:none;display:inline-block}
+.scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.scores .card b{display:block;font-size:14px;margin-bottom:4px}
+</style>
+
+<div class="wrap">
+<header>
+  <span class="kicker">Hackfest'26 · Last Mile · Solution architecture</span>
+  <h1>From a prediction the bank already has, to an action a person approved</h1>
+  <p class="lede">Five stages. The decision in the middle is the part a sorted list cannot do, and a
+    person stands between every recommendation and every customer.</p>
+</header>
+
+<div class="keys">
+  <span class="i"><span class="sw" style="background:var(--teal-soft);border:1.6px solid var(--teal)"></span> our model</span>
+  <span class="i"><span class="sw" style="background:var(--amber-soft);border:1.6px solid var(--amber)"></span> a rule, or a person</span>
+  <span class="i"><span class="sw" style="background:var(--violet-soft);border:2px solid var(--violet)"></span> the language model — two jobs, both wording</span>
+  <span class="i"><span class="sw" style="background:var(--surface);border:1.3px solid var(--line)"></span> deterministic code</span>
+</div>
+
+<figure>
+<svg viewBox="0 0 1440 678" role="img" aria-label="Solution architecture in five stages: the bank's existing prediction and data, preparation with quality gates and a privacy vault, the decision - what is allowed, what is at stake and what an action would change, combined into an expected value and allocated by a solver - then human approval, then the bank acting and the outcome returning to retrain the model. A governance band runs underneath, and a language model appears once, between deciding and approving, to write the reason."><defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/></marker>
+  <marker id="arrLlm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--violet)"/></marker>
+  <marker id="arrRead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+    <path d="M1,1 L8,5 L1,9" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="arrWrite" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <rect x="1.5" y="1.5" width="7" height="7" fill="var(--teal)" transform="rotate(45 5 5)"/></marker>
+</defs>
+<rect class="bank" x="40.0" y="96" width="252.8" height="184" rx="10"/><circle class="pm" cx="70.0" cy="126" r="15"/><text class="pml" x="70.0" y="131" text-anchor="middle">1</text><text class="st" x="96.0" y="132" text-anchor="start">The bank's data</text><text class="ss" x="60.0" y="170" text-anchor="start">Their risk prediction</text><text class="ss" x="60.0" y="191" text-anchor="start">already exists.</text><text class="ss" x="60.0" y="212" text-anchor="start">Six feeds, their own API.</text><text class="stag" x="60.0" y="262" text-anchor="start">TWO BANKS, ONE ENGINE</text><rect class="box" x="316.8" y="96" width="252.8" height="184" rx="10"/><circle class="pm" cx="346.8" cy="126" r="15"/><text class="pml" x="346.8" y="131" text-anchor="middle">2</text><text class="st" x="372.8" y="132" text-anchor="start">Prepare</text><text class="ss" x="336.8" y="170" text-anchor="start">13 quality gates.</text><text class="ss" x="336.8" y="191" text-anchor="start">Names and phones into</text><text class="ss" x="336.8" y="212" text-anchor="start">a vault, and no further.</text><text class="stag" x="336.8" y="262" text-anchor="start">POINT-IN-TIME</text><path class="edge2" d="M294.8,188.0 H310.8" marker-end="url(#arr)"/><rect class="agent" x="593.6" y="96" width="252.8" height="184" rx="10"/><circle class="pm" cx="623.6" cy="126" r="15"/><text class="pml" x="623.6" y="131" text-anchor="middle">3</text><text class="st" x="649.6" y="132" text-anchor="start">Decide</text><text class="ss" x="613.6" y="170" text-anchor="start">What may we do, what is</text><text class="ss" x="613.6" y="191" text-anchor="start">at stake, and what would</text><text class="ss" x="613.6" y="212" text-anchor="start">change if we act?</text><text class="stag" x="613.6" y="262" text-anchor="start">MODELS AND A SOLVER</text><path class="edge2" d="M571.6,188.0 H587.6" marker-end="url(#arr)"/><rect class="gate" x="870.4000000000001" y="96" width="252.8" height="184" rx="10"/><circle class="pm" cx="900.4000000000001" cy="126" r="15"/><text class="pml" x="900.4000000000001" y="131" text-anchor="middle">4</text><text class="st" x="926.4000000000001" y="132" text-anchor="start">Approve</text><text class="ss" x="890.4000000000001" y="170" text-anchor="start">A person reads the reason</text><text class="ss" x="890.4000000000001" y="191" text-anchor="start">and releases it.</text><text class="ss" x="890.4000000000001" y="212" text-anchor="start">Nothing sends itself.</text><text class="stag" x="890.4000000000001" y="262" text-anchor="start">HUMAN GATE</text><path class="edge2" d="M848.4000000000001,188.0 H864.4000000000001" marker-end="url(#arr)"/><rect class="bank" x="1147.2" y="96" width="252.8" height="184" rx="10"/><circle class="pm" cx="1177.2" cy="126" r="15"/><text class="pml" x="1177.2" y="131" text-anchor="middle">5</text><text class="st" x="1203.2" y="132" text-anchor="start">Act, then learn</text><text class="ss" x="1167.2" y="170" text-anchor="start">The bank carries it out.</text><text class="ss" x="1167.2" y="191" text-anchor="start">The outcome comes back</text><text class="ss" x="1167.2" y="212" text-anchor="start">and retrains the model.</text><text class="stag" x="1167.2" y="262" text-anchor="start">CLOSED LOOP</text><path class="edge2" d="M1125.2,188.0 H1141.2" marker-end="url(#arr)"/><circle class="llmdot" cx="858.4000000000001" cy="188.0" r="15"/><text class="llmtag" x="858.4000000000001" y="193.0" text-anchor="middle">AI</text><text class="vnote" x="858.4000000000001" y="82" text-anchor="middle">writes the reason</text><text class="vnote" x="858.4000000000001" y="306" text-anchor="middle">never a number</text><path class="write" d="M1273.6000000000001,280 V342 H720.0 V286" marker-end="url(#arrWrite)"/><text class="flow2" x="996.8000000000001" y="330" text-anchor="middle">what happened feeds the next decision</text><text class="lbl2" x="40" y="386" text-anchor="start">INSIDE STAGE 3 — THE PART A SORTED LIST CANNOT DO</text><rect class="gate" x="40" y="400" width="300" height="92" rx="10"/><text class="dt" x="56" y="428" text-anchor="start">What may we do?</text><text class="ss" x="56" y="450" text-anchor="start">consent, do-not-call, hardship,</text><text class="ss" x="56" y="469" text-anchor="start">contact caps — rules, not a model</text><path class="edge2" d="M190.0,492 V512"/><rect class="box" x="356" y="400" width="300" height="92" rx="10"/><text class="dt" x="372" y="428" text-anchor="start">What is at stake?</text><text class="ss" x="372" y="450" text-anchor="start">the bank's score × exposure</text><text class="ss" x="372" y="469" text-anchor="start">× loss given default</text><path class="edge2" d="M506.0,492 V512"/><rect class="agent" x="672" y="400" width="300" height="92" rx="10"/><text class="dt" x="688" y="428" text-anchor="start">What would change?</text><text class="ss" x="688" y="450" text-anchor="start">uplift per action from a causal</text><text class="ss" x="688" y="469" text-anchor="start">model — the one model we own</text><path class="edge2" d="M822.0,492 V512"/><path class="edge2" d="M190.0,512 H822.0"/><path class="edge2" d="M822.0,512 H986 V446 H994" marker-end="url(#arr)"/><text class="flow2" x="42" y="532" text-anchor="start">answered independently, then combined</text><rect class="box" x="1000" y="400" width="180" height="92" rx="10"/><text class="dt" x="1090" y="434" text-anchor="middle">Expected</text><text class="dt" x="1090" y="456" text-anchor="middle">value, in $</text><text class="stag" x="1090" y="478" text-anchor="middle">arithmetic</text><path class="edge2" d="M1180,446 H1216" marker-end="url(#arr)"/><rect class="box" x="1228" y="400" width="172" height="92" rx="10"/><text class="dt" x="1314" y="434" text-anchor="middle">Solver picks</text><text class="dt" x="1314" y="456" text-anchor="middle">today's list</text><text class="stag" x="1314" y="478" text-anchor="middle">under capacity</text><path class="edge2" d="M720.0,362 V394" marker-end="url(#arr)"/><rect class="zone" x="40" y="566" width="1360" height="84" rx="10"/><text class="st" x="62" y="598" text-anchor="start">Governed all the way through</text><text class="ss" x="62" y="628" text-anchor="start">·  Every figure carries its source</text><text class="ss" x="334" y="628" text-anchor="start">·  Hash-chained audit, verified</text><text class="ss" x="606" y="628" text-anchor="start">·  Three roles, checked every request</text><text class="ss" x="878" y="628" text-anchor="start">·  Every model call stored</text><text class="ss" x="1150" y="628" text-anchor="start">·  Rules re-checked after solving</text></svg>  <figcaption>Read left to right. The dashed line is the learning loop: what happened on a released
+    action comes back as the data the next model is trained on.</figcaption>
+</figure>
+
+<section>
+  <div class="sec-head"><h2>Where each part of this is load-bearing</h2></div>
+  <div class="scores cards">
+    <div class="card"><b>Component design and integration</b>
+      <p>Each stage is a separate layer with one job, and the boundaries are enforced in CI rather than
+        by convention. Two banks run on this engine today with no code difference between them — different
+        API paths, different column names, and one sends grade bands while the other sends a 180-day probability.</p></div>
+    <div class="card"><b>Extensibility</b>
+      <p>A new bank is a configuration pack, proposed by an onboarding agent and approved by an admin.
+        A new decision — NPA early warning on commercial loans — is written against the same schema and
+        validates; it has not been run, because that needs a loan feed we do not have.</p></div>
+    <div class="card"><b>Security and governance</b>
+      <p>Personal data goes into a vault at stage 2 and is read again only to write a call script at
+        release. Three roles are checked on every request. Every decision is in a hash-chained audit,
+        and the rules run twice — before the solver, and again on the finished plan.</p></div>
+    <div class="card"><b>Responsible AI and human-in-the-loop</b>
+      <p>The language model appears once, to write wording, and is checked against the facts it was given.
+        It produces no number and takes no decision. Every recommendation carries a reason with a source for
+        each figure, and nothing reaches a customer without a person releasing it.</p></div>
+  </div>
+</section>
+
+<footer>
+  <p>The detailed version — the full agent pipeline, the access model, the feedback loop, failure modes
+    and measured run times — is in the companion architecture document.</p>
+</footer>
+</div>

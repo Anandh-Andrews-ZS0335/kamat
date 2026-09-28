@@ -1,0 +1,13 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Last Mile · Users & access</title><link rel="stylesheet" href="/static/console.css"><link rel="stylesheet" href="/static/app.css">
+<style>.access-grid{display:grid;grid-template-columns:minmax(280px,390px) minmax(0,1fr);gap:16px}.access-form{display:grid;gap:12px}.access-form label{display:grid;gap:5px;font-size:12px;font-weight:700;color:var(--ink-2)}.access-form .hint{font-weight:400;color:var(--ink-3)}@media(max-width:800px){.access-grid{grid-template-columns:1fr}}</style></head>
+<body><main class="page"><section class="hero"><p class="eyebrow">Access</p><h2>Users &amp; access</h2><p class="muted">Set up the people who operate a bank day. Collection-agent accounts are linked to a roster collector ID, so they see only their own queue.</p><p class="muted" id="scopeNote"></p></section>
+<div class="access-grid"><section class="panel"><div class="panel-h"><b>Add a user</b></div><form class="panel-b access-form" id="userForm">
+<label>Display name<input class="input" name="display_name" required maxlength="100" placeholder="e.g. Priya Nair"></label>
+<label>Username<input class="input" name="username" required pattern="[A-Za-z0-9_.-]{3,80}" placeholder="e.g. priya.nair"></label>
+<label id="roleField">Role<select class="input" name="role" id="role"></select></label>
+<label id="collectorField">Roster collector ID <span class="hint">Must match a daily-team ID, such as C01.</span><input class="input" name="collector_id" maxlength="40" placeholder="C01"></label>
+<label>Password <span class="hint">Minimum 12 characters. It is never shown again.</span><input class="input" name="password" type="password" required minlength="12" autocomplete="new-password"></label>
+<button class="btn primary" type="submit">Create user</button><p class="muted" id="formMsg" aria-live="polite"></p></form></section>
+<section class="panel"><div class="panel-h"><b id="listTitle">Active console users</b><span class="muted" id="userCount"></span></div><div class="panel-b" id="users"><div class="empty">Loading users…</div></div></section></div></main>
+<script src="/static/common.js"></script><script src="/static/shell.js"></script><script src="/static/users.js"></script></body></html>

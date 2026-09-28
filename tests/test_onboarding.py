@@ -120,7 +120,7 @@ def test_onboarding_refuses_without_a_brain(harbor, tmp_path):
     sid = sessions.new_session("http://testserver", "tester", tmp_path)
     onboard(sid, "http://testserver", data_dir=tmp_path, bank=harbor, llm=None, llm_mode="template")
     s = sessions.get(sid, tmp_path)
-    assert s["status"] == "failed" and "needs an LLM" in s["error"]
+    assert s["status"] == "failed" and "needs a language model" in s["error"]
 
 
 def test_engine_runs_a_full_day_for_the_onboarded_bank(harbor, tmp_path, dirs, run, monkeypatch):

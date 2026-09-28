@@ -405,7 +405,7 @@ def build_registry() -> Registry:
         return out, {"accounts": len(out), "facts_per_account": len(provenance.FORMATS) - 1,
                      "_message": f"{len(out)} fact sheets stamped"}
 
-    @r.register("llm.draft_templates", "lastmile.agents.llm  (Gemini)", EXPLAIN,
+    @r.register("llm.draft_templates", "lastmile.agents.llm", EXPLAIN,
                 "Ask the LLM for rationale and script templates per segment x action. No account data is sent", "llm")
     def draft(ctx, combos: list[tuple[str, str]], feedback: dict | None = None):
         cfg = ctx.cfg

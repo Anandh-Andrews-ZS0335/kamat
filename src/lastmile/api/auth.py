@@ -1,11 +1,11 @@
-"""Login for the consoles: three roles, a signed session cookie, and one gate in front of every page and API call.
+"""Login for the consoles: role-scoped access, a signed session cookie, and one gate in front of every page and API call.
 
-  admin    everything, including saving configuration
-  manager  operates the business day (team, runs, approvals, release, close); can read but not save configuration
-  guest    read-only: every page and GET endpoint, no changes
+  admin     everything, including saving configuration and onboarding a bank
+  manager   operates the business day (team, runs, approvals, release, close) and adds collection agents
+  collector works only their roster-linked queue; cannot approve or release actions
 
 Accounts come from LASTMILE_USERS in the environment, never from the repository:
-  LASTMILE_USERS=admin:admin:<hash>;manager:manager:<hash>;guest:guest:<hash>
+  LASTMILE_USERS=admin:admin:<hash>;manager:manager:<hash>;collector:collector:<hash>
 Create them with `python -m lastmile.api.auth users` (prints random passwords once, and the line for .env).
 Standard library only: PBKDF2-SHA256 password hashes, HMAC-SHA256 signed cookies.
 """
@@ -29,8 +29,12 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from lastmile.config.settings import TOKEN_SECRET
+from lastmile.store import db
 
-ROLES = ("admin", "manager", "guest")
+ROLES = ("admin", "manager", "collector")
+# Roles that used to exist. An entry carrying one is skipped rather than rejected, so an
+# .env written before the role was withdrawn does not stop the engine from starting.
+RETIRED_ROLES = frozenset({"guest"})
 COOKIE = "lastmile_session"
 SESSION_S = 8 * 3600
 PBKDF2_ITERATIONS = 600_000
@@ -44,6 +48,8 @@ class User:
     username: str
     role: str
     pw_hash: str
+    display_name: str | None = None
+    collector_id: str | None = None
 
 
 # ------------------------------------------------------------------------------------ passwords
@@ -69,9 +75,20 @@ def load_users(raw: str | None = None) -> dict[str, User]:
     users = {}
     for entry in filter(None, (e.strip() for e in raw.split(";"))):
         username, role, pw_hash = entry.split(":", 2)
+        if role in RETIRED_ROLES:
+            continue
         if role not in ROLES:
             raise ValueError(f"LASTMILE_USERS: unknown role {role!r} for {username!r}")
-        users[username] = User(username, role, pw_hash)
+        users[username] = User(username, role, pw_hash, username)
+    try:
+        with db.connect() as con:
+            rows = db.rows(con, "SELECT username, display_name, role, collector_id, pw_hash FROM app_users WHERE active = 1")
+        for row in rows:
+            if row["role"] in RETIRED_ROLES or row["role"] not in ROLES:
+                continue
+            users[row["username"]] = User(row["username"], row["role"], row["pw_hash"], row["display_name"], row["collector_id"])
+    except Exception:  # the engine may be reading credentials before its local database exists
+        pass
     return users
 
 
@@ -115,11 +132,43 @@ def read_session(token: str | None, users: dict[str, User], now: float | None = 
 
 
 def allowed(role: str, method: str, path: str) -> bool:
-    if role == "admin" or method in READ_METHODS:
+    if role == "admin":
         return True
+    if role == "collector":
+        return (path == "/agent" or path.startswith("/api/agent/") or path.startswith("/static/")
+                or path == "/api/worklist" or path in {"/api/me", "/api/status", "/logout"})
     if role == "manager":
-        return not (method == "PUT" and path.startswith("/api/config/files/"))
-    return False
+        # a manager runs the day and staffs it: the users console is open to them, but
+        # users.py caps what they may create there to collection-agent accounts
+        return (path != "/agent" and not path.startswith("/api/agent/")
+                and not path.startswith("/admin/onboarding") and not path.startswith("/api/onboarding")
+                and not path.startswith("/admin/config") and not path.startswith("/api/config")
+                and not (method == "PUT" and path.startswith("/api/config/files/")))
+    return False                       # an unrecognised role reaches nothing
+
+
+# Where a role belongs when nothing else is asked for. A collector cannot open the guided tour,
+# so sending everyone there would leave them staring at a permission error after a valid sign-in.
+HOME = {"collector": "/agent"}
+
+
+def home_for(role: str) -> str:
+    return HOME.get(role, "/guide")
+
+
+def denial_reason(role: str, method: str, path: str) -> str:
+    """Say what is actually wrong, rather than guessing at configuration."""
+    if role == "collector":
+        return "Your account can open your own queue only."
+    if path == "/agent" or path.startswith("/api/agent/"):
+        return "The collection-agent queue belongs to an account linked to a roster collector."
+    if path.startswith("/admin/config") or path.startswith("/api/config"):
+        return "Only an administrator can open the bank configuration."
+    if path.startswith("/admin/onboarding") or path.startswith("/api/onboarding"):
+        return "Only an administrator can onboard a bank."
+    if path.startswith("/admin/users") or path.startswith("/api/users"):
+        return "Only an administrator or a collections manager can manage access."
+    return "Your account does not have access to this page."
 
 
 def actor(request: Request) -> str:
@@ -151,9 +200,12 @@ class AuthMiddleware:
                 response = RedirectResponse(f"/login?next={quote(target)}", status_code=303)
             return await response(scope, receive, send)
         if not allowed(user.role, method, path):
-            msg = ("guest accounts are read-only" if user.role == "guest"
-                   else "only an admin can save configuration changes")
-            return await JSONResponse({"detail": msg}, status_code=403)(scope, receive, send)
+            msg = denial_reason(user.role, method, path)
+            if path.startswith("/api/") or method not in READ_METHODS:
+                response = JSONResponse({"detail": msg}, status_code=403)
+            else:
+                response = _denied_page(msg, home_for(user.role))
+            return await response(scope, receive, send)
         scope.setdefault("state", {})["user"] = user
         await self.app(scope, receive, send)
 
@@ -174,6 +226,19 @@ def _safe_next(target: str | None) -> str:
     return target if target and target.startswith("/") and not target.startswith("//") and "\\" not in target else "/guide"
 
 
+def _denied_page(message: str, home: str) -> HTMLResponse:
+    """A refused page request gets a page, not a JSON blob in the address bar."""
+    css = LOGIN_HTML[LOGIN_HTML.index("<style>"):LOGIN_HTML.index("</style>") + 8]   # same shell as sign-in
+    return HTMLResponse(f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>No access \u00b7 Last Mile</title>
+{css}</head><body><main class="card">
+  <div class="brand"><span class="mark">LM</span><span><b>Last Mile</b><small>Collections</small></span></div>
+  <h1>No access</h1><p class="sub">{escape(message)}</p>
+  <p class="roles"><a href="{escape(home)}">Go to your own page</a> &#183;
+     <a href="/login">Sign in as somebody else</a></p>
+</main></body></html>""", status_code=403, headers={"Cache-Control": "no-store"})
+
+
 def _page(error: str = "", next_path: str = "/guide", status: int = 200) -> HTMLResponse:
     err = f'<p class="err" role="alert">{escape(error)}</p>' if error else ""
     return HTMLResponse(LOGIN_HTML.replace("{{error}}", err).replace("{{next}}", escape(next_path)), status_code=status,
@@ -182,8 +247,10 @@ def _page(error: str = "", next_path: str = "/guide", status: int = 200) -> HTML
 
 @router.get("/login", include_in_schema=False)
 def login_page(request: Request, next: str | None = None):
-    if read_session(request.cookies.get(COOKIE), load_users()):
-        return RedirectResponse(_safe_next(next), status_code=303)
+    user = read_session(request.cookies.get(COOKIE), load_users())
+    if user:
+        target = _safe_next(next)
+        return RedirectResponse(target if allowed(user.role, "GET", target) else home_for(user.role), status_code=303)
     return _page(next_path=_safe_next(next))
 
 
@@ -205,6 +272,8 @@ async def login(request: Request):
             _failures.setdefault(key, []).append(now)
         return _page("Incorrect username or password.", next_path, 401)
     _failures.pop(f"user:{username}", None)
+    if not allowed(user.role, "GET", next_path):
+        next_path = home_for(user.role)          # a stale or default target their role cannot open
     response = RedirectResponse(next_path, status_code=303)
     response.set_cookie(COOKIE, make_session(user), max_age=SESSION_S, httponly=True, samesite="lax",
                         secure=request.url.scheme == "https", path="/")
@@ -221,7 +290,12 @@ def logout():
 @router.get("/api/me")
 def me(request: Request):
     user = request.state.user
-    return {"username": user.username, "role": user.role}
+    out = {"username": user.username, "role": user.role}
+    if user.display_name and user.display_name != user.username:
+        out["display_name"] = user.display_name
+    if user.collector_id:
+        out["collector_id"] = user.collector_id
+    return out
 
 
 LOGIN_HTML = """<!doctype html>
@@ -269,9 +343,9 @@ button:hover{filter:brightness(1.08)}
   <label for="password">Password</label>
   <input id="password" name="password" type="password" autocomplete="current-password" required>
   <button type="submit">Sign in</button>
-  <p class="roles"><b>admin</b> — everything, including saving configuration.<br>
-    <b>manager</b> — runs the business day: team, runs, approvals, release.<br>
-    <b>guest</b> — read-only.</p>
+  <p class="roles"><b>admin</b> — everything, including configuration and onboarding a bank.<br>
+    <b>manager</b> — runs the business day: team, runs, approvals, release; adds collection agents.<br>
+    <b>collection agent</b> — their own queue for today.</p>
 </form>
 </body></html>"""
 

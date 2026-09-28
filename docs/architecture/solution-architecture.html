@@ -1,0 +1,770 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Last Mile Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+:root{
+  --ground:#EDF2F2; --surface:#FFFFFF; --surface-2:#F4F8F8; --sunk:#E4ECEC;
+  --ink:#0F2429; --ink-2:#41565A; --ink-3:#697C7F; --line:#C7D5D5; --line-2:#DDE7E7;
+  --teal:#11606B; --teal-soft:#DCECEE; --violet:#63479C; --violet-soft:#EAE4F5;
+  --amber:#875B12; --amber-soft:#F5EAD6; --rust:#9C3B26; --rust-soft:#F7E4DF;
+  --sans:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+  --serif:"IBM Plex Serif",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0B1214; --surface:#121B1E; --surface-2:#172226; --sunk:#0D1618;
+  --ink:#E3ECEC; --ink-2:#AEC0C1; --ink-3:#7D9294; --line:#2B3C40; --line-2:#1F2D31;
+  --teal:#6BBFC8; --teal-soft:#0F323A; --violet:#B69CE4; --violet-soft:#241C35;
+  --amber:#D7A557; --amber-soft:#2C2416; --rust:#E0846B; --rust-soft:#341913;
+}}
+:root[data-theme="dark"]{
+  --ground:#0B1214; --surface:#121B1E; --surface-2:#172226; --sunk:#0D1618;
+  --ink:#E3ECEC; --ink-2:#AEC0C1; --ink-3:#7D9294; --line:#2B3C40; --line-2:#1F2D31;
+  --teal:#6BBFC8; --teal-soft:#0F323A; --violet:#B69CE4; --violet-soft:#241C35;
+  --amber:#D7A557; --amber-soft:#2C2416; --rust:#E0846B; --rust-soft:#341913;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.6 var(--sans);
+  padding-inline:20px;padding-block:36px 72px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:34px}
+.kicker{font:600 11.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--teal)}
+h1{margin:0;font:600 clamp(28px,3.6vw,40px)/1.14 var(--serif);letter-spacing:-.015em;text-wrap:balance}
+h2{margin:0;font:600 clamp(20px,2.2vw,25px)/1.2 var(--serif);letter-spacing:-.01em;text-wrap:balance}
+h3{margin:0;font:600 16px/1.35 var(--sans);letter-spacing:-.005em}
+p{margin:0}
+a{color:var(--teal)}
+.lede{color:var(--ink-2);font-size:17px;max-width:70ch}
+header{display:grid;gap:12px}
+section{display:grid;gap:16px}
+.sec-head{display:grid;gap:8px;max-width:78ch}
+.sec-head p{color:var(--ink-2)}
+.num{font:600 11.5px/1 var(--mono);color:var(--ink-3);letter-spacing:.12em}
+hr{border:0;border-top:1px solid var(--line);margin:0}
+
+/* strip of figures */
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.strip div{background:var(--surface);padding:15px 17px;display:grid;gap:3px}
+.strip b{font:600 26px/1 var(--sans);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.strip span{font-size:12.5px;color:var(--ink-3);line-height:1.4}
+
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:10px;
+  align-content:start}
+.card ul,.card ol{margin:0;padding-left:19px;display:grid;gap:7px;font-size:14px;color:var(--ink-2)}
+.card li b,.card li strong{color:var(--ink);font-weight:600}
+.card > p{font-size:14px;color:var(--ink-2)}
+
+/* tables */
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:13.5px}
+caption{text-align:left;padding:14px 16px 0;font-size:13px;color:var(--ink-3)}
+th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line-2);vertical-align:top}
+thead th{position:sticky;top:0;background:var(--surface-2);font:600 11.5px/1.3 var(--mono);letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);border-bottom:1px solid var(--line);z-index:1}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--surface-2)}
+td.f{font-family:var(--mono);font-size:12.5px;white-space:nowrap;color:var(--ink)}
+th.grp{background:var(--sunk);font:600 11.5px/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-2);padding:8px 14px;border-bottom:1px solid var(--line)}
+td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* badges */
+.b{display:inline-block;font:600 10.5px/1.7 var(--mono);letter-spacing:.05em;padding:0 7px;border-radius:4px;
+  white-space:nowrap;border:1px solid transparent;text-transform:uppercase}
+.b-rule{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
+.b-model{background:var(--teal-soft);color:var(--teal);border-color:var(--teal)}
+.b-money{background:var(--ink);color:var(--surface)}
+.b-label{background:transparent;color:var(--ink);border-color:var(--ink)}
+.b-shown{background:var(--surface-2);color:var(--ink-3);border-color:var(--line)}
+.b-unused{background:transparent;color:var(--rust);border:1px dashed var(--rust)}
+.b-pii{background:var(--violet-soft);color:var(--violet);border-color:var(--violet)}
+.b-key{background:transparent;color:var(--ink-3);border:1px dotted var(--ink-3)}
+.bs{display:flex;gap:4px;flex-wrap:wrap}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);align-items:center}
+.legend span.i{display:inline-flex;gap:6px;align-items:center}
+
+/* callouts */
+.note{border-left:3px solid var(--teal);background:var(--surface);border-radius:0 8px 8px 0;padding:14px 18px;
+  display:grid;gap:6px;font-size:14px;color:var(--ink-2)}
+.note.warn{border-left-color:var(--rust)}
+.note.gate{border-left-color:var(--amber)}
+.note b{color:var(--ink)}
+.note h3{margin-bottom:2px}
+code{font-family:var(--mono);font-size:.87em;background:var(--surface-2);padding:1px 5px;border-radius:4px;
+  border:1px solid var(--line-2)}
+.note code,td code{background:transparent;border:0;padding:0}
+footer{color:var(--ink-3);font-size:13px;display:grid;gap:6px;max-width:80ch}
+@media (max-width:520px){ body{padding-inline:16px} .strip b{font-size:22px} }
+</style>
+
+<style>
+figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;
+  overflow-x:auto}
+figure svg{display:block;width:100%;height:auto;font-family:var(--sans)}
+#f1 svg{min-width:1160px} #f2 svg{min-width:900px}
+figcaption{margin-top:12px;font-size:13.5px;color:var(--ink-3);max-width:96ch}
+.box{fill:var(--surface);stroke:var(--line);stroke-width:1.2}
+.box-dash{fill:var(--surface);stroke:var(--ink-3);stroke-width:1.2;stroke-dasharray:5 4}
+.zone{fill:var(--surface-2);stroke:var(--line);stroke-width:1.2}
+.person{fill:var(--surface);stroke:var(--ink-2);stroke-width:1.4}
+.pm{fill:var(--ink);stroke:none}
+.pml{fill:var(--surface);font:600 13px var(--mono)}
+.gate{fill:var(--amber-soft);stroke:var(--amber);stroke-width:1.3}
+.api{fill:var(--sunk);stroke:var(--ink-3);stroke-width:1.2}
+.agent{fill:var(--teal-soft);stroke:var(--teal);stroke-width:1.5}
+.bank{fill:var(--surface);stroke:var(--ink-2);stroke-width:1.4}
+.llm{fill:var(--violet-soft);stroke:var(--violet);stroke-width:1.6}
+.store{fill:var(--surface);stroke:var(--ink-3);stroke-width:1.3}
+.tool{fill:var(--surface);stroke:var(--line);stroke-width:1.2}
+.rule{stroke:var(--ink-3);stroke-width:1;fill:none}
+text.t{fill:var(--ink);font-size:13px;font-weight:600}
+text.s{fill:var(--ink-3);font-size:11px}
+text.m{fill:var(--ink-3);font-size:10.5px;font-family:var(--mono)}
+text.lbl{fill:var(--ink-3);font-size:10.5px;font-weight:700;letter-spacing:.12em}
+text.lbl-v{fill:var(--violet)}
+text.lbl-a{fill:var(--amber)}
+text.lbl-t{fill:var(--teal)}
+.sep{stroke:var(--ink-3);stroke-width:1;stroke-dasharray:4 4;fill:none;opacity:.6}
+#f0 svg{min-width:1040px}
+text.bt{fill:var(--ink);font-size:16px;font-weight:600;letter-spacing:-.005em}
+text.bs{fill:var(--ink-3);font-size:12.5px}
+text.eq{fill:var(--ink);font-size:14px;font-family:var(--mono);font-weight:500}
+text.tag{fill:var(--ink-3);font:700 10px var(--mono);letter-spacing:.11em}
+text.tag-v{fill:var(--violet);font:700 10px var(--mono);letter-spacing:.11em}
+text.ag{fill:var(--teal);font:600 10.5px var(--mono);letter-spacing:.06em}
+text.flow{fill:var(--ink-2);font-size:12px;font-style:italic}
+#f3 svg{min-width:1100px} #f4 svg{min-width:1100px} #f5 svg{min-width:1400px}
+text.el{fill:var(--ink-2);font-size:11px}
+text.prop{fill:var(--ink-3);font:700 9px var(--mono);letter-spacing:.1em}
+.edge{stroke:var(--ink-2);stroke-width:1.5;fill:none}
+.llmedge{stroke:var(--violet);stroke-width:1.8;fill:none}
+.read{stroke:var(--ink-3);stroke-width:1.4;fill:none;stroke-dasharray:1.5 3.5;stroke-linecap:round}
+.write{stroke:var(--teal);stroke-width:1.5;fill:none;stroke-dasharray:7 4}
+.ch-full{fill:var(--ink);stroke:none}
+.ch-read{fill:none;stroke:var(--ink-2);stroke-width:1.1}
+.ch-none{fill:none;stroke:var(--line);stroke-width:1;stroke-dasharray:2 2}
+text.cht{fill:var(--ink-3);font:600 9.5px var(--mono)}
+text.cht-on{fill:var(--surface)}
+.keys{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);align-items:center;
+  padding:2px 0}
+.keys .i{display:inline-flex;gap:7px;align-items:center}
+.keys svg{width:34px;height:12px;flex:none;min-width:0}
+.swatch{width:13px;height:13px;border-radius:3px;flex:none;display:inline-block}
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="kicker">Hackfest'26 · Last Mile · Response to technical review</span>
+  <h1>How Last Mile is put together, and who is allowed to see what</h1>
+  <p class="lede">The same architecture as before, with three changes the review asked for: three
+    real roles instead of one manager and a read-only guest, every console explained top to
+    bottom, and data stores drawn with arrows of their own so a read is never mistaken for a write.</p>
+</header>
+
+<div class="note gate">
+  <h3>What is built, and the one thing that is not</h3>
+  <p>Everything on this page runs today, including the <b>three-role model</b>: admin, collections
+    manager and collection agent, each gated on every page and every API call. A collection
+    agent sees only the queue assigned to them and may re-order their own work before release.
+    A read-only <em>guest</em> role existed and was <b>withdrawn</b>: it could read the bank
+    configuration and the onboarding console, which a collections manager cannot.</p>
+  <p><b>The exception</b>, marked wherever it appears: the agent console does not yet let a
+    collector <em>record what happened</em> on each attempt. The 30-day feedback loop runs; the
+    same-day one cannot until that capture exists. See section 05.</p>
+</div>
+
+
+<hr>
+
+<section>
+  <div class="sec-head">
+    <span class="num">01</span>
+    <h2>The solution, end to end</h2>
+    <p>One frame. The bank already has a prediction; everything below it is the part that turns that
+      prediction into an approved action. Read it downwards — and note that the three boxes in the
+      middle are answered <em>independently</em>, which is what separates this from a sorted list.</p>
+  </div>
+  <figure id="f0">
+
+<svg viewBox="0 0 1600 1126" role="img" aria-label="Solution architecture: the bank's existing prediction and account data are ingested and tokenised into a point-in-time decision state; three layers then answer independently what is allowed, what is at stake, and what an action would change; those combine into an expected value, a mixed-integer solver allocates the day under capacity, the plan is packed into collector shifts and re-verified against every rule, an LLM drafts the wording, a person approves and releases, the bank executes, and matured outcomes return up the left margin to retrain the model."><defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/></marker>
+  <marker id="arrLlm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--violet)"/></marker>
+  <marker id="arrRead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+    <path d="M1,1 L8,5 L1,9" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="arrWrite" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <rect x="1.5" y="1.5" width="7" height="7" fill="var(--teal)" transform="rotate(45 5 5)"/></marker>
+</defs>
+
+<rect class="person" x="40.0" y="16" width="389.3333333333333" height="54" rx="8"/><circle class="pm" cx="66.0" cy="43" r="14"/><text class="pml" x="66.0" y="48" text-anchor="middle">A</text><text class="bt" x="90.0" y="38" text-anchor="start">Admin</text><text class="bs" x="90.0" y="57" text-anchor="start">banks, rules and who has access</text><path class="edge" d="M234.66666666666666,70 V82" marker-end="url(#arr)"/><rect class="person" x="445.3333333333333" y="16" width="389.3333333333333" height="54" rx="8"/><circle class="pm" cx="471.3333333333333" cy="43" r="14"/><text class="pml" x="471.3333333333333" y="48" text-anchor="middle">M</text><text class="bt" x="495.3333333333333" y="38" text-anchor="start">Collections manager</text><text class="bs" x="495.3333333333333" y="57" text-anchor="start">runs the day, approves, releases</text><path class="edge" d="M640.0,70 V82" marker-end="url(#arr)"/><rect class="person" x="850.6666666666666" y="16" width="389.3333333333333" height="54" rx="8"/><circle class="pm" cx="876.6666666666666" cy="43" r="14"/><text class="pml" x="876.6666666666666" y="48" text-anchor="middle">C</text><text class="bt" x="900.6666666666666" y="38" text-anchor="start">Collection agent</text><text class="bs" x="900.6666666666666" y="57" text-anchor="start">works only their own queue</text><path class="edge" d="M1045.3333333333333,70 V82" marker-end="url(#arr)"/><rect class="gate" x="40" y="84" width="1200" height="36" rx="8"/><text class="bt" x="58" y="107" text-anchor="start">Sign-in gate</text><text class="bs" x="170" y="107" text-anchor="start">the role decides which consoles open, and is re-checked on every page and every API call</text><text class="tag" x="1224" y="107" text-anchor="end">OPERATE  ·  MANAGE</text><path class="edge" d="M340,120 V134" marker-end="url(#arr)"/><rect class="bank" x="40" y="136" width="380" height="120" rx="8"/><text class="bt" x="58" y="163" text-anchor="start">Bank systems</text><text class="tag" x="404" y="162" text-anchor="end">THE PREDICTION ALREADY EXISTS</text><text class="bs" x="58" y="186" text-anchor="start">Riverbend CU — risk as grades A–E</text><text class="bs" x="58" y="204" text-anchor="start">Harbor — risk as a 180-day probability</text><path class="edge" d="M420,196 H460" marker-end="url(#arr)"/><rect class="box" x="470" y="136" width="400" height="128" rx="8"/><text class="bt" x="488" y="163" text-anchor="start">Ingest &amp; prepare</text><text class="bs" x="488" y="186" text-anchor="start">six feeds over the bank's own API · 13 quality gates</text><text class="bs" x="488" y="204" text-anchor="start">names and phones → identity vault, never past here</text><text class="bs" x="488" y="222" text-anchor="start">their score recalibrated to one scale · LGD · exposure</text><text class="ag" x="854" y="253" text-anchor="end">Ingestion · Data Steward</text><path class="edge" d="M870,196 H910" marker-end="url(#arr)"/><rect class="box" x="880" y="136" width="360" height="128" rx="8"/><text class="bt" x="898" y="163" text-anchor="start">Decision state</text><text class="bs" x="898" y="186" text-anchor="start">one row per delinquent account,</text><text class="bs" x="898" y="204" text-anchor="start">true as of this morning and nothing later —</text><text class="bs" x="898" y="222" text-anchor="start">point-in-time, or the model learns the answer</text><text class="ag" x="1224" y="253" text-anchor="end">Feature Agent</text><text class="lbl" x="40" y="280" text-anchor="start">THE DECISION</text><path class="edge" d="M1060,256 V272 H234.66666666666666 V286" marker-end="url(#arr)"/><path class="edge" d="M640.0,272 V286" marker-end="url(#arr)"/><path class="edge" d="M1045.3333333333333,272 V286" marker-end="url(#arr)"/><path class="edge" d="M234.66666666666666,272 H1045.3333333333333"/><rect class="gate" x="40.0" y="288" width="389.3333333333333" height="158" rx="8"/><text class="bt" x="58.0" y="315" text-anchor="start">What may we do?</text><text class="tag" x="413.3333333333333" y="314" text-anchor="end">RULES, NOT A MODEL</text><text class="bs" x="58.0" y="338" text-anchor="start">consent per channel · do-not-call</text><text class="bs" x="58.0" y="356" text-anchor="start">deceased · bankruptcy · litigation · fraud</text><text class="bs" x="58.0" y="374" text-anchor="start">hardship history · days past due</text><text class="bs" x="58.0" y="392" text-anchor="start">7 attempts / 7 days · 1 contact / day</text><text class="ag" x="413.3333333333333" y="435" text-anchor="end">Policy Agent</text><text class="flow" x="246.66666666666666" y="470" text-anchor="start">eligible actions per account</text><rect class="box" x="445.3333333333333" y="288" width="389.3333333333333" height="158" rx="8"/><text class="bt" x="463.3333333333333" y="315" text-anchor="start">What is at stake?</text><text class="tag" x="818.6666666666666" y="314" text-anchor="end">ARITHMETIC</text><text class="bs" x="463.3333333333333" y="338" text-anchor="start">the bank's own score, recalibrated</text><text class="bs" x="463.3333333333333" y="356" text-anchor="start">to a 12-month probability of default</text><text class="bs" x="463.3333333333333" y="374" text-anchor="start">× exposure × loss given default</text><text class="bs" x="463.3333333333333" y="392" text-anchor="start">we never retrain their model</text><text class="ag" x="818.6666666666666" y="435" text-anchor="end">Feature Agent</text><text class="flow" x="652.0" y="470" text-anchor="start">expected loss if it does not cure</text><rect class="agent" x="850.6666666666666" y="288" width="389.3333333333333" height="158" rx="8"/><text class="bt" x="868.6666666666666" y="315" text-anchor="start">What would change if we act?</text><text class="tag" x="1224.0" y="314" text-anchor="end">OUR MODEL</text><text class="bs" x="868.6666666666666" y="338" text-anchor="start">bagged T-learner — 6 × gradient boosting</text><text class="bs" x="868.6666666666666" y="356" text-anchor="start">P(cure | action) − P(cure | nothing)</text><text class="bs" x="868.6666666666666" y="374" text-anchor="start">one estimate per action, with a range</text><text class="bs" x="868.6666666666666" y="392" text-anchor="start">Persuadable · Sure Thing · Lost Cause · Sleeping Dog</text><text class="ag" x="1224.0" y="435" text-anchor="end">Decision Agent</text><text class="flow" x="1057.3333333333333" y="470" text-anchor="start">uplift per action</text><path class="edge" d="M234.66666666666666,504 H1045.3333333333333"/><path class="edge" d="M234.66666666666666,446 V504"/><path class="edge" d="M640.0,446 V504"/><path class="edge" d="M1045.3333333333333,446 V504"/><path class="edge" d="M640.0,504 V528" marker-end="url(#arr)"/><rect class="box" x="40" y="528" width="1200" height="64" rx="8"/><text class="bt" x="58" y="555" text-anchor="start">Expected value</text><text class="eq" x="58" y="578" text-anchor="start">uplift  ×  ( probability of default × exposure × loss given default )  −  the cost of acting</text><text class="tag" x="1224" y="554" text-anchor="end">THE RANKING A RISK SCORE CANNOT PRODUCE</text><path class="edge" d="M440,592 V618" marker-end="url(#arr)"/><rect class="box" x="40" y="618" width="800" height="128" rx="8"/><text class="bt" x="58" y="645" text-anchor="start">Optimise, then assign</text><text class="tag" x="824" y="644" text-anchor="end">A SOLVER, NOT THE LLM</text><text class="bs" x="58" y="668" text-anchor="start">mixed-integer program (PuLP / CBC): maximise total value subject to team</text><text class="bs" x="58" y="686" text-anchor="start">minutes, handling time per action, contact caps, one action per account</text><text class="bs" x="58" y="704" text-anchor="start">then first-fit-decreasing packing into each collector's shift, repair re-solve</text><text class="ag" x="824" y="735" text-anchor="end">Decision Agent</text><rect class="box" x="895" y="618" width="345" height="122" rx="8"/><text class="bt" x="913" y="645" text-anchor="start">Checked before anyone is called</text><text class="bs" x="913" y="668" text-anchor="start">Monte Carlo × 2,000 → p10 / p50 / p90</text><text class="bs" x="913" y="686" text-anchor="start">SimPy shift simulation → will it finish?</text><text class="bs" x="913" y="704" text-anchor="start">compared with sort-by-risk and sort-by-value</text><path class="read" d="M891,679 H844" marker-end="url(#arrRead)"/><path class="edge" d="M440,740 V766" marker-end="url(#arr)"/><rect class="gate" x="40" y="766" width="1200" height="48" rx="8"/><text class="bt" x="58" y="795" text-anchor="start">Every rule re-checked against the finished plan</text><text class="bs" x="470" y="795" text-anchor="start">a different code path from the gate above, so a plan that broke a cap after solving is caught — and the run fails closed</text><path class="edge" d="M440,814 V840" marker-end="url(#arr)"/><rect class="llm" x="40" y="840" width="1200" height="58" rx="8"/><text class="bt" x="58" y="867" text-anchor="start">Explain it in plain language</text><text class="bs" x="58" y="888" text-anchor="start">facts stamped with their source  →  the LLM drafts the wording  →  checked back against those facts, one rewrite allowed</text><text class="tag-v" x="1224" y="866" text-anchor="end">THE LLM WRITES THE SENTENCE, NEVER THE NUMBER</text><path class="llmedge" d="M1240,869 H1268" marker-end="url(#arrLlm)"/><path class="edge" d="M440,898 V924" marker-end="url(#arr)"/><rect class="gate" x="40" y="924" width="1200" height="48" rx="8"/><text class="bt" x="58" y="953" text-anchor="start">A person approves every action, then releases it</text><text class="bs" x="470" y="953" text-anchor="start">nothing above this line has contacted anybody · approver and reason recorded in the audit chain</text><path class="edge" d="M440,972 V998" marker-end="url(#arr)"/><rect class="bank" x="40" y="998" width="1200" height="78" rx="8"/><text class="bt" x="58" y="1025" text-anchor="start">The bank executes — and tells us what happened</text><text class="bs" x="58" y="1048" text-anchor="start">reached or not, on the day  ·  cured within 30 days, amount paid, complaints  —  no outcome is published before it matures</text><path class="write" d="M640,1056 V1100 H22 V268 H1045.3333333333333 V284" marker-end="url(#arrWrite)"/><text class="flow" x="620" y="1084" text-anchor="end">matured outcomes retrain the model — promoted only if it beats random (Qini)</text><text class="flow" x="1031.3333333333333" y="264" text-anchor="end">the system learns</text><text class="lbl" x="1272" y="128" text-anchor="start">ACROSS EVERY LAYER</text><rect class="box" x="1272" y="136" width="300" height="200" rx="8"/><text class="bt" x="1290" y="163" text-anchor="start">Governed by construction</text><text class="bs" x="1290" y="186" text-anchor="start">hash-chained audit, verified on read</text><text class="bs" x="1290" y="204" text-anchor="start">every figure shown carries its source</text><text class="bs" x="1290" y="222" text-anchor="start">the rule pack is hashed onto each run</text><text class="bs" x="1290" y="240" text-anchor="start">every agent tool call is traced</text><text class="bs" x="1290" y="258" text-anchor="start">every LLM request and reply is stored</text><text class="bs" x="1290" y="276" text-anchor="start">append-only tables · nothing edited</text><text class="bs" x="1290" y="294" text-anchor="start">a reason on every recommendation</text><rect class="store" x="1272" y="380" width="300" height="186" rx="8"/><text class="bt" x="1290" y="407" text-anchor="start">Data stores</text><text class="bs" x="1290" y="430" text-anchor="start">SQLite — runs, approvals, releases,</text><text class="bs" x="1290" y="448" text-anchor="start">audit, traces, LLM calls</text><text class="bs" x="1290" y="466" text-anchor="start">Parquet — every intermediate table,</text><text class="bs" x="1290" y="484" text-anchor="start">one folder per run</text><text class="bs" x="1290" y="502" text-anchor="start">Identity vault — names and phones,</text><text class="bs" x="1290" y="520" text-anchor="start">opened only to write a call script</text><text class="bs" x="1290" y="538" text-anchor="start">YAML packs — rules, versioned</text><path class="write" d="M1240,556 H1268" marker-end="url(#arrWrite)"/><path class="read" d="M1268,672 H1240" marker-end="url(#arrRead)"/><rect class="llm" x="1272" y="812" width="300" height="150" rx="8"/><text class="bt" x="1290" y="839" text-anchor="start">LLM</text><text class="bs" x="1290" y="862" text-anchor="start">① the wording of the reason</text><text class="bs" x="1290" y="880" text-anchor="start">② mapping a new bank's columns</text><text class="bs" x="1290" y="898" text-anchor="start"></text><text class="bs" x="1290" y="916" text-anchor="start">never a number, never a decision,</text><text class="bs" x="1290" y="934" text-anchor="start">never a customer's data</text>
+</svg>
+  <figcaption>Teal marks the one model we own and the agent that runs each stage. Amber marks a stop:
+    a rule, or a person. Violet marks the only two places an LLM is involved. The dashed line up the
+    left margin is the learning loop — what happened becomes what the model is next trained on.</figcaption>
+  </figure>
+
+  <div class="cards">
+    <div class="card">
+      <h3>Why the three run in parallel</h3>
+      <p>If policy were applied after scoring, a suppressed account could still influence the
+        allocation by consuming capacity in the solver. Gating first means the optimiser never sees
+        an action it is not allowed to take, and the plan is feasible by construction rather than by
+        correction.</p>
+    </div>
+    <div class="card">
+      <h3>Why the value step is plain arithmetic</h3>
+      <p>Combining uplift with money is the moment this becomes a financial decision, and it is the
+        step a reviewer will want to check by hand. Keeping it as one named expression over stamped
+        fields means anyone can recompute a single row on paper.</p>
+    </div>
+    <div class="card">
+      <h3>Why the rules run twice</h3>
+      <p>The gate says what is allowed before optimisation. The verifier re-checks the finished plan
+        afterwards, through different code. Between those two points the optimiser, the packer and a
+        manager's edits can all change the plan — an edit that swaps a 12-minute call for a 45-minute
+        referral is exactly the case the second pass exists for.</p>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+<section>
+  <div class="sec-head">
+    <span class="num">02</span>
+    <h2>The same system, by component and access</h2>
+    <p>The same system again, this time as parts rather than as a flow: who signs in, which console
+      each role may open, which engines the agents call, and where everything is stored. Use the
+      figure above to explain <em>how the decision is made</em>; use this one to answer
+      <em>what is it built from, and who can touch it</em>.</p>
+  </div>
+
+  <div class="keys">
+    <span class="i"><span class="swatch" style="background:var(--teal-soft);border:1.5px solid var(--teal)"></span> agent</span>
+    <span class="i"><span class="swatch" style="background:var(--violet-soft);border:1.5px solid var(--violet)"></span> LLM</span>
+    <span class="i"><span class="swatch" style="background:var(--amber-soft);border:1.5px solid var(--amber)"></span> human gate</span>
+    <span class="i"><span class="swatch" style="background:var(--surface);border:1.2px solid var(--line)"></span> deterministic code</span>
+    <span class="i"><span class="swatch" style="background:var(--surface);border:1.2px dashed var(--ink-3)"></span> not built yet</span>
+  </div>
+  <div class="keys">
+    <span class="i"><svg viewBox="0 0 34 12" aria-hidden="true"><path d="M1,6 H26" stroke="var(--ink-2)" stroke-width="1.5" fill="none"/><path d="M26,2 L33,6 L26,10 z" fill="var(--ink-2)"/></svg> data or control flow</span>
+    <span class="i"><svg viewBox="0 0 34 12" aria-hidden="true"><path d="M1,6 H26" stroke="var(--ink-3)" stroke-width="1.4" fill="none" stroke-dasharray="1.5 3.5" stroke-linecap="round"/><path d="M26,2 L32,6 L26,10" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> <b>reads</b> from a store</span>
+    <span class="i"><svg viewBox="0 0 34 12" aria-hidden="true"><path d="M1,6 H26" stroke="var(--teal)" stroke-width="1.5" fill="none" stroke-dasharray="7 4"/><rect x="26" y="3" width="6" height="6" fill="var(--teal)" transform="rotate(45 29 6)"/></svg> <b>writes</b> to a store</span>
+    <span class="i"><svg viewBox="0 0 34 12" aria-hidden="true"><path d="M1,6 H26" stroke="var(--violet)" stroke-width="1.8" fill="none"/><path d="M26,2 L33,6 L26,10 z" fill="var(--violet)"/></svg> LLM call</span>
+  </div>
+  <div class="keys">
+    <span class="i"><svg viewBox="0 0 34 16" aria-hidden="true"><rect x="1" y="1" width="15" height="13" rx="3" fill="var(--ink)"/><text x="8.5" y="11" text-anchor="middle" fill="var(--surface)" style="font:600 9.5px var(--mono)">A</text></svg> full access</span>
+    <span class="i"><svg viewBox="0 0 34 16" aria-hidden="true"><rect x="1" y="1" width="15" height="13" rx="3" fill="none" stroke="var(--ink-2)" stroke-width="1.1"/><text x="8.5" y="11" text-anchor="middle" fill="var(--ink-3)" style="font:600 9.5px var(--mono)">M</text></svg> scoped</span>
+    <span class="i"><svg viewBox="0 0 34 16" aria-hidden="true"><rect x="1" y="1" width="15" height="13" rx="3" fill="none" stroke="var(--line)" stroke-dasharray="2 2"/><text x="8.5" y="11" text-anchor="middle" fill="var(--ink-3)" style="font:600 9.5px var(--mono)">C</text></svg> no access</span>
+    <span class="i"><b>A</b>&nbsp;admin &nbsp; <b>M</b>&nbsp;collections manager &nbsp; <b>C</b>&nbsp;collection agent</span>
+  </div>
+
+  <figure id="f1">
+
+<svg viewBox="0 0 1400 820" role="img" aria-label="System map: three roles sign in through a gate to consoles filtered by role; consoles call the engine API, which starts a pipeline of eight agents; agents call deterministic engines and read from and write to four data stores; two banks feed data in and receive approved actions back; an external LLM is reached from two places only.">
+<rect class="person" x="300.0" y="16" width="264.0" height="66" rx="7"/><circle class="pm" cx="322.0" cy="49" r="12"/><text class="pml" x="322.0" y="53" text-anchor="middle">A</text><text class="t" x="342.0" y="44" text-anchor="start">Admin</text><text class="s" x="342.0" y="62" text-anchor="start">everything: banks, rules, users</text><path class="edge" d="M432.0,82 V104" marker-end="url(#arr)"/><rect class="person" x="578.0" y="16" width="264.0" height="66" rx="7"/><circle class="pm" cx="600.0" cy="49" r="12"/><text class="pml" x="600.0" y="53" text-anchor="middle">M</text><text class="t" x="620.0" y="44" text-anchor="start">Collections manager</text><text class="s" x="620.0" y="62" text-anchor="start">the business day; adds agents</text><path class="edge" d="M710.0,82 V104" marker-end="url(#arr)"/><rect class="person" x="856.0" y="16" width="264.0" height="66" rx="7"/><circle class="pm" cx="878.0" cy="49" r="12"/><text class="pml" x="878.0" y="53" text-anchor="middle">C</text><text class="t" x="898.0" y="44" text-anchor="start">Collection agent</text><text class="s" x="898.0" y="62" text-anchor="start">their own queue only</text><path class="edge" d="M988.0,82 V104" marker-end="url(#arr)"/><rect class="zone" x="286" y="94" width="848" height="696" rx="12"/><text class="lbl" x="298" y="112" text-anchor="start">LAST MILE ENGINE · FastAPI</text><rect class="gate" x="300" y="120" width="820" height="34" rx="7"/><text class="t" x="710.0" y="142" text-anchor="middle">Sign-in gate · the role is read from the session and checked on every page and every API call</text><text class="lbl" x="300" y="176" text-anchor="start">CONSOLES · OPERATE</text><rect class="box" x="300.0" y="184" width="197.5" height="62" rx="7"/><text class="t" x="311.0" y="205" text-anchor="start">Today</text><text class="s" x="311.0" y="221" text-anchor="start">run the day, approve</text><rect class="ch-full" x="311.0" y="224" width="17" height="14" rx="3"/><text class="cht cht-on" x="319.5" y="234.5" text-anchor="middle">A</text><rect class="ch-full" x="331.0" y="224" width="17" height="14" rx="3"/><text class="cht cht-on" x="339.5" y="234.5" text-anchor="middle">M</text><rect class="ch-none" x="351.0" y="224" width="17" height="14" rx="3"/><text class="cht " x="359.5" y="234.5" text-anchor="middle">C</text><rect class="box" x="507.5" y="184" width="197.5" height="62" rx="7"/><text class="t" x="518.5" y="205" text-anchor="start">My queue</text><text class="s" x="518.5" y="221" text-anchor="start">own assigned work</text><rect class="ch-none" x="518.5" y="224" width="17" height="14" rx="3"/><text class="cht " x="527.0" y="234.5" text-anchor="middle">A</text><rect class="ch-none" x="538.5" y="224" width="17" height="14" rx="3"/><text class="cht " x="547.0" y="234.5" text-anchor="middle">M</text><rect class="ch-full" x="558.5" y="224" width="17" height="14" rx="3"/><text class="cht cht-on" x="567.0" y="234.5" text-anchor="middle">C</text><rect class="box" x="715.0" y="184" width="197.5" height="62" rx="7"/><text class="t" x="726.0" y="205" text-anchor="start">Daily results</text><text class="s" x="726.0" y="221" text-anchor="start">frozen per day</text><rect class="ch-full" x="726.0" y="224" width="17" height="14" rx="3"/><text class="cht cht-on" x="734.5" y="234.5" text-anchor="middle">A</text><rect class="ch-full" x="746.0" y="224" width="17" height="14" rx="3"/><text class="cht cht-on" x="754.5" y="234.5" text-anchor="middle">M</text><rect class="ch-none" x="766.0" y="224" width="17" height="14" rx="3"/><text class="cht " x="774.5" y="234.5" text-anchor="middle">C</text><rect class="box" x="922.5" y="184" width="197.5" height="62" rx="7"/><text class="t" x="933.5" y="205" text-anchor="start">Performance</text><text class="s" x="933.5" y="221" text-anchor="start">KPIs over time</text><rect class="ch-full" x="933.5" y="224" width="17" height="14" rx="3"/><text class="cht cht-on" x="942.0" y="234.5" text-anchor="middle">A</text><rect class="ch-full" x="953.5" y="224" width="17" height="14" rx="3"/><text class="cht cht-on" x="962.0" y="234.5" text-anchor="middle">M</text><rect class="ch-none" x="973.5" y="224" width="17" height="14" rx="3"/><text class="cht " x="982.0" y="234.5" text-anchor="middle">C</text><text class="lbl" x="300" y="266" text-anchor="start">CONSOLES · MANAGE</text><rect class="box" x="300.0" y="274" width="197.5" height="62" rx="7"/><text class="t" x="311.0" y="295" text-anchor="start">Runs &amp; pipeline</text><text class="s" x="311.0" y="311" text-anchor="start">trace, LLM calls</text><rect class="ch-full" x="311.0" y="314" width="17" height="14" rx="3"/><text class="cht cht-on" x="319.5" y="324.5" text-anchor="middle">A</text><rect class="ch-full" x="331.0" y="314" width="17" height="14" rx="3"/><text class="cht cht-on" x="339.5" y="324.5" text-anchor="middle">M</text><rect class="ch-none" x="351.0" y="314" width="17" height="14" rx="3"/><text class="cht " x="359.5" y="324.5" text-anchor="middle">C</text><rect class="box" x="507.5" y="274" width="197.5" height="62" rx="7"/><text class="t" x="518.5" y="295" text-anchor="start">Onboard a bank</text><text class="s" x="518.5" y="311" text-anchor="start">admin only</text><rect class="ch-full" x="518.5" y="314" width="17" height="14" rx="3"/><text class="cht cht-on" x="527.0" y="324.5" text-anchor="middle">A</text><rect class="ch-none" x="538.5" y="314" width="17" height="14" rx="3"/><text class="cht " x="547.0" y="324.5" text-anchor="middle">M</text><rect class="ch-none" x="558.5" y="314" width="17" height="14" rx="3"/><text class="cht " x="567.0" y="324.5" text-anchor="middle">C</text><rect class="box" x="715.0" y="274" width="197.5" height="62" rx="7"/><text class="t" x="726.0" y="295" text-anchor="start">Bank configuration</text><text class="s" x="726.0" y="311" text-anchor="start">admin only</text><rect class="ch-full" x="726.0" y="314" width="17" height="14" rx="3"/><text class="cht cht-on" x="734.5" y="324.5" text-anchor="middle">A</text><rect class="ch-none" x="746.0" y="314" width="17" height="14" rx="3"/><text class="cht " x="754.5" y="324.5" text-anchor="middle">M</text><rect class="ch-none" x="766.0" y="314" width="17" height="14" rx="3"/><text class="cht " x="774.5" y="324.5" text-anchor="middle">C</text><rect class="box" x="922.5" y="274" width="197.5" height="62" rx="7"/><text class="t" x="933.5" y="295" text-anchor="start">Users &amp; access</text><text class="s" x="933.5" y="311" text-anchor="start">manager: agents only</text><rect class="ch-full" x="933.5" y="314" width="17" height="14" rx="3"/><text class="cht cht-on" x="942.0" y="324.5" text-anchor="middle">A</text><rect class="ch-read" x="953.5" y="314" width="17" height="14" rx="3"/><text class="cht " x="962.0" y="324.5" text-anchor="middle">M</text><rect class="ch-none" x="973.5" y="314" width="17" height="14" rx="3"/><text class="cht " x="982.0" y="324.5" text-anchor="middle">C</text><text class="lbl" x="300" y="356" text-anchor="start">OUTSIDE THE SIDEBAR · CLIENT-FACING</text><rect class="box" x="300.0" y="364" width="197.5" height="56" rx="7"/><text class="t" x="311.0" y="385" text-anchor="start">Guided tour</text><text class="s" x="311.0" y="401" text-anchor="start">plain language</text><rect class="ch-full" x="311.0" y="398" width="17" height="14" rx="3"/><text class="cht cht-on" x="319.5" y="408.5" text-anchor="middle">A</text><rect class="ch-full" x="331.0" y="398" width="17" height="14" rx="3"/><text class="cht cht-on" x="339.5" y="408.5" text-anchor="middle">M</text><rect class="ch-none" x="351.0" y="398" width="17" height="14" rx="3"/><text class="cht " x="359.5" y="408.5" text-anchor="middle">C</text><rect class="box" x="507.5" y="364" width="197.5" height="56" rx="7"/><text class="t" x="518.5" y="385" text-anchor="start">Demo showcase</text><text class="s" x="518.5" y="401" text-anchor="start">presentation view</text><rect class="ch-full" x="518.5" y="398" width="17" height="14" rx="3"/><text class="cht cht-on" x="527.0" y="408.5" text-anchor="middle">A</text><rect class="ch-full" x="538.5" y="398" width="17" height="14" rx="3"/><text class="cht cht-on" x="547.0" y="408.5" text-anchor="middle">M</text><rect class="ch-none" x="558.5" y="398" width="17" height="14" rx="3"/><text class="cht " x="567.0" y="408.5" text-anchor="middle">C</text><text class="s" x="715.0" y="386" text-anchor="start">Reached by URL. No customer data on either page.</text><text class="s" x="715.0" y="402" text-anchor="start">A collector account cannot open them.</text><path class="edge" d="M390,420 V444" marker-end="url(#arr)"/><g transform="translate(0,100)"><rect class="api" x="300" y="344" width="820" height="34" rx="7"/><text class="t" x="710.0" y="366" text-anchor="middle">Engine API · runs · roster &amp; day · worklist · approvals · release · reports · KPIs · config · onboarding</text><path class="edge" d="M390,378 V400" marker-end="url(#arr)"/><text class="el" x="398" y="394" text-anchor="start">start run</text><rect class="agent" x="300" y="400" width="820" height="60" rx="7"/><text class="t" x="316" y="425" text-anchor="start">Agent pipeline — eight agents, fixed order, one owner per tool</text><text class="s" x="316" y="443" text-anchor="start">Configuration → Ingestion → Data Steward → Feature → Policy → Decision → Explanation, under Supervisor</text><text class="el" x="1106" y="425" text-anchor="end">figure 2</text><path class="edge" d="M390,460 V490" marker-end="url(#arr)"/><text class="el" x="398" y="480" text-anchor="start">calls</text><text class="lbl" x="1120" y="484" text-anchor="end">DETERMINISTIC ENGINES · NO LLM</text><rect class="tool" x="300.0" y="490" width="95.5" height="52" rx="7"/><text class="t" x="347.75" y="513.0" text-anchor="middle">Uplift</text><text class="m" x="347.75" y="530.0" text-anchor="middle">T-learner ×6</text><rect class="tool" x="403.5" y="490" width="95.5" height="52" rx="7"/><text class="t" x="451.25" y="513.0" text-anchor="middle">Value</text><text class="m" x="451.25" y="530.0" text-anchor="middle">PD·EAD·LGD</text><rect class="tool" x="507.0" y="490" width="95.5" height="52" rx="7"/><text class="t" x="554.75" y="513.0" text-anchor="middle">Optimiser</text><text class="m" x="554.75" y="530.0" text-anchor="middle">MIP · CBC</text><rect class="tool" x="610.5" y="490" width="95.5" height="52" rx="7"/><text class="t" x="658.25" y="513.0" text-anchor="middle">Queues</text><text class="m" x="658.25" y="530.0" text-anchor="middle">bin packing</text><rect class="tool" x="714.0" y="490" width="95.5" height="52" rx="7"/><text class="t" x="761.75" y="513.0" text-anchor="middle">Monte Carlo</text><text class="m" x="761.75" y="530.0" text-anchor="middle">2,000 runs</text><rect class="tool" x="817.5" y="490" width="95.5" height="52" rx="7"/><text class="t" x="865.25" y="513.0" text-anchor="middle">Shift sim</text><text class="m" x="865.25" y="530.0" text-anchor="middle">SimPy</text><rect class="tool" x="921.0" y="490" width="95.5" height="52" rx="7"/><text class="t" x="968.75" y="513.0" text-anchor="middle">Rules</text><text class="m" x="968.75" y="530.0" text-anchor="middle">fail-closed</text><rect class="tool" x="1024.5" y="490" width="95.5" height="52" rx="7"/><text class="t" x="1072.25" y="513.0" text-anchor="middle">Audit</text><text class="m" x="1072.25" y="530.0" text-anchor="middle">SHA-256</text><text class="lbl" x="300" y="596" text-anchor="start">DATA STORES</text><rect class="store" x="300.0" y="604" width="199.0" height="66" rx="7"/><path class="rule" d="M300.0,620 H499.0"/><text class="t" x="311.0" y="616" text-anchor="start">SQLite</text><text class="s" x="311.0" y="638" text-anchor="start">runs · trace · llm_calls</text><text class="s" x="311.0" y="653" text-anchor="start">approvals · releases · audit</text><rect class="store" x="507.0" y="604" width="199.0" height="66" rx="7"/><path class="rule" d="M507.0,620 H706.0"/><text class="t" x="518.0" y="616" text-anchor="start">Parquet artifacts</text><text class="s" x="518.0" y="638" text-anchor="start">every intermediate table,</text><text class="s" x="518.0" y="653" text-anchor="start">one folder per run</text><rect class="store" x="714.0" y="604" width="199.0" height="66" rx="7"/><path class="rule" d="M714.0,620 H913.0"/><text class="t" x="725.0" y="616" text-anchor="start">Identity vault</text><text class="s" x="725.0" y="638" text-anchor="start">names · phones · emails,</text><text class="s" x="725.0" y="653" text-anchor="start">opened only at release</text><rect class="store" x="921.0" y="604" width="199.0" height="66" rx="7"/><path class="rule" d="M921.0,620 H1120.0"/><text class="t" x="932.0" y="616" text-anchor="start">Config packs (YAML)</text><text class="s" x="932.0" y="638" text-anchor="start">scenario · institution · run,</text><text class="s" x="932.0" y="653" text-anchor="start">hashed onto every run</text><path class="write" d="M600,546 V600" marker-end="url(#arrWrite)"/><text class="el" x="610" y="578" text-anchor="start">writes</text><path class="read" d="M900,600 V546" marker-end="url(#arrRead)"/><text class="el" x="910" y="578" text-anchor="start">reads</text><text class="lbl" x="20" y="394" text-anchor="start">BANK SYSTEMS</text><rect class="bank" x="20" y="402" width="220" height="80" rx="7"/><text class="t" x="34" y="428" text-anchor="start">Riverbend Credit Union</text><text class="s" x="34" y="449" text-anchor="start">risk as grades A–E</text><text class="s" x="34" y="465" text-anchor="start">/api/v1 · 6 feeds</text><rect class="bank" x="20" y="502" width="220" height="80" rx="7"/><text class="t" x="34" y="528" text-anchor="start">Harbor Community Bank</text><text class="s" x="34" y="549" text-anchor="start">risk as 180-day PD</text><text class="s" x="34" y="565" text-anchor="start">/v2 · renamed columns</text><path class="edge" d="M240,430 H286" marker-end="url(#arr)"/><text class="el" x="263" y="422" text-anchor="middle">feeds in</text><path class="edge" d="M300,361 H130 V402" marker-end="url(#arr)"/><text class="el" x="20" y="354" text-anchor="start">approved actions out</text><text class="lbl lbl-v" x="1150" y="394" text-anchor="start">EXTERNAL AI</text><rect class="llm" x="1150" y="402" width="240" height="118" rx="7"/><text class="t" x="1164" y="426" text-anchor="start">Language model</text><text class="s" x="1164" y="448" text-anchor="start">① Explanation Agent</text><text class="s" x="1176" y="463" text-anchor="start">wording of the reason</text><text class="s" x="1164" y="484" text-anchor="start">② Onboarding Agent</text><text class="s" x="1176" y="499" text-anchor="start">mapping a new bank</text><path class="llmedge" d="M1134,430 H1148" marker-end="url(#arrLlm)"/><path class="llmedge" d="M1134,486 H1148" marker-end="url(#arrLlm)"/><text class="el" x="1150" y="538" text-anchor="start">never a number, never</text><text class="el" x="1150" y="553" text-anchor="start">customer data</text></g>
+</svg>
+  <figcaption>The <b>A M C</b> chips on each console are Admin, Collections manager and
+    Collection agent. Dotted arrows with an open head are reads; dashed arrows with a diamond head are writes —
+    drawn separately so it is always clear which direction data moves. The two violet arrows are the
+    only paths to an LLM in the whole system.</figcaption>
+  </figure>
+</section>
+
+<hr>
+
+<section>
+  <div class="sec-head">
+    <span class="num">03</span>
+    <h2>Three roles, and what separates them</h2>
+    <p>Admin and manager differ by <em>what they may change</em>. The collection agent differs by
+      <em>which rows exist for them at all</em> — a harder thing to build, and the reason this is
+      enforced in the API rather than in the navigation.</p>
+  </div>
+  <div class="cards">
+    <div class="card">
+      <h3>Admin</h3>
+      <p>The only role that can change how the system itself behaves.</p>
+      <ul>
+        <li><b>Only they</b> can onboard a bank and see its connection details.</li>
+        <li><b>Only they</b> can open or save configuration — the rules, the LGD table, the caps.</li>
+        <li><b>Only they</b> can create manager accounts. Collection-agent accounts can be created by
+          an admin or by a manager, linked to a roster collector id such as <code>C01</code>.</li>
+        <li>Full access to the agent trace and every stored LLM request and response.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Collections manager</h3>
+      <p>Owns the business day. Cannot change the rules they operate under, which is the point.</p>
+      <ul>
+        <li>Sets today's team, starts the run, approves, releases, closes the day.</li>
+        <li>Sees every collector's queue, the daily results and the KPIs.</li>
+        <li><b>Adds collection agents</b> from Users &amp; access and sees the list of their own
+          agents — but cannot create another manager or an admin.</li>
+        <li><b>No access at all</b> to configuration, onboarding or user management — not even to read.</li>
+        <li>Cannot open a collection agent's queue page.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Collection agent</h3>
+      <p>Sees one thing: the accounts assigned to them today.</p>
+      <ul>
+        <li>Their own queue only. Other collectors' queues do not exist for them.</li>
+        <li><b>May re-order their own work</b> while the run is awaiting approval. The order locks
+          once actions are released, and every re-order is written to the audit chain.</li>
+        <li>Cannot approve, release or re-plan; cannot reach any other console, including the
+          guided tour and the demo.</li>
+        <li>The scoping comes from the <b>signed-in session</b>. A collector id in the URL is ignored.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="note">
+    <h3>Signing in sends you somewhere you can open</h3>
+    <p>Every role has a landing page it is allowed to reach: a collection agent goes to
+      <code>/agent</code>, everybody else to the guided tour. A link to a page the role cannot open —
+      a stale bookmark, or a default written for a different role — is corrected at sign-in rather than
+      followed into a permission error. And a refused page answers with a page that says which role the
+      account has and where it can go, not a JSON error in the address bar.</p>
+  </div>
+
+  <div class="note">
+    <h3>The part that is easy to get wrong, and was done right</h3>
+    <p>Hiding a page from the navigation is not access control. For the collection agent role to
+      mean anything the <em>API</em> has to scope the worklist to the signed-in collector — if the
+      browser can ask for <code>?collector_id=C03</code> and get an answer, the role is decoration.
+      In this build the collector id is read from the session on the server and the browser cannot
+      supply one, so the guarantee holds even if someone crafts the request by hand.</p>
+  </div>
+
+  <div class="scroll">
+    <table>
+      <caption>Access matrix — what each role can reach, and at what level</caption>
+      <thead><tr><th style="width:24%">Console</th><th style="width:14%">Admin</th><th style="width:14%">Manager</th><th style="width:16%">Collection agent</th><th>What the restriction protects</th></tr></thead>
+      <tbody>
+        <tr><th class="grp" colspan="6">Operate</th></tr>
+        <tr><td><b>Today</b><br><span style="color:var(--ink-3);font-size:12.5px">worklist, approvals, roster</span></td><td><span class="b b-money">full</span></td><td><span class="b b-money">full</span></td><td><span class="b b-shown">none</span></td><td>Releasing an action to a customer is a manager's decision.</td></tr>
+        <tr><td><b>My queue</b><br><span style="color:var(--ink-3);font-size:12.5px">/agent</span></td><td><span class="b b-shown">n/a</span></td><td><span class="b b-shown">none</span></td><td><span class="b b-model">own only</span></td><td>One collector cannot see another's customers. An admin passes the gate but the API still refuses, because only an account linked to a roster collector has a queue.</td></tr>
+        <tr><td><b>Daily results</b></td><td><span class="b b-money">full</span></td><td><span class="b b-money">full</span></td><td><span class="b b-shown">none</span></td><td>Team-level performance is not for the team to browse.</td></tr>
+        <tr><td><b>Performance</b><br><span style="color:var(--ink-3);font-size:12.5px">the KPI page</span></td><td><span class="b b-money">full</span></td><td><span class="b b-money">full</span></td><td><span class="b b-shown">none</span></td><td>Same.</td></tr>
+        <tr><th class="grp" colspan="6">Manage</th></tr>
+        <tr><td><b>Runs &amp; pipeline</b><br><span style="color:var(--ink-3);font-size:12.5px">trace, LLM calls</span></td><td><span class="b b-money">full</span></td><td><span class="b b-money">full</span></td><td><span class="b b-shown">none</span></td><td>Stored prompts and responses are an audit record.</td></tr>
+        <tr><td><b>Onboard a bank</b></td><td><span class="b b-money">full</span></td><td><span class="b b-shown">none</span></td><td><span class="b b-shown">none</span></td><td>Connecting a data source is a system change, not a daily task.</td></tr>
+        <tr><td><b>Bank configuration</b></td><td><span class="b b-money">edit</span></td><td><span class="b b-shown">none</span></td><td><span class="b b-shown">none</span></td><td>Nobody reads or changes the rules they are measured against.</td></tr>
+        <tr><td><b>Users &amp; access</b></td><td><span class="b b-money">every role</span></td><td><span class="b b-model">agents only</span></td><td><span class="b b-shown">none</span></td><td>Creating an account grants somebody else power, so the roles a person may hand out are capped by their own. A manager staffs their floor; only an admin can create another manager.</td></tr>
+        <tr><th class="grp" colspan="6">Outside the sidebar, reached by URL</th></tr>
+        <tr><td><b>Guided tour</b> · <b>Demo</b> · <b>Presentation</b></td><td><span class="b b-money">full</span></td><td><span class="b b-money">full</span></td><td><span class="b b-shown">none</span></td><td>Explanatory pages, no customer data. A collector's session reaches only their own queue, so these are closed to them too.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr>
+
+<section>
+  <div class="sec-head">
+    <span class="num">04</span>
+    <h2>The agent pipeline — what each one is handed, and what it hands on</h2>
+    <p>Eight stages in a fixed order. Each agent may call only the tools it owns, so a stage
+      physically cannot reach into another's work. Dotted arrows on the left are what the agent
+      reads; dashed arrows on the right are what it produces.</p>
+  </div>
+  <figure id="f2">
+
+<svg viewBox="0 0 1240 922" role="img" aria-label="Agent pipeline: eight agents in a vertical chain, each showing what it reads on the left and what it produces on the right, ending at a human approval gate.">
+<text class="lbl" x="300" y="28" text-anchor="end">GETS</text><text class="lbl" x="400" y="28">AGENT · IN ORDER</text><text class="lbl" x="840" y="28">PRODUCES</text><rect class="agent" x="400" y="44" width="400" height="62" rx="7"/><text class="t" x="416" y="68" text-anchor="start">Configuration</text><text class="s" x="416" y="86" text-anchor="start">loads the three YAML packs, today's roster</text><text class="s" x="300" y="68" text-anchor="end">config packs (YAML)</text><text class="s" x="300" y="84" text-anchor="end">roster saved by the manager</text><path class="read" d="M312,75.0 H396" marker-end="url(#arrRead)"/><text class="s" x="840" y="68" text-anchor="start">resolved config + config hash</text><text class="s" x="840" y="84" text-anchor="start">capacity per collector</text><path class="write" d="M804,75.0 H834" marker-end="url(#arrWrite)"/><path class="edge" d="M600.0,106 V140" marker-end="url(#arr)"/><rect class="agent" x="400" y="144" width="400" height="62" rx="7"/><text class="t" x="416" y="168" text-anchor="start">Ingestion</text><text class="s" x="416" y="186" text-anchor="start">pulls six feeds over the bank's own API, page by page</text><text class="s" x="300" y="168" text-anchor="end">bank API · 6 feeds</text><text class="s" x="300" y="184" text-anchor="end">endpoint list from the pack</text><path class="read" d="M312,175.0 H396" marker-end="url(#arrRead)"/><text class="s" x="840" y="168" text-anchor="start">raw snapshot → Parquet</text><text class="s" x="840" y="184" text-anchor="start">row counts per feed</text><path class="write" d="M804,175.0 H834" marker-end="url(#arrWrite)"/><path class="edge" d="M600.0,206 V240" marker-end="url(#arr)"/><rect class="agent" x="400" y="244" width="400" height="62" rx="7"/><text class="t" x="416" y="268" text-anchor="start">Data Steward</text><text class="s" x="416" y="286" text-anchor="start">quality gates, then personal data out of the analytics path</text><text class="s" x="300" y="268" text-anchor="end">raw snapshot</text><path class="read" d="M312,275.0 H396" marker-end="url(#arrRead)"/><text class="s" x="840" y="268" text-anchor="start">canonical tables (tokenised)</text><text class="s" x="840" y="284" text-anchor="start">names · phones → identity vault</text><path class="write" d="M804,275.0 H834" marker-end="url(#arrWrite)"/><path class="edge" d="M600.0,306 V340" marker-end="url(#arr)"/><rect class="agent" x="400" y="344" width="400" height="62" rx="7"/><text class="t" x="416" y="368" text-anchor="start">Feature</text><text class="s" x="416" y="386" text-anchor="start">calibrates the bank's risk score, builds point-in-time features</text><text class="s" x="300" y="368" text-anchor="end">canonical tables</text><text class="s" x="300" y="384" text-anchor="end">PD calibration from the pack</text><path class="read" d="M312,375.0 H396" marker-end="url(#arrRead)"/><text class="s" x="840" y="368" text-anchor="start">portfolio: PD, exposure, LGD</text><text class="s" x="840" y="384" text-anchor="start">training set + today's features</text><path class="write" d="M804,375.0 H834" marker-end="url(#arrWrite)"/><path class="edge" d="M600.0,406 V440" marker-end="url(#arr)"/><rect class="agent" x="400" y="444" width="400" height="62" rx="7"/><text class="t" x="416" y="468" text-anchor="start">Policy</text><text class="s" x="416" y="486" text-anchor="start">what is allowed, before anything is scored</text><text class="s" x="300" y="468" text-anchor="end">portfolio</text><text class="s" x="300" y="484" text-anchor="end">consent, suppression, caps</text><path class="read" d="M312,475.0 H396" marker-end="url(#arrRead)"/><text class="s" x="840" y="468" text-anchor="start">eligible actions per account</text><text class="s" x="840" y="484" text-anchor="start">blocked, with the reason</text><path class="write" d="M804,475.0 H834" marker-end="url(#arrWrite)"/><path class="edge" d="M600.0,506 V540" marker-end="url(#arr)"/><rect class="agent" x="400" y="544" width="400" height="70" rx="7"/><text class="t" x="416" y="568" text-anchor="start">Decision</text><text class="s" x="416" y="586" text-anchor="start">uplift, value, optimise, pack into shifts, simulate</text><text class="s" x="300" y="568" text-anchor="end">training set + features</text><text class="s" x="300" y="584" text-anchor="end">eligible actions</text><text class="s" x="300" y="600" text-anchor="end">today's capacity</text><path class="read" d="M312,579.0 H396" marker-end="url(#arrRead)"/><text class="s" x="840" y="568" text-anchor="start">plan: account → action → collector</text><text class="s" x="840" y="584" text-anchor="start">queue position, value, p10/p50/p90</text><path class="write" d="M804,579.0 H834" marker-end="url(#arrWrite)"/><path class="edge" d="M600.0,614 V648" marker-end="url(#arr)"/><rect class="agent" x="400" y="652" width="400" height="62" rx="7"/><text class="t" x="416" y="676" text-anchor="start">Policy (again)</text><text class="s" x="416" y="694" text-anchor="start">an independent re-check of the finished plan</text><text class="s" x="300" y="676" text-anchor="end">the plan</text><path class="read" d="M312,683.0 H396" marker-end="url(#arrRead)"/><text class="s" x="840" y="676" text-anchor="start">violations, or a clean verdict</text><text class="s" x="840" y="692" text-anchor="start">hash-chained audit entry</text><path class="write" d="M804,683.0 H834" marker-end="url(#arrWrite)"/><path class="edge" d="M600.0,714 V748" marker-end="url(#arr)"/><rect class="agent" x="400" y="752" width="400" height="62" rx="7"/><text class="t" x="416" y="776" text-anchor="start">Explanation</text><text class="s" x="416" y="794" text-anchor="start">a sentence per recommendation, every figure sourced</text><text class="s" x="300" y="776" text-anchor="end">plan + stamped facts</text><text class="s" x="300" y="792" text-anchor="end">LLM draft (segment × action)</text><path class="read" d="M312,783.0 H396" marker-end="url(#arrRead)"/><text class="s" x="840" y="776" text-anchor="start">worklist published to Today</text><text class="s" x="840" y="792" text-anchor="start">reasons, validated against facts</text><path class="write" d="M804,783.0 H834" marker-end="url(#arrWrite)"/><rect class="gate" x="360" y="852" width="480" height="46" rx="7"/><text class="t" x="600.0" y="880" text-anchor="middle">Manager approves · releases · closes the day</text>
+</svg>
+  <figcaption>The Policy Agent appears twice on purpose: once to say what is allowed before
+    anything is scored, and once to re-check the finished plan independently. A rule that only
+    ran before optimisation would not catch a plan that broke it afterwards.</figcaption>
+  </figure>
+
+  <div class="scroll">
+    <table>
+      <caption>Tool ownership — an agent that does not own a tool cannot call it, and the registry enforces that</caption>
+      <thead><tr><th style="width:20%">Agent</th><th>Tools it owns</th></tr></thead>
+      <tbody>
+        <tr><td><b>Configuration</b></td><td class="f">config.load_packs · config.map_fields · roster.load</td></tr>
+        <tr><td><b>Ingestion</b></td><td class="f">bank.health · bank.list_feeds · bank.fetch_feed · landing.store</td></tr>
+        <tr><td><b>Data Steward</b></td><td class="f">quality.run_gates · privacy.tokenise · features.feasibility_profile</td></tr>
+        <tr><td><b>Feature</b></td><td class="f">features.calibrate_pd · features.lookup_lgd · features.join_portfolio · features.build_training_set · features.build_online_features · features.leakage_guard</td></tr>
+        <tr><td><b>Policy</b></td><td class="f">policy.eligibility · policy.verify_plan · governance.escalate · audit.append</td></tr>
+        <tr><td><b>Decision</b></td><td class="f">engine.train_uplift · engine.score_actions · engine.assign_segments · engine.compute_value · engine.optimise · engine.assign_collectors · engine.simulate_policies · engine.simulate_floor · engine.baselines · kpi.validate_uplift</td></tr>
+        <tr><td><b>Explanation</b></td><td class="f">provenance.build_facts · <span style="color:var(--violet);font-weight:600">llm.draft_templates</span> · provenance.validate_templates · engine.explain_selection · worklist.publish</td></tr>
+        <tr><td><b>Onboarding</b><br><span style="color:var(--ink-3);font-size:12.5px">runs once per new bank</span></td><td class="f">onboard.read_api_description · <span style="color:var(--violet);font-weight:600">llm.onboard_plan</span> · onboard.sample_feeds · onboard.profile_data · <span style="color:var(--violet);font-weight:600">llm.onboard_map</span> · onboard.check_proposal · onboard.build_pack</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+
+<hr>
+
+<section>
+  <div class="sec-head">
+    <span class="num">05</span>
+    <h2>The feedback loop — two speeds</h2>
+    <p>What the collection agent records comes back into the system. It arrives in two very
+      different ways, and conflating them is the easiest mistake to make here.</p>
+  </div>
+  <figure id="f4">
+
+<svg viewBox="0 0 1240 476" role="img" aria-label="Two feedback loops: the day runs left to right from the uplift model through the plan, release, the collection agent and the recorded outcome; a fast loop returns the same day to improve the next plan, and a slow loop returns after 30 days with the matured outcome that retrains the model.">
+<rect class="box" x="20" y="70" width="200" height="66" rx="7"/><text class="t" x="34" y="94" text-anchor="start">Uplift model</text><text class="s" x="34" y="111" text-anchor="start">trained on matured</text><text class="s" x="34" y="126" text-anchor="start">outcomes only</text><path class="edge" d="M220,103.0 H256" marker-end="url(#arr)"/><rect class="box" x="260" y="70" width="200" height="66" rx="7"/><text class="t" x="274" y="94" text-anchor="start">Plan &amp; worklist</text><text class="s" x="274" y="111" text-anchor="start">action, collector,</text><text class="s" x="274" y="126" text-anchor="start">queue position</text><path class="edge" d="M460,103.0 H496" marker-end="url(#arr)"/><rect class="box" x="500" y="70" width="200" height="66" rx="7"/><text class="t" x="514" y="94" text-anchor="start">Manager releases</text><text class="s" x="514" y="111" text-anchor="start">approved actions</text><text class="s" x="514" y="126" text-anchor="start">go to the bank</text><path class="edge" d="M700,103.0 H736" marker-end="url(#arr)"/><rect class="box" x="740" y="70" width="200" height="66" rx="7"/><text class="t" x="754" y="94" text-anchor="start">Collection agent</text><text class="s" x="754" y="111" text-anchor="start">works their own queue,</text><text class="s" x="754" y="126" text-anchor="start">re-orders it before release</text><path class="edge" d="M940,103.0 H976" marker-end="url(#arr)"/><rect class="box-dash" x="980" y="70" width="200" height="66" rx="7"/><text class="t" x="994" y="94" text-anchor="start">Records the outcome</text><text class="s" x="994" y="111" text-anchor="start">reached · promise · refused</text><text class="s" x="994" y="126" text-anchor="start">wrong number · minutes</text><text class="prop" x="1180" y="62" text-anchor="end">THE ONE PIECE STILL MISSING</text><text class="lbl" x="20" y="196" text-anchor="start">FAST LOOP · SAME DAY — CHANGES THE NEXT PLAN, NOT THE MODEL</text><rect class="box-dash" x="980" y="210" width="200" height="66" rx="7"/><text class="t" x="994" y="234" text-anchor="start">Contact history</text><text class="s" x="994" y="251" text-anchor="start">contacts_30d · rpc_rate_90d</text><text class="s" x="994" y="266" text-anchor="start">days since last contact</text><rect class="box-dash" x="740" y="210" width="200" height="66" rx="7"/><text class="t" x="754" y="234" text-anchor="start">Real handling time</text><text class="s" x="754" y="251" text-anchor="start">replaces the fixed</text><text class="s" x="754" y="266" text-anchor="start">12 / 25 / 45 minutes</text><path class="edge" d="M980,243.0 H944" marker-end="url(#arr)"/><rect class="box-dash" x="500" y="210" width="200" height="66" rx="7"/><text class="t" x="514" y="234" text-anchor="start">Hard stops</text><text class="s" x="514" y="251" text-anchor="start">wrong number · cease and</text><text class="s" x="514" y="266" text-anchor="start">desist · promised date</text><path class="edge" d="M740,243.0 H704" marker-end="url(#arr)"/><path class="edge" d="M1080.0,136 V206" marker-end="url(#arr)"/><path class="edge" d="M500,243.0 H360.0 V140" marker-end="url(#arr)"/><text class="lbl" x="20" y="356" text-anchor="start">SLOW LOOP · 30 DAYS — THIS IS WHAT TRAINS THE MODEL</text><rect class="box" x="980" y="370" width="200" height="66" rx="7"/><text class="t" x="994" y="394" text-anchor="start">Bank confirms</text><text class="s" x="994" y="411" text-anchor="start">amount paid,</text><text class="s" x="994" y="426" text-anchor="start">account status</text><rect class="box" x="740" y="370" width="200" height="66" rx="7"/><text class="t" x="754" y="394" text-anchor="start">Outcome matures</text><text class="s" x="754" y="411" text-anchor="start">cured_30d published</text><text class="s" x="754" y="426" text-anchor="start">only at day 30</text><path class="edge" d="M980,403.0 H944" marker-end="url(#arr)"/><rect class="box" x="500" y="370" width="200" height="66" rx="7"/><text class="t" x="514" y="394" text-anchor="start">Training row</text><text class="s" x="514" y="411" text-anchor="start">features at t · action T</text><text class="s" x="514" y="426" text-anchor="start">· outcome Y</text><path class="edge" d="M740,403.0 H704" marker-end="url(#arr)"/><rect class="box" x="260" y="370" width="200" height="66" rx="7"/><text class="t" x="274" y="394" text-anchor="start">Retrain &amp; validate</text><text class="s" x="274" y="411" text-anchor="start">promoted only if it</text><text class="s" x="274" y="426" text-anchor="start">beats random (Qini)</text><path class="edge" d="M500,403.0 H464" marker-end="url(#arr)"/><path class="edge" d="M1180,90 H1224 V403.0 H1184" marker-end="url(#arr)"/><path class="edge" d="M260,403.0 H120.0 V140" marker-end="url(#arr)"/><text class="el" x="140" y="428" text-anchor="start">next training run</text>
+</svg>
+  <figcaption>The slow loop runs today: the bank publishes matured outcomes and they train the next
+    model. The collection agent console now exists too — but it has no way to record what happened on
+    an attempt, so the fast lane is still dashed. Everything on that lane would improve the
+    <em>next plan</em>; only the slow lane changes the model.</figcaption>
+  </figure>
+
+  <div class="note warn">
+    <h3>Why real-time outcomes do not train the model directly</h3>
+    <p>The uplift model learns from <code>cured_30d</code> — did the account catch up within 30 days
+      of being worked. That label is deliberately withheld until 30 days have passed, so a row cannot
+      be trained on its own outcome. A collector's note at 11am that someone promised to pay is a
+      genuine signal, but it is <b>not that label</b>: promises are broken, and a model trained on
+      promises would learn to predict optimism rather than recovery.</p>
+    <p>So the collector's feedback does three things instead, all of them real:
+      it updates contact history and reachability, which are model <em>features</em> on the next run;
+      it replaces our fixed 12 / 25 / 45-minute handling estimates with what calls actually took,
+      which makes tomorrow's queues fit; and it raises hard stops — a wrong number, a stated
+      cease-and-desist — that suppress the account immediately rather than a day later.</p>
+    <p>If a shorter-horizon label is wanted, the honest way to add one is a second outcome the bank
+      can confirm — a payment within 7 days, or a promise actually kept — trained as its own model,
+      not by relabelling what the collector typed.</p>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <h3>Fast loop · same day</h3>
+      <ul>
+        <li><b>Contact history</b> → <code>contacts_30d</code>, <code>rpc_rate_90d</code>,
+          <code>days_since_last_contact</code> on the next run.</li>
+        <li><b>Real handling minutes</b> → capacity and packing, which is the measurement gap behind
+          our collector-time KPI.</li>
+        <li><b>Hard stops</b> → wrong number and cease-and-desist suppress before the next plan.</li>
+        <li><b>A promised date</b> → do not contact again before it.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Slow loop · 30 days</h3>
+      <ul>
+        <li>The bank confirms payment and account status.</li>
+        <li><code>cured_30d</code> is published only once the window closes.</li>
+        <li>A training row is assembled: features as they were on the day, the action taken, the
+          outcome that followed.</li>
+        <li>The model retrains and is <b>promoted only if it beats random on a Qini check</b>. A model
+          that fails validation does not reach a worklist.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>What this costs to build</h3>
+      <ul>
+        <li>The slow loop <b>already runs</b> — it is how the current model is trained.</li>
+        <li>The console is built. What is missing is an outcome-capture endpoint, a table to hold
+          the attempts, and the three feature joins that would read it.</li>
+        <li>Every field it writes has to carry a timestamp and pass the leakage guard, or it will
+          quietly contaminate the training set.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+<section>
+  <div class="sec-head">
+    <span class="num">06</span>
+    <h2>A business day, in order</h2>
+    <p>The same system on a clock. Worth reading for two things: the run is started by a person and
+      not by a timer, and the last event on the page happens a month after the first.</p>
+  </div>
+  <figure id="f5">
+
+<svg viewBox="0 0 1560 554" role="img" aria-label="A business day in four lanes - collections manager, Last Mile engine, collection agent and the bank - across a time axis, with a final column 30 days later when the outcome is confirmed.">
+<text class="lbl" x="34" y="20" text-anchor="start">A BUSINESS DAY, IN ORDER — A PERSON STARTS IT, NOTHING RUNS ON A TIMER</text><rect class="zone" x="20" y="44" width="1520" height="100" rx="8"/><text class="t" x="34" y="64" text-anchor="start">Collections manager</text><rect class="zone" x="20" y="154" width="1520" height="100" rx="8"/><text class="t" x="34" y="174" text-anchor="start">Last Mile engine</text><rect class="zone" x="20" y="264" width="1520" height="100" rx="8"/><text class="t" x="34" y="284" text-anchor="start">Collection agent</text><rect class="zone" x="20" y="374" width="1520" height="100" rx="8"/><text class="t" x="34" y="394" text-anchor="start">The bank</text><path class="sep" d="M180,36 V480"/><text class="m" x="180" y="30" text-anchor="middle">08:00</text><path class="sep" d="M360,36 V480"/><text class="m" x="360" y="30" text-anchor="middle">08:05</text><path class="sep" d="M540,36 V480"/><text class="m" x="540" y="30" text-anchor="middle">08:20</text><path class="sep" d="M720,36 V480"/><text class="m" x="720" y="30" text-anchor="middle">09:00</text><path class="sep" d="M900,36 V480"/><text class="m" x="900" y="30" text-anchor="middle">09:30</text><path class="sep" d="M1080,36 V480"/><text class="m" x="1080" y="30" text-anchor="middle">through the day</text><path class="sep" d="M1260,36 V480"/><text class="m" x="1260" y="30" text-anchor="middle">17:00</text><path class="sep" d="M1460,36 V480"/><text class="m" x="1460" y="30" text-anchor="middle">T + 30 days</text><path class="sep" d="M1362,28 V490" stroke-dasharray="7 5"/><text class="el" x="1370" y="20" text-anchor="start">— 30 days pass —</text><rect class="gate" x="95.0" y="74" width="170" height="74" rx="6"/><text class="t" x="180" y="96" text-anchor="middle">Sets the team,</text><text class="t" x="180" y="113" text-anchor="middle">starts the run</text><text class="s" x="180" y="132" text-anchor="middle">who is in, minutes each</text><rect class="agent" x="275.0" y="184" width="170" height="57" rx="6"/><text class="t" x="360" y="206" text-anchor="middle">Eight agents run</text><text class="s" x="360" y="225" text-anchor="middle">feeds → features → plan</text><rect class="box" x="275.0" y="404" width="170" height="41" rx="6"/><text class="t" x="360" y="426" text-anchor="middle">Serves the six feeds</text><rect class="agent" x="455.0" y="184" width="170" height="57" rx="6"/><text class="t" x="540" y="206" text-anchor="middle">Worklist published</text><text class="s" x="540" y="225" text-anchor="middle">split per collector</text><rect class="gate" x="635.0" y="74" width="170" height="57" rx="6"/><text class="t" x="720" y="96" text-anchor="middle">Reviews and approves</text><text class="s" x="720" y="115" text-anchor="middle">escalations one by one</text><rect class="gate" x="815.0" y="74" width="170" height="57" rx="6"/><text class="t" x="900" y="96" text-anchor="middle">Releases</text><text class="s" x="900" y="115" text-anchor="middle">approved actions only</text><rect class="box" x="815.0" y="404" width="170" height="41" rx="6"/><text class="t" x="900" y="426" text-anchor="middle">Receives the actions</text><rect class="box" x="995.0" y="294" width="170" height="57" rx="6"/><text class="t" x="1080" y="316" text-anchor="middle">Works the queue</text><text class="s" x="1080" y="335" text-anchor="middle">in their own chosen order</text><rect class="box" x="995.0" y="404" width="170" height="57" rx="6"/><text class="t" x="1080" y="426" text-anchor="middle">Executes them</text><text class="s" x="1080" y="445" text-anchor="middle">marks reached or not</text><rect class="gate" x="1175.0" y="74" width="170" height="57" rx="6"/><text class="t" x="1260" y="96" text-anchor="middle">Closes the day</text><text class="s" x="1260" y="115" text-anchor="middle">the report is frozen</text><rect class="agent" x="1175.0" y="184" width="170" height="57" rx="6"/><text class="t" x="1260" y="206" text-anchor="middle">Report frozen</text><text class="s" x="1260" y="225" text-anchor="middle">that day never changes</text><rect class="box" x="1375.0" y="404" width="170" height="57" rx="6"/><text class="t" x="1460" y="426" text-anchor="middle">Confirms the cure</text><text class="s" x="1460" y="445" text-anchor="middle">and the amount paid</text><rect class="agent" x="1375.0" y="184" width="170" height="57" rx="6"/><text class="t" x="1460" y="206" text-anchor="middle">Into the training set</text><text class="s" x="1460" y="225" text-anchor="middle">for the next model</text><path class="edge" d="M180,148 V212.5 H271.0" marker-end="url(#arr)"/><text class="el" x="188" y="164" text-anchor="start">start the run</text><path class="edge" d="M360,400 V245" marker-end="url(#arr)"/><path class="edge" d="M540,180 V102.5 H631.0" marker-end="url(#arr)"/><text class="el" x="548" y="174" text-anchor="start">worklist</text><path class="edge" d="M900,131 V400" marker-end="url(#arr)"/><text class="el" x="908" y="147" text-anchor="start">approved actions</text><path class="edge" d="M1460,400 V245" marker-end="url(#arr)"/><path class="write" d="M1080,351 V504 H220 V190 H271.0" marker-end="url(#arrWrite)"/><text class="el" x="340" y="494" text-anchor="start">fast loop · same day — NOT BUILT: needs outcome capture on the agent console</text><path class="write" d="M1460,241 V534 H170 V218 H271.0" marker-end="url(#arrWrite)"/><text class="el" x="290" y="524" text-anchor="start">slow loop · 30 days — the matured outcome that retrains the uplift model</text>
+</svg>
+  <figcaption>Time runs left to right but not to scale — the last column is 30 days after the
+    others. Every lane runs today, including the collection agent working their own queue in an order
+    they choose. Only the fast loop beneath is still dashed: it needs outcome capture on the agent
+    console. If the team changes mid-morning the manager can re-plan, which rebuilds the queues from
+    the same model run and retires the old worklist.</figcaption>
+  </figure>
+</section>
+
+<hr>
+
+<section>
+  <div class="sec-head">
+    <span class="num">07</span>
+    <h2>Each console, top to bottom</h2>
+    <p>What a person does on the page, what runs underneath, which stores are touched, and what
+      comes back. The chips repeat the access level so a page can be read on its own.</p>
+  </div>
+
+  <div class="cards">
+
+    <div class="card">
+      <h3>Today <span style="font-weight:400;color:var(--ink-3);font-size:13px">· /manager</span></h3>
+      <div class="bs"><span class="b b-money">admin full</span><span class="b b-money">manager full</span><span class="b b-shown">collector none</span></div>
+      <ol>
+        <li>The manager confirms <b>today's team</b> — who is in, and how many minutes each person works.</li>
+        <li><b>Start run.</b> The API writes a run row and hands control to the Supervisor; the page follows the stages live.</li>
+        <li>Eight agents run. Feeds come from the bank, personal data goes to the vault, the plan is optimised and packed into shifts.</li>
+        <li>A <b>worklist</b> appears, already split into one queue per collector, each provably inside that person's shift.</li>
+        <li>The manager <b>approves, edits or rejects</b> each item. Anything escalated — hardship, large exposure, a wide uplift interval — has to be looked at individually.</li>
+        <li><b>Release</b> posts approved actions to the bank. <b>Close day</b> freezes the report.</li>
+        <li>If the team changes mid-morning, <b>re-plan</b> rebuilds the queues from the same model run and retires the old worklist.</li>
+      </ol>
+      <p style="font-size:13px"><b>Stores:</b> reads config packs and the saved roster; writes runs, trace, recommendations, approvals, releases and the audit chain. Opens the identity vault only at release, to write the call script.</p>
+    </div>
+
+    <div class="card">
+      <h3>My queue <span style="font-weight:400;color:var(--ink-3);font-size:13px">· /agent</span></h3>
+      <div class="bs"><span class="b b-shown">admin n/a</span><span class="b b-shown">manager none</span><span class="b b-model">collector own only</span></div>
+      <ol>
+        <li>The collector signs in and sees <b>only the accounts assigned to them today</b>, in the order the optimiser put them.</li>
+        <li>Each row carries the action, the script, the reason and the figures behind it, plus a running total of assigned, pending and released work.</li>
+        <li><b>They can re-order their own queue</b> while the run is awaiting approval — the person on the phone knows things the optimiser does not. The list must still contain exactly their own accounts, once each.</li>
+        <li>The order <b>locks once actions are released</b>, and every re-order is written to the audit chain as <code>queue.reordered</code>.</li>
+        <li>They cannot approve, release, re-plan, or see another collector's rows.</li>
+        <li>The filter is applied <b>server-side from the session</b>. A collector id in the URL is ignored, and an account that is not linked to a roster collector gets a 403 rather than an empty page.</li>
+      </ol>
+      <p style="font-size:13px"><b>Stores:</b> reads recommendations and releases scoped to that collector; writes queue positions and an audit entry.
+        <b>Not yet:</b> there is no endpoint for recording what happened on an attempt, so nothing from this page feeds the same-day loop. See section 05.</p>
+    </div>
+
+    <div class="card">
+      <h3>Daily results <span style="font-weight:400;color:var(--ink-3);font-size:13px">· /report</span></h3>
+      <div class="bs"><span class="b b-money">admin full</span><span class="b b-money">manager full</span><span class="b b-shown">collector none</span></div>
+      <ol>
+        <li>Pick a business day.</li>
+        <li>The API rebuilds that day from stored facts, not from live data — the same day always renders the same page.</li>
+        <li>Shows the team, every run that happened that day including superseded ones, what was recommended against what was released, per-collector queues, and the override reasons managers gave.</li>
+        <li>Follow-up comes back from the bank: executed, reached, cured at 30 days, amount paid.</li>
+        <li>The audit chain is verified on load and the result is shown.</li>
+      </ol>
+      <p style="font-size:13px"><b>Stores:</b> reads SQLite and the run's Parquet artifacts. Writes nothing.</p>
+    </div>
+
+    <div class="card">
+      <h3>Performance <span style="font-weight:400;color:var(--ink-3);font-size:13px">· /kpis</span></h3>
+      <div class="bs"><span class="b b-money">admin full</span><span class="b b-money">manager full</span><span class="b b-shown">collector none</span></div>
+      <ol>
+        <li>Pick a window. Seven cards, one per business question.</li>
+        <li>Each card states whether it is <b>measured</b>, <b>partly measured</b> or <b>waiting for outcomes</b> — outcomes mature at 30 days, so recent days honestly cannot answer yet.</li>
+        <li>Every KPI opens into a daily chart, plus four notes: how it is measured, where the numbers come from, how far to trust it, and what is missing.</li>
+        <li>"Why this customer?" deep-links straight into that account's explanation on Today.</li>
+      </ol>
+      <p style="font-size:13px"><b>Stores:</b> reads SQLite and the bank's action log. Writes nothing.
+        Carries a standing warning that without a randomised holdout these are observed results, not proven effects.</p>
+    </div>
+
+    <div class="card">
+      <h3>Runs &amp; pipeline <span style="font-weight:400;color:var(--ink-3);font-size:13px">· /admin</span></h3>
+      <div class="bs"><span class="b b-money">admin full</span><span class="b b-money">manager full</span><span class="b b-shown">collector none</span></div>
+      <ol>
+        <li>Every run, with its stages and how long each took.</li>
+        <li>Every tool call an agent made, in order, with a summary of what went in and what came out.</li>
+        <li>Every <b>LLM request and response</b>, stored verbatim — the prompt, the reply, the model, and whether the validator accepted it or forced the one rewrite.</li>
+        <li>The artifacts each stage produced, downloadable for inspection.</li>
+      </ol>
+      <p style="font-size:13px"><b>Stores:</b> reads runs, trace, llm_calls and Parquet artifacts. Writes nothing.</p>
+    </div>
+
+    <div class="card">
+      <h3>Bank configuration <span style="font-weight:400;color:var(--ink-3);font-size:13px">· /admin/config</span></h3>
+      <div class="bs"><span class="b b-money">admin edit</span><span class="b b-shown">manager none</span><span class="b b-shown">collector none</span></div>
+      <ol>
+        <li>The three YAML packs — scenario, institution, run — each field explained in plain language next to the value.</li>
+        <li>An edit is <b>checked before it is saved</b>: the schema is validated, the offending line is named, and a diff of what would change is shown.</li>
+        <li>A manager cannot open this page at all — the route and its API are closed to them, not merely read-only.</li>
+        <li>On save the pack is re-hashed, and the new hash is stamped onto every run that follows — so a report always says which rules produced it.</li>
+      </ol>
+      <p style="font-size:13px"><b>Stores:</b> reads and writes the YAML config packs; writes an audit entry per save.</p>
+    </div>
+
+    <div class="card">
+      <h3>Onboard a bank <span style="font-weight:400;color:var(--ink-3);font-size:13px">· /admin/onboarding</span></h3>
+      <div class="bs"><span class="b b-money">admin full</span><span class="b b-shown">manager none</span><span class="b b-shown">collector none</span></div>
+      <ol>
+        <li>The admin gives a base URL. The Onboarding Agent reads the bank's own API description.</li>
+        <li><b>LLM call one:</b> from the endpoint list, which feeds does Last Mile need, and where are they.</li>
+        <li>The agent samples those feeds and profiles the columns as <b>value shapes</b> — <code>Aaaaa</code>, <code>+9-999-9999</code> — never values.</li>
+        <li><b>LLM call two:</b> map this bank's columns to the 54 canonical fields, and say whether the risk score is a band or a probability.</li>
+        <li>Deterministic checks run: does every column exist, do the values match the expected kind, are required fields covered. Failures go back once for a correction.</li>
+        <li>The admin sees the proposal field by field and <b>approves or rejects</b>. Only on approval is an institution pack written.</li>
+      </ol>
+      <p style="font-size:13px"><b>Stores:</b> reads the bank's API and samples; writes a proposed config pack and the LLM call record. Nothing is used until an admin approves it.</p>
+    </div>
+
+    <div class="card">
+      <h3>Users &amp; access <span style="font-weight:400;color:var(--ink-3);font-size:13px">· /admin/users</span></h3>
+      <div class="bs"><span class="b b-money">admin every role</span><span class="b b-model">manager agents only</span><span class="b b-shown">collector none</span></div>
+      <ol>
+        <li>Lists the accounts this person is allowed to manage: <b>an admin sees all of them</b>, a
+          <b>manager sees only their collection agents</b>, with the roster collector each one is linked to.</li>
+        <li>The role dropdown is built from the server's answer, not hard-coded: a manager is offered
+          <em>collection agent</em> and nothing else, and the field is hidden entirely when that is the only choice.</li>
+        <li>A collection-agent account must carry a <b>collector id from the daily team</b>, such as
+          <code>C01</code>. That link is what gives the person a queue; without it the agent page returns 403.</li>
+        <li>Passwords are at least 12 characters and are shown once. Accounts live in an
+          <code>app_users</code> table, separate from the bootstrap accounts in the environment, so the
+          first admin can always get in.</li>
+        <li>Every change records who made it and when, in the audit chain.</li>
+      </ol>
+      <p style="font-size:13px"><b>The rule that matters:</b> the cap on what a person may grant is enforced
+        in the API, not the dropdown. A manager who posts <code>role: "manager"</code> by hand gets a 403.
+        <b>Stores:</b> reads and writes <code>app_users</code>; passwords held as PBKDF2-SHA256 hashes.</p>
+    </div>
+
+    <div class="card">
+      <h3>Guided tour, Demo &amp; Presentation <span style="font-weight:400;color:var(--ink-3);font-size:13px">· /guide, /demo, /presentation · outside the sidebar</span></h3>
+      <div class="bs"><span class="b b-money">admin</span><span class="b b-money">manager</span><span class="b b-shown">collector none</span></div>
+      <ol>
+        <li>A plain-language walkthrough of one run, for a client who has not seen the system before.</li>
+        <li>Technical detail is available on demand rather than shown by default.</li>
+        <li>Neither page shows customer data. All three were taken out of the sidebar and are reached by URL; a collector account cannot open them.</li>
+      </ol>
+      <p style="font-size:13px"><b>Stores:</b> reads a completed run for illustration. Writes nothing.</p>
+    </div>
+
+  </div>
+</section>
+
+<hr>
+
+<section>
+  <div class="sec-head">
+    <span class="num">08</span>
+    <h2>Where an agent decides, where a rule decides, and where a person decides</h2>
+    <p>The review asked us not to use AI where a rule is enough. Here is the split, stated as a
+      responsibility per component rather than as a claim about the system as a whole.</p>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th style="width:23%">Decision</th><th style="width:15%">Decided by</th><th>Why that and not something else</th></tr></thead>
+      <tbody>
+        <tr><td>May we contact this person at all?</td><td><span class="b b-rule">rule</span></td><td>Consent, do-not-call, deceased, bankruptcy, litigation, fraud hold. Binary, legally defined, and auditable. A model here would be both useless and indefensible.</td></tr>
+        <tr><td>Which actions are available for this account?</td><td><span class="b b-rule">rule</span></td><td>Eligibility is written as structured conditions in YAML — days past due thresholds, hardship history, product. An admin can read and change them; nobody has to retrain anything.</td></tr>
+        <tr><td>Have we contacted them too often?</td><td><span class="b b-rule">rule</span></td><td>Counting. The cap is 7 attempts in 7 days and 1 contact a day.</td></tr>
+        <tr><td>How much money is at stake?</td><td><span class="b b-money">arithmetic</span></td><td><code>pd_12m × exposure × lgd</code>. Same inputs, same answer, every time, and every input traceable to a bank field.</td></tr>
+        <tr><td>How much difference would each action make?</td><td><span class="b b-model">model</span></td><td>This is a genuine pattern-finding problem across sixteen signals, and it is the one thing a rule cannot do: no policy can tell you who is <em>persuadable</em>.</td></tr>
+        <tr><td>Which actions do we actually do today?</td><td><span class="b b-money">optimiser</span></td><td>A constrained allocation problem — value against capacity, caps and shift lengths. A solver gives the best feasible answer and can prove it is feasible. An LLM would guess.</td></tr>
+        <tr><td>Who works which account, in what order?</td><td><span class="b b-money">optimiser</span></td><td>Bin packing with a repair step. A 45-minute referral cannot be split across two people, so this has to be exact rather than approximately right.</td></tr>
+        <tr><td>How should the reason be worded?</td><td><span class="b b-pii">LLM</span></td><td>Language, not judgement. It receives segment and action, writes a template with placeholders, and the figures are filled from stamped facts. A validator checks the wording against those facts and allows one rewrite.</td></tr>
+        <tr><td>How does a new bank's data map to ours?</td><td><span class="b b-pii">LLM</span> + <span class="b b-rule">rule</span></td><td>Reading an unfamiliar API and guessing that <code>CURR_BAL</code> means current balance is exactly what a language model is good at. Whether the guess is <em>right</em> is then checked deterministically, and an admin approves it.</td></tr>
+        <tr><td>Does this action go to a customer?</td><td><span class="b b-label">person</span></td><td>Always. Nothing reaches the bank without a manager's release, and every release is in the hash-chained audit with who approved it.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note">
+    <p><b>The rule we applied.</b> If the answer is defined by policy or law, it is a rule.
+      If it is arithmetic, it is arithmetic. If it needs a pattern across many weak signals, it is
+      a model. If it is a constrained allocation, it is a solver. The LLM gets the two jobs that
+      are genuinely about language — wording and interpreting an unfamiliar schema — and neither
+      of those outputs is ever a number or a decision.</p>
+  </div>
+</section>
+
+
+<hr>
+
+<section>
+  <div class="sec-head">
+    <span class="num">09</span>
+    <h2>Volumes, runtime and what the numbers are set to</h2>
+    <p>Measured on the engine database as it stands, not estimated. 42 completed runs.</p>
+  </div>
+  <div class="strip">
+    <div><b>16.5s</b><span>average run, end to end (9.8s fastest, 50.3s slowest)</span></div>
+    <div><b>457</b><span>recommendations in a typical worklist</span></div>
+    <div><b>1,514</b><span>delinquent accounts in Riverbend's book, of 5,188</span></div>
+    <div><b>20,308</b><span>historical worked-account rows the model learns from</span></div>
+    <div><b>15</b><span>LLM calls across all 43 runs — it is on a cold path</span></div>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th style="width:30%">Setting</th><th style="width:18%">Value</th><th>Why, and what would change it</th></tr></thead>
+      <tbody>
+        <tr><td>Feed page size</td><td class="n">5,000 rows</td><td>One request per page against the bank. A much larger book would want a cursor rather than a page number.</td></tr>
+        <tr><td>Uplift bags per arm</td><td class="n">6</td><td>The point estimate is the bag mean; the low–high range is their spread. More bags narrow the range and cost training time linearly.</td></tr>
+        <tr><td>Holdout for validation</td><td class="n">25%</td><td>Used only to compute Qini. This is <b>not</b> a holdout of customers left uncontacted — that is the thing we do not have.</td></tr>
+        <tr><td>Minimum Qini to publish</td><td class="n">0.0</td><td>The model must at least beat random ranking. A real deployment should set this above zero.</td></tr>
+        <tr><td>Monte Carlo runs</td><td class="n">2,000</td><td>Produces p10 / p50 / p90 on the day's value. The single biggest contributor to run time.</td></tr>
+        <tr><td>Shift simulation replications</td><td class="n">20</td><td>Enough for a completion-rate mean; too few for a confident tail.</td></tr>
+        <tr><td>Label maturity</td><td class="n">30 days</td><td>No outcome younger than this is published, so a row cannot train on its own result.</td></tr>
+        <tr><td>Planning buffer</td><td class="n">10%</td><td>Plan to 90% of each shift, because handling times run long.</td></tr>
+        <tr><td>Default team</td><td class="n">5 × 360 min</td><td>Only used when the manager has not saved a roster for the day.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note">
+    <p><b>Where it would strain.</b> Run time is dominated by simulation, not by the model or the
+      solver, so ten times the accounts would not cost ten times the minutes. The parts that would
+      need attention first are the single-file SQLite database under concurrent collectors, and the
+      feed pull, which is sequential per feed.</p>
+  </div>
+</section>
+
+<hr>
+
+<section>
+  <div class="sec-head">
+    <span class="num">10</span>
+    <h2>What happens when something goes wrong</h2>
+    <p>The design rule is fail-closed: when the system cannot be sure, it produces no worklist
+      rather than a doubtful one. A missing worklist costs a day; a wrong one contacts real people.</p>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th style="width:30%">What goes wrong</th><th style="width:16%">Result</th><th>What the system actually does</th></tr></thead>
+      <tbody>
+        <tr><td>The bank's API is unreachable, or a required feed is missing</td><td><span class="b b-money">run stops</span></td><td>Fails before any modelling, naming the feeds that were not published. No partial worklist is ever produced.</td></tr>
+        <tr><td>A config file is edited while a run is in progress</td><td><span class="b b-money">run stops</span></td><td>Refuses to continue rather than finish under two different sets of rules.</td></tr>
+        <tr><td>A quality gate fails — too few rows, too many nulls, a stale score, an unknown grade</td><td><span class="b b-money">run stops</span></td><td>Thirteen gates run before anything is scored. A score older than two days stops the day.</td></tr>
+        <tr><td>Code asks for a banned column as a feature</td><td><span class="b b-money">run stops</span></td><td>The leakage guard raises rather than warns, so a leaking model cannot reach a worklist by accident.</td></tr>
+        <tr><td>History has too little treatment variation to identify uplift</td><td><span class="b b-money">run stops</span></td><td>Feasibility is checked before training: "causal feasibility checks failed; worklist not produced".</td></tr>
+        <tr><td>The trained model fails its holdout check</td><td><span class="b b-money">run stops</span></td><td>If Qini is below the threshold on any action, the run refuses to publish. A model that cannot beat random ranking never reaches a collector.</td></tr>
+        <tr><td>The finished plan breaks a policy rule</td><td><span class="b b-money">run stops</span></td><td>The independent verifier writes a <code>plan.rejected</code> audit entry and fails the run, quoting the first violations.</td></tr>
+        <tr><td>A collector's queue will not fit their shift</td><td><span class="b b-rule">degrades</span></td><td>The packer re-solves at reduced capacity, up to three attempts. Anything that still does not fit is reported as unassigned rather than forced onto someone.</td></tr>
+        <tr><td>The LLM is unavailable, or its wording fails validation</td><td><span class="b b-rule">degrades</span></td><td>One rewrite is attempted, then a deterministic fallback template is used. The recommendation still ships and records which source wrote it. <b>No LLM outage can stop a worklist.</b></td></tr>
+        <tr><td>A manager's edit overfills a queue</td><td><span class="b b-rule">flagged</span></td><td>Swapping a 12-minute call for a 45-minute referral marks the queue over-shift in the console rather than silently accepting it.</td></tr>
+        <tr><td>The team changes after the plan was built</td><td><span class="b b-rule">recovers</span></td><td>Re-plan rebuilds the queues from the same model run, supersedes the old worklist, and records the link between them.</td></tr>
+        <tr><td><b>The solver returns a non-optimal status</b></td><td><span class="b b-unused">known gap</span></td><td><b>This one does not fail closed.</b> The status is recorded on the run, but the plan is still built from whatever the solver produced. It should refuse, the way the verifier does. Found while writing this page.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr>
+
+<footer>
+  <p><b>Verified against the code, not from memory.</b> Roles and the permission table from
+    <code>src/lastmile/api/auth.py</code>, the collector's own endpoints from
+    <code>api/app.py</code>, account management from <code>api/users.py</code> and the
+    <code>app_users</code> table, consoles from the role-filtered navigation in
+    <code>static/shell.js</code>, tool ownership from <code>src/lastmile/agents/tools.py</code>
+    and <code>crew.py</code>, stages from <code>agents/supervisor.py</code>.</p>
+  <p>The three-role model, the collection agent console and admin-managed accounts all run today.
+    The read-only <b>guest</b> role has been withdrawn: it could read the bank configuration and the
+    onboarding console, which a collections manager cannot, and an inverted permission is worse than
+    a missing one.</p>
+  <p>
+    The only thing drawn as not built is the <b>same-day feedback loop</b>, which needs outcome capture
+    on the agent console. Measured figures in section 09 come from the engine database as it stands.</p>
+  <p><b>Not covered here:</b> the deployment and hosting view (which machine, which processes, which
+    network boundaries) and the model lifecycle in detail (when a model is retrained rather than reused).
+    Both are worth adding; neither should be drawn from memory.</p>
+</footer>
+
+</div>

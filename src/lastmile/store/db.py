@@ -85,6 +85,20 @@ CREATE TABLE IF NOT EXISTS approvals (
   CHECK (decision = 'approved' OR reason_code IS NOT NULL)
 );
 
+-- What the collection agent found when they worked the account. Append-only like approvals:
+-- editing a comment writes a new row, so the history of what was said is never lost.
+CREATE TABLE IF NOT EXISTS attempt_outcomes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, run_id TEXT NOT NULL, account_token TEXT NOT NULL,
+  collector_id TEXT NOT NULL, disposition TEXT NOT NULL, comment TEXT,
+  promise_date TEXT, promise_amount REAL, spent_minutes INTEGER,
+  recorded_by TEXT NOT NULL, recorded_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_attempts_run ON attempt_outcomes(run_id, account_token);
+CREATE TRIGGER IF NOT EXISTS attempts_no_update BEFORE UPDATE ON attempt_outcomes
+  BEGIN SELECT RAISE(ABORT, 'attempt_outcomes is append-only; record a new outcome instead'); END;
+CREATE TRIGGER IF NOT EXISTS attempts_no_delete BEFORE DELETE ON attempt_outcomes
+  BEGIN SELECT RAISE(ABORT, 'attempt_outcomes is append-only'); END;
+
 CREATE TABLE IF NOT EXISTS audit_events (
   seq INTEGER PRIMARY KEY AUTOINCREMENT, run_id TEXT, event_type TEXT, actor TEXT,
   payload_json TEXT, prev_hash TEXT, hash TEXT NOT NULL, created_at TEXT NOT NULL
@@ -98,6 +112,14 @@ CREATE TABLE IF NOT EXISTS releases (
   id INTEGER PRIMARY KEY AUTOINCREMENT, run_id TEXT, account_token TEXT, action TEXT,
   bank_action_id INTEGER, released_by TEXT, released_at TEXT
 );
+
+-- Locally managed console accounts. Environment accounts remain supported for bootstrap access.
+CREATE TABLE IF NOT EXISTS app_users (
+  username TEXT PRIMARY KEY, display_name TEXT NOT NULL, role TEXT NOT NULL,
+  collector_id TEXT, pw_hash TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1,
+  created_by TEXT NOT NULL, created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_app_users_collector ON app_users(collector_id);
 """
 
 
@@ -171,6 +193,9 @@ def _migrate(con: sqlite3.Connection) -> None:
     llm = _columns(con, "llm_calls")
     if llm and "thinking_tokens" not in llm:
         con.execute("ALTER TABLE llm_calls ADD COLUMN thinking_tokens INTEGER")
+    att = _columns(con, "attempt_outcomes")
+    if att and "spent_minutes" not in att:
+        con.execute("ALTER TABLE attempt_outcomes ADD COLUMN spent_minutes INTEGER")
     rec = _columns(con, "recommendations")
     for name, typ in [("collector_id", "TEXT"), ("queue_position", "INTEGER")]:
         if rec and name not in rec:

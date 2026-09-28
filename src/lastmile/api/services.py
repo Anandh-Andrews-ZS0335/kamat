@@ -7,10 +7,12 @@ import json
 import pandas as pd
 from fastapi import HTTPException
 
+from lastmile.agents import provenance
+from lastmile.agents.templates import SCRIPTS
 from lastmile.config.resolve import resolve
 from lastmile.config.settings import bank_base_url
 from lastmile.engine.collectors import AUTOMATED
-from lastmile.governance import approvals, audit
+from lastmile.governance import approvals, audit, outcomes
 from lastmile.ingest.bank_client import BankApiError, BankClient
 from lastmile.pipeline.run import run_config, run_roster
 from lastmile.store import artifacts, db, rosters
@@ -47,6 +49,7 @@ def worklist(run_id: str) -> list[dict]:
         recs = db.rows(con, "SELECT * FROM recommendations WHERE run_id = ? ORDER BY rank", (run_id,))
         released = {r["account_token"]: r for r in db.rows(con, "SELECT * FROM releases WHERE run_id = ?", (run_id,))}
     latest = approvals.latest(run_id)
+    attempts = outcomes.latest(run_id)
     team = run_roster(run_id)
     names = {c.id: c.name for c in team.collectors} if team else {}
     names[AUTOMATED] = "Automated SMS"
@@ -60,6 +63,7 @@ def worklist(run_id: str) -> list[dict]:
                     "action": r["action"], "action_label": f["action_label"]["value"], "segment": r["segment"],
                     "segment_label": f["segment_label"]["value"], "product": f["product_label"]["value"],
                     "exposure": f["exposure"]["value"], "dpd": f["dpd"]["value"], "risk_grade": f["risk_grade"]["value"],
+                    "min_payment": (f.get("min_payment") or {}).get("value"),
                     "expected_loss": f["expected_loss"]["value"], "uplift": f["uplift"]["value"],
                     "uplift_low": f["uplift_low"]["value"], "uplift_high": f["uplift_high"]["value"],
                     "base_cure": f["base_cure"]["value"], "action_value": f["action_value"]["value"],
@@ -67,8 +71,19 @@ def worklist(run_id: str) -> list[dict]:
                     "collector_id": cid, "collector_name": names.get(cid, cid) if cid else None,
                     "queue_position": r.get("queue_position"),
                     "decision": a["decision"] if a else "pending", "final_action": a["final_action"] if a else None,
-                    "approver": a["approver_id"] if a else None, "released": r["account_token"] in released})
+                    "approver": a["approver_id"] if a else None, "released": r["account_token"] in released,
+                    "attempt": _attempt_view(attempts.get(r["account_token"]))})
     return out
+
+
+def _attempt_view(row: dict | None) -> dict | None:
+    """What the collector reported, as the consoles show it. None until the account has been worked."""
+    if not row:
+        return None
+    return {"disposition": row["disposition"], "label": outcomes.DISPOSITIONS.get(row["disposition"], row["disposition"]),
+            "comment": row["comment"], "promise_date": row["promise_date"], "promise_amount": row["promise_amount"],
+            "recorded_by": row["recorded_by"], "recorded_at": row["recorded_at"],
+            "spent_minutes": row["spent_minutes"], "revisions": row["revisions"]}
 
 
 def queues(run_id: str, items: list[dict]) -> list[dict]:
@@ -103,6 +118,126 @@ def queues(run_id: str, items: list[dict]) -> list[dict]:
             "actions": pd.Series([i["action"] for i in mine], dtype=object).value_counts().to_dict(),
         })
     return rows
+
+
+# --------------------------------------------------------------------------------- scope and capability
+# What a collection agent never receives: what the action is *worth* and what the model believes.
+# A price tag or a "Lost Cause" label on the screen changes how the person on the phone is spoken to.
+# These are removed from the payload, not hidden in the page - what is not sent cannot leak.
+# The account's own balance is not in this set: the collector has to discuss it on the call.
+MANAGER_ONLY_ITEM_FIELDS = frozenset({
+    "expected_loss", "uplift", "uplift_low", "uplift_high", "base_cure",
+    "action_value", "segment", "segment_label", "risk_grade", "template_source",
+})
+MANAGER_ONLY_QUEUE_FIELDS = frozenset({"est_value"})
+
+# Why an account was held back for review, said in terms of what to do differently on the call.
+# The raw escalation detail is written for the manager and quotes the model; it is not sent on.
+COLLECTOR_ESCALATION_NOTES = {
+    "HARDSHIP_OFFER": "Hardship referral. Listen for signs of difficulty and follow the script closely.",
+    "HIGH_EXPOSURE": "Large balance. A manager reviewed this one by name before it was released.",
+    "WIDE_INTERVAL": "Less certain than usual. Follow the script, but let the customer lead.",
+}
+DEFAULT_ESCALATION_NOTE = "Held back for a manager to read before release. Take extra care."
+
+
+def escalation_note(escalations: list[dict] | None) -> str | None:
+    """One line a collector can act on, or nothing at all."""
+    if not escalations:
+        return None
+    return " ".join(dict.fromkeys(COLLECTOR_ESCALATION_NOTES.get(e.get("code"), DEFAULT_ESCALATION_NOTE)
+                                  for e in escalations))
+
+
+def resolve_collector(role: str, session_collector_id: str | None, requested: str | None) -> str | None:
+    """Whose queue this is. A collection agent always gets their own: a collector= supplied by the
+    browser is discarded rather than honoured, so crafting the request by hand changes nothing."""
+    if role == "collector":
+        return session_collector_id
+    return requested
+
+
+def work_state(item: dict) -> str:
+    """One word for where an account stands, from the person working it."""
+    if item.get("attempt"):
+        return "worked"
+    if item["released"]:
+        return "released"
+    if item["decision"] in ("approved", "edited"):
+        return "approved"
+    if item["decision"] == "rejected":
+        return "rejected"
+    return "awaiting_approval"
+
+
+def capabilities(role: str, run_status: str, own_queue_only: bool) -> dict:
+    """What this viewer may do, decided once on the server. Pages render from this, never from a role name."""
+    live = run_status == "awaiting_approval"
+    if own_queue_only:
+        return {"reorder": live, "record_outcome": True, "approve": False, "release": False,
+                "replan": False, "close_day": False, "see_all_queues": False,
+                "see_money": False, "see_model": False}
+    write = role in ("admin", "manager")
+    return {"reorder": write and live, "record_outcome": False, "approve": write and live,
+            "release": write, "replan": write, "close_day": write,
+            "see_all_queues": True, "see_money": True, "see_model": True}
+
+
+def collector_scripts(run_id: str, items: list[dict]) -> dict[str, str]:
+    """The words the collector says, rendered the way release renders them.
+
+    An edited account gets the template for the action that was actually approved, mirroring
+    the release payload: the script on the queue and the script sent to the bank must never
+    describe different work. The member's first name is rejoined here and nowhere else in the
+    payload, so the identity file is read on the server and never handed to the page.
+    """
+    if not items:
+        return {}
+    with db.connect() as con:
+        recs = {r["account_token"]: r for r in db.rows(
+            con, "SELECT account_token, action, script_tpl, facts_json FROM recommendations WHERE run_id = ?", (run_id,))}
+    try:
+        ident = pd.read_parquet(artifacts.identity_path(run_id))
+        first = ident.set_index("account_token")["first_name"]
+    except Exception:            # an archived run may no longer carry its identity file
+        first = pd.Series(dtype=object)
+    out = {}
+    for item in items:
+        rec = recs.get(item["account_token"])
+        if not rec:
+            continue
+        final = item.get("final_action") or rec["action"]
+        template = rec["script_tpl"] if final == rec["action"] else SCRIPTS.get(final)
+        if not template:         # an action with no script: no words is safer than the wrong words
+            continue
+        facts = db.loads(rec["facts_json"])
+        facts["first_name"] = provenance.stamp("first_name", first.get(item["account_token"], "there"),
+                                               "identity:members", run_id)
+        out[item["account_token"]] = provenance.render_text(template, facts)
+    return out
+
+
+def project_items(items: list[dict], detail: str, scripts: dict[str, str] | None = None) -> list[dict]:
+    """`full` keeps every field; `execution` keeps only what is needed to work the account."""
+    if detail == "full":
+        return items
+    scripts = scripts or {}
+    out = []
+    for item in items:
+        row = {k: v for k, v in item.items() if k not in MANAGER_ONLY_ITEM_FIELDS}
+        row["escalated"] = bool(item.get("escalations"))       # that it needs care, and what to do about it
+        row["escalation_note"] = escalation_note(item.get("escalations"))
+        row["state"] = work_state(item)
+        row["script"] = scripts.get(item["account_token"])
+        row.pop("escalations", None)
+        out.append(row)
+    return out
+
+
+def project_queue(queue: dict | None, detail: str) -> dict | None:
+    if queue is None or detail == "full":
+        return queue
+    return {k: v for k, v in queue.items() if k not in MANAGER_ONLY_QUEUE_FIELDS}
 
 
 # ------------------------------------------------------------------------------------ business day

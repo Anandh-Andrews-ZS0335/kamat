@@ -7,7 +7,7 @@ Paste everything below the line into an LLM or diagramming assistant.
 You are a solutions architect and information designer. Produce a **solution architecture
 diagram** for a system called **Last Mile** — an agentic decision system that turns a bank's
 raw collections data into a per-collector daily worklist that a human manager approves before
-anything is sent to a customer.
+anything is sent to a customer, and hands each collection agent only their own share of it.
 
 ## What to produce
 
@@ -123,12 +123,28 @@ Annotate clearly: **the LLM writes the sentence; it never produces a number, nev
 action, and never sees customer data — only tokens and aggregate facts.**
 
 **11. Human-in-the-loop** *(amber)*
-The **collections manager**: sets today's roster (how many collectors, how long each works),
-triggers the daily run (there is no timer), reviews the worklist and per-collector queues,
-approves / edits / rejects each item, may re-plan for a changed team, releases the approved
-actions, and closes the day. An **admin** edits the YAML config packs through a validating
-editor and approves a new bank's onboarding proposal. Roles: admin · manager · guest, enforced
-on every page and API call. **Nothing reaches a customer without a release.**
+Three roles, enforced on every page and every API call — draw them as distinct actors, because
+they differ in two different ways: admin and manager differ by *what they may change*, while
+the collection agent differs by *which rows exist for them at all*. Each role also has a landing
+page it is allowed to open, resolved at sign-in; a refused page answers with a page, not a JSON error.
+- **Admin** — everything. The only role that can onboard a bank, save configuration, or create
+  accounts for other people.
+- **Collections manager** — owns the business day: sets today's roster (who is in, how long each
+  works), triggers the run (there is no timer), reviews the worklist and the per-collector
+  queues, approves / edits / rejects each item, may re-plan for a changed team, releases the
+  approved actions, and closes the day. Has **no access** to onboarding, configuration or user
+  management.
+- **Collection agent (collector)** — sees only the queue assigned to them for today, and may
+  re-order their own work while the run is awaiting approval; the queue locks once actions are
+  released. Cannot approve, cannot release, cannot see another collector's rows, and cannot
+  reach any other console. The scoping comes from the **signed-in session's `collector_id`**,
+  never from a parameter the browser sends — show this on the diagram, because it is the
+  difference between a role and a hidden menu item.
+A read-only **guest** role existed and was withdrawn: it could read the bank configuration and the
+onboarding console, which a collections manager cannot. Do not draw it.
+
+Accounts come from the environment for bootstrap and from an admin-managed `app_users` table
+after that. **Nothing reaches a customer without a manager's release.**
 
 **12. Action / execution layer**
 Released actions are posted back to the bank's API (CALL · SMS · PLAN · HARDSHIP), with the
@@ -155,10 +171,17 @@ identity vault kept outside the analytics store.
 
 ## Cross-cutting bands to draw around the stack
 
-- **Top band — users and access:** collections manager · admin · guest · client/judges →
+- **Top band — users and access:** admin · collections manager · collection agent →
   HTTPS → sign-in gate (PBKDF2 password hashes, HMAC-signed session cookie, role checked on
-  every request) → consoles: Today (worklist & queues) · Daily reports · Runs & agents ·
-  Configuration · Onboard a bank · Business KPIs · Guided tour · Demo.
+  every request) → the consoles below. The sidebar is filtered by role, so each person sees only
+  their own group; mark each console with which roles may open it.
+  - *Operate:* **Today** (worklist, approvals, roster — admin, manager) ·
+    **My queue** (the collector's own assigned work — collector only) ·
+    **Daily results** (admin, manager) · **Performance** (the KPI page — admin, manager)
+  - *Manage:* **Runs & pipeline** (admin, manager) · **Onboard a bank** (admin only) ·
+    **Bank configuration** (admin only) · **Users & access** (admin: any role; manager: collection agents only)
+  - *Client-facing, outside the sidebar:* **Guided tour** (`/guide`) and **Demo showcase**
+    (`/demo`), which keep their own presentation layout.
 - **Application layer:** FastAPI (:8000) — business services & APIs, the daily-run workflow /
   orchestration endpoints, and the rules engine; vanilla-JS front end with a shared design
   system.
@@ -185,7 +208,9 @@ Everywhere else, state plainly on the diagram: **deterministic maths, no LLM.**
 - Do not invent components, vendors, cloud services or model names that are not listed above.
 - Do not put the LLM anywhere in the scoring, valuation, optimisation or policy path.
 - Keep the honest caveats visible rather than hiding them: no holdout yet; outcomes mature at
-  30 days; the bank's contact log and Last Mile's plan are two separate sources of contacts.
+  30 days; the bank's contact log and Last Mile's plan are two separate sources of contacts;
+  and the collection agent can re-order their queue but cannot yet **record what happened on
+  each attempt**, so the same-day half of the feedback loop is not closed.
 - Prefer clarity over density. If a band has more than six boxes, group them.
 
 ## Reference sketch (topology only — improve on it, don't copy its crudeness)
@@ -206,7 +231,7 @@ BANK SYSTEMS  →  INGESTION & PREPARATION  →  CUSTOMER DECISION STATE
                                                      ↓
                               RECOMMENDATION & EXPLANATION  (facts → LLM wording → validation)
                                                      ↓
-                                        HUMAN APPROVAL  (collections manager)
+                                        HUMAN APPROVAL  (manager approves → agent works own queue)
                                                      ↓
                                           ACTION EXECUTION
                                                      ↓

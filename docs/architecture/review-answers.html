@@ -1,0 +1,315 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Review Answers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+:root{
+  --ground:#EDF2F2; --surface:#FFFFFF; --surface-2:#F4F8F8; --sunk:#E4ECEC;
+  --ink:#0F2429; --ink-2:#41565A; --ink-3:#697C7F; --line:#C7D5D5; --line-2:#DDE7E7;
+  --teal:#11606B; --teal-soft:#DCECEE; --violet:#63479C; --violet-soft:#EAE4F5;
+  --amber:#875B12; --amber-soft:#F5EAD6; --rust:#9C3B26; --rust-soft:#F7E4DF;
+  --sans:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+  --serif:"IBM Plex Serif",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0B1214; --surface:#121B1E; --surface-2:#172226; --sunk:#0D1618;
+  --ink:#E3ECEC; --ink-2:#AEC0C1; --ink-3:#7D9294; --line:#2B3C40; --line-2:#1F2D31;
+  --teal:#6BBFC8; --teal-soft:#0F323A; --violet:#B69CE4; --violet-soft:#241C35;
+  --amber:#D7A557; --amber-soft:#2C2416; --rust:#E0846B; --rust-soft:#341913;
+}}
+:root[data-theme="dark"]{
+  --ground:#0B1214; --surface:#121B1E; --surface-2:#172226; --sunk:#0D1618;
+  --ink:#E3ECEC; --ink-2:#AEC0C1; --ink-3:#7D9294; --line:#2B3C40; --line-2:#1F2D31;
+  --teal:#6BBFC8; --teal-soft:#0F323A; --violet:#B69CE4; --violet-soft:#241C35;
+  --amber:#D7A557; --amber-soft:#2C2416; --rust:#E0846B; --rust-soft:#341913;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.6 var(--sans);
+  padding-inline:20px;padding-block:36px 72px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:34px}
+.kicker{font:600 11.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--teal)}
+h1{margin:0;font:600 clamp(28px,3.6vw,40px)/1.14 var(--serif);letter-spacing:-.015em;text-wrap:balance}
+h2{margin:0;font:600 clamp(20px,2.2vw,25px)/1.2 var(--serif);letter-spacing:-.01em;text-wrap:balance}
+h3{margin:0;font:600 16px/1.35 var(--sans);letter-spacing:-.005em}
+p{margin:0}
+a{color:var(--teal)}
+.lede{color:var(--ink-2);font-size:17px;max-width:70ch}
+header{display:grid;gap:12px}
+section{display:grid;gap:16px}
+.sec-head{display:grid;gap:8px;max-width:78ch}
+.sec-head p{color:var(--ink-2)}
+.num{font:600 11.5px/1 var(--mono);color:var(--ink-3);letter-spacing:.12em}
+hr{border:0;border-top:1px solid var(--line);margin:0}
+
+/* strip of figures */
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.strip div{background:var(--surface);padding:15px 17px;display:grid;gap:3px}
+.strip b{font:600 26px/1 var(--sans);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.strip span{font-size:12.5px;color:var(--ink-3);line-height:1.4}
+
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:10px;
+  align-content:start}
+.card ul,.card ol{margin:0;padding-left:19px;display:grid;gap:7px;font-size:14px;color:var(--ink-2)}
+.card li b,.card li strong{color:var(--ink);font-weight:600}
+.card > p{font-size:14px;color:var(--ink-2)}
+
+/* tables */
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:13.5px}
+caption{text-align:left;padding:14px 16px 0;font-size:13px;color:var(--ink-3)}
+th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line-2);vertical-align:top}
+thead th{position:sticky;top:0;background:var(--surface-2);font:600 11.5px/1.3 var(--mono);letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);border-bottom:1px solid var(--line);z-index:1}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--surface-2)}
+td.f{font-family:var(--mono);font-size:12.5px;white-space:nowrap;color:var(--ink)}
+th.grp{background:var(--sunk);font:600 11.5px/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-2);padding:8px 14px;border-bottom:1px solid var(--line)}
+td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* badges */
+.b{display:inline-block;font:600 10.5px/1.7 var(--mono);letter-spacing:.05em;padding:0 7px;border-radius:4px;
+  white-space:nowrap;border:1px solid transparent;text-transform:uppercase}
+.b-rule{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
+.b-model{background:var(--teal-soft);color:var(--teal);border-color:var(--teal)}
+.b-money{background:var(--ink);color:var(--surface)}
+.b-label{background:transparent;color:var(--ink);border-color:var(--ink)}
+.b-shown{background:var(--surface-2);color:var(--ink-3);border-color:var(--line)}
+.b-unused{background:transparent;color:var(--rust);border:1px dashed var(--rust)}
+.b-pii{background:var(--violet-soft);color:var(--violet);border-color:var(--violet)}
+.b-key{background:transparent;color:var(--ink-3);border:1px dotted var(--ink-3)}
+.bs{display:flex;gap:4px;flex-wrap:wrap}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);align-items:center}
+.legend span.i{display:inline-flex;gap:6px;align-items:center}
+
+/* callouts */
+.note{border-left:3px solid var(--teal);background:var(--surface);border-radius:0 8px 8px 0;padding:14px 18px;
+  display:grid;gap:6px;font-size:14px;color:var(--ink-2)}
+.note.warn{border-left-color:var(--rust)}
+.note.gate{border-left-color:var(--amber)}
+.note b{color:var(--ink)}
+.note h3{margin-bottom:2px}
+code{font-family:var(--mono);font-size:.87em;background:var(--surface-2);padding:1px 5px;border-radius:4px;
+  border:1px solid var(--line-2)}
+.note code,td code{background:transparent;border:0;padding:0}
+footer{color:var(--ink-3);font-size:13px;display:grid;gap:6px;max-width:80ch}
+@media (max-width:520px){ body{padding-inline:16px} .strip b{font-size:22px} }
+</style>
+
+<style>
+.chain{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.chain div{background:var(--surface);padding:14px 16px;display:grid;gap:5px;align-content:start}
+.chain .q{font:600 12px/1.35 var(--mono);color:var(--teal);letter-spacing:.02em}
+.chain .a{font-size:13.5px;color:var(--ink-2)}
+.chain .s{font:600 10.5px/1 var(--mono);color:var(--ink-3);letter-spacing:.1em}
+.qa{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px 22px;display:grid;gap:12px}
+.qa > .h{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+.qa .qn{font:600 12px/1 var(--mono);color:var(--teal);letter-spacing:.1em;white-space:nowrap}
+.qa h3{font-size:18px}
+.qa .short{font-size:15.5px;color:var(--ink);border-left:3px solid var(--teal);padding-left:14px}
+.qa ul{margin:0;padding-left:19px;display:grid;gap:7px;font-size:14px;color:var(--ink-2)}
+.qa ul b{color:var(--ink)}
+.where{font-size:13px;color:var(--ink-3);border-top:1px solid var(--line-2);padding-top:11px}
+.where a{font-weight:600}
+.docs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.doc{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:8px}
+.doc a{font:600 16px/1.3 var(--sans);text-decoration:none}
+.doc p{font-size:13.5px;color:var(--ink-2)}
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="kicker">Hackfest'26 · Last Mile · Response to technical review</span>
+  <h1>Answers to the six review questions</h1>
+  <p class="lede">One page. Each question answered directly, with a pointer to the document that
+    carries the detail. Two of the answers include something we got wrong or have not built —
+    those are marked rather than smoothed over.</p>
+</header>
+
+<section>
+  <div class="sec-head"><h2>The chain, in one line each</h2></div>
+  <div class="chain">
+    <div><span class="s">01</span><span class="q">What are we predicting?</span><span class="a">The <b>change in cure probability</b> caused by each possible action — not who will default.</span></div>
+    <div><span class="s">02</span><span class="q">What data do we use?</span><span class="a">54 parameters over 6 bank feeds. 16 reach the model; the rest drive rules, money or the screen.</span></div>
+    <div><span class="s">03</span><span class="q">Where do we use AI / agents?</span><span class="a">Agents orchestrate all 8 stages. An LLM is used in exactly 2 places, both about language.</span></div>
+    <div><span class="s">04</span><span class="q">Where do we use rules?</span><span class="a">Consent, suppression, eligibility, contact caps. Anything defined by policy or law.</span></div>
+    <div><span class="s">05</span><span class="q">What decision is made?</span><span class="a">Which account, which action, which collector, in what order — for one business day.</span></div>
+    <div><span class="s">06</span><span class="q">Where is a human required?</span><span class="a">Every release. Three roles, enforced in the API: admin, collections manager, collection agent.</span></div>
+    <div><span class="s">07</span><span class="q">What outcome improves?</span><span class="a">Money recovered per collector hour, at a fixed team size and without more customer contact.</span></div>
+  </div>
+</section>
+
+<hr>
+
+<section>
+  <div class="sec-head"><h2>The six questions</h2></div>
+
+  <div class="qa">
+    <div class="h"><span class="qn">Q1</span><h3>What prediction does our solution provide?</h3></div>
+    <p class="short">For each delinquent account and each available action, we predict
+      <b>P(cures within 30 days | we take this action) − P(cures within 30 days | we do nothing)</b>,
+      with a confidence range. That difference is called uplift.</p>
+    <ul>
+      <li><b>We do not predict default risk.</b> The bank's own model does that and sends it to us. We
+        calibrate it to a common scale and use it to size the money at stake, never to choose who to call.</li>
+      <li><b>Output per account:</b> the recommended action, its uplift and range, its expected value in
+        dollars, a segment, a rank, an assigned collector, a queue position, and a sentence saying why.</li>
+      <li><b>Why not "who is most likely to pay":</b> that ranking sends collectors to people who would
+        have paid anyway. Uplift ranks by the difference the call makes, which is what a collector hour
+        is actually worth.</li>
+    </ul>
+    <p class="where">Detail: <a href="https://claude.ai/artifact/SDedNwjqEYwar2CnuqcmDh">Data inventory</a>, section 01.</p>
+  </div>
+
+  <div class="qa">
+    <div class="h"><span class="qn">Q2</span><h3>What decision is taken by AI / LLM, and what is the role of the agent?</h3></div>
+    <p class="short">The LLM takes <b>no decision at all</b>. The agents take no decision either — they
+      run stages and call tools. The decisions are made by rules, by arithmetic, by a model, by a solver,
+      and by a person.</p>
+    <ul>
+      <li><b>What the LLM does — two jobs, both language.</b> It drafts the wording of the reason shown
+        to the manager, from segment and action only, with figures filled in afterwards from stamped facts
+        and checked by a validator. And it proposes how a new bank's columns map to ours, which is then
+        verified in code and approved by an admin.</li>
+      <li><b>What the LLM never does.</b> It never produces a number, never picks an action, never sees a
+        customer's name, balance or phone number.</li>
+      <li><b>What an agent is here.</b> A stage with a fixed job and a fixed set of tools it is allowed to
+        call. The registry enforces that — the Feature Agent cannot call the optimiser even if it tried.
+        Agents give us ordering, traceability and isolation, not judgement.</li>
+      <li><b>Who decides the action.</b> The uplift model ranks, the solver allocates under constraints, and
+        the manager approves. Three different mechanisms, each auditable on its own.</li>
+    </ul>
+    <p class="where">Detail: <a href="https://claude.ai/artifact/DUXNktoqkBeaoTBcRTEbLz">Architecture</a>, sections 03 and 05.</p>
+  </div>
+
+  <div class="qa">
+    <div class="h"><span class="qn">Q3</span><h3>Where do we use AI agents and where do we use rule-based logic?</h3></div>
+    <p class="short">The rule we applied: if policy or law defines the answer, it is a rule. If it is
+      arithmetic, it is arithmetic. If it needs a pattern across many weak signals, it is a model. If it is a
+      constrained allocation, it is a solver. The LLM gets only what is genuinely about language.</p>
+    <ul>
+      <li><b>Rules:</b> consent, do-not-call, deceased, bankruptcy, litigation, fraud hold, hardship
+        eligibility, days-past-due thresholds, contact caps. Written as structured conditions in YAML that an
+        admin can read and change without retraining anything.</li>
+      <li><b>Rules run twice.</b> Once before scoring, to say what is allowed. Once after optimisation, as an
+        independent re-check of the finished plan. A rule that only ran first would not catch a plan that broke
+        it afterwards.</li>
+      <li><b>Model:</b> only the uplift estimate. It is the one question no rule can answer — no policy can
+        tell you who is persuadable.</li>
+      <li><b>Solver:</b> which actions fit today's capacity, and who works what. A solver can prove its answer
+        is feasible; a language model would guess.</li>
+    </ul>
+    <p class="where">Detail: <a href="https://claude.ai/artifact/DUXNktoqkBeaoTBcRTEbLz">Architecture</a>, section 05 — a table of ten decisions and what decides each.</p>
+  </div>
+
+  <div class="qa">
+    <div class="h"><span class="qn">Q4</span><h3>Can we expand the data points used?</h3></div>
+    <p class="short">Yes, and the first three cost nothing: we already receive
+      <code>language</code>, <code>email_consent</code> and <code>last_rpc_date</code> and never read them.
+      Beyond that, the biggest single gap is a per-attempt call log.</p>
+    <ul>
+      <li><b>Found while preparing this answer:</b> three fields cross the wire every morning and are
+        discarded. <code>last_rpc_date</code> matters most — it would capture contact made outside the
+        collections queue, which is exactly the blind spot behind the cap breaches we measured.</li>
+      <li><b>Structured data worth asking a real bank for:</b> payment and transaction history, salary credit
+        dates, other balances at the same bank, failed direct debits, per-attempt call logs with real durations,
+        SMS delivery events, inbound contact, and one combined view of all contact rather than just ours.</li>
+      <li><b>Unstructured data:</b> call recordings and transcripts, collector free-text notes, complaint
+        correspondence. An LLM turns these into a few dated flags — promise made, hardship mentioned, dispute
+        raised — which then enter the model as ordinary features under the same leakage rules.</li>
+      <li><b>Agents already do the gathering.</b> The Onboarding Agent reads a bank's API, profiles its columns
+        as value shapes rather than values, and proposes the mapping for an admin to approve. It mapped a second
+        bank's 54 fields correctly on the first attempt. Adding a new feed is a review, not a code change.</li>
+    </ul>
+    <p class="where">Detail: <a href="https://claude.ai/artifact/SDedNwjqEYwar2CnuqcmDh">Data inventory</a>, sections 04, 05 and 06.</p>
+  </div>
+
+  <div class="qa">
+    <div class="h"><span class="qn">Q5</span><h3>Can broader data and AI analysis improve the prediction?</h3></div>
+    <p class="short">Partly — and this is the one place we want to push back on the premise. A causal
+      model has a different bottleneck from a risk model. <b>Uplift is limited by variation in treatment, not
+      by feature count.</b></p>
+    <ul>
+      <li><b>Where more data genuinely helps:</b> a payment trajectory beats three summary counts; real call
+        durations remove a fixed assumption that currently caps how accurately we can plan a shift; promise and
+        distress flags from text capture intent that structured fields cannot.</li>
+      <li><b>Where it does not help:</b> if the bank has always called the same kind of customer, no number of
+        new columns can separate the effect of the call from the kind of person who receives one. That is a
+        property of the data-generating process, not of the model.</li>
+      <li><b>What actually unlocks it:</b> leaving a small random sample of eligible accounts alone. Five per
+        cent randomisation buys more accuracy here than fifty new fields, and it is the only thing that turns
+        "we observed this" into "we caused this".</li>
+      <li><b>And a warning:</b> richer signals make leakage easier, not harder. A promise flag from a call that
+        happened after the decision date produces a beautiful, useless model. Our leakage guard raises an error
+        rather than logging a warning, and any new field has to pass it.</li>
+    </ul>
+    <p class="where">Detail: <a href="https://claude.ai/artifact/SDedNwjqEYwar2CnuqcmDh">Data inventory</a>, section 07.</p>
+  </div>
+
+  <div class="qa">
+    <div class="h"><span class="qn">Q6</span><h3>Where should humans be in the decision?</h3></div>
+    <p class="short">A person approves <b>every single action</b> before it reaches a customer. Nothing is
+      auto-sent. The role model the review asked for is now built and enforced on every request.</p>
+    <ul>
+      <li><b>Automated:</b> pulling data, checking quality, calibrating risk, estimating uplift, computing value,
+        optimising, packing queues, and applying every policy rule. All deterministic and all reproducible.</li>
+      <li><b>Always human:</b> releasing actions to the bank, and anything escalated — hardship referrals, large
+        exposures, and cases where the uplift range is too wide to trust. Saving configuration and onboarding a
+        bank are admin-only.</li>
+      <li><b>Three roles, enforced in the API:</b> <b>admin</b> does everything including onboarding, configuration
+        and creating any account; <b>collections manager</b> runs the day and adds collection agents to their own
+        floor, but cannot open configuration or onboarding; <b>collection agent</b> sees only the queue assigned to
+        them and may re-order their own work before release. A read-only <em>guest</em> role existed and was
+        withdrawn, because it could read configuration that a manager cannot — an inverted permission is worse
+        than a missing one.</li>
+      <li><b>Signing in resolves per role.</b> Each role lands on a page it can open, and a refused page answers
+        with a page explaining which role the account has, rather than a JSON error.</li>
+      <li><b>The two things that make it real rather than cosmetic.</b> A collector's scope comes from the
+        signed-in session, so a collector id in the URL is ignored. And the roles a person may hand out are capped
+        by their own — a manager who posts <code>role: "manager"</code> by hand gets a 403, not a new peer.</li>
+      <li><b>Still open:</b> a collector can work and re-order their queue but cannot yet record what happened on
+        each attempt, so the same-day half of the feedback loop is not closed. See KPI answer Q5.</li>
+    </ul>
+    <p class="where">Detail: <a href="https://claude.ai/artifact/DUXNktoqkBeaoTBcRTEbLz">Architecture</a>, sections 02 and 04.</p>
+  </div>
+</section>
+
+<hr>
+
+<section>
+  <div class="sec-head"><h2>The two documents</h2></div>
+  <div class="docs">
+    <div class="doc">
+      <a href="https://claude.ai/artifact/SDedNwjqEYwar2CnuqcmDh">Collections Data Inventory →</a>
+      <p>All 54 parameters we receive, each traced to the decision it changes. Then the data worth adding,
+        split into what a real bank could supply and what we can build for the hackfest. Ends with what more
+        data will not fix.</p>
+    </div>
+    <div class="doc">
+      <a href="https://claude.ai/artifact/DUXNktoqkBeaoTBcRTEbLz">Last Mile Architecture →</a>
+      <p>The system map with three roles and an access matrix, the agent pipeline showing what each stage is
+        handed and what it hands on, every console explained top to bottom, and a table of ten decisions
+        naming what decides each.</p>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+<footer>
+  <p><b>Two things this response does not claim.</b> A collection agent cannot yet record what happened
+    on an attempt, so the same-day feedback loop is designed but not closed. And without a randomised
+    holdout, our recovery figures are observed results, not proven effects — the KPI page says so on its
+    face rather than in a footnote.</p>
+</footer>
+
+</div>

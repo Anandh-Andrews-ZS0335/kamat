@@ -42,7 +42,7 @@ async function loadStatus() {
     D.status = s;
     if ($("#statusChips")) $("#statusChips").innerHTML = `
       <span class="chip"><i class="dot ${s.bank.ok ? "ok" : "bad"}"></i>Bank API ${s.bank.ok ? `· ${esc(s.bank.as_of)}` : "offline"}</span>
-      <span class="chip"><i class="dot ${s.llm_mode.startsWith("gemini") ? "ok" : "warn"}"></i>LLM: ${esc(s.llm_mode)}</span>
+      <span class="chip"><i class="dot ${s.llm_mode.startsWith("template") ? "warn" : "ok"}"></i>LLM: ${esc(s.llm_mode)}</span>
       <span class="chip">${esc(s.scenario)}</span>
       <span class="chip mono" title="Configuration SHA-256">cfg: ${esc(fmt.short(s.config_hash, 10))}</span>`;
     

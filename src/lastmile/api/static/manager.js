@@ -24,9 +24,27 @@ async function selectRun(id) {
   if (M.tab !== "worklist") showTab(M.tab);
 }
 
+// The server says what this viewer may do on this run; the page renders that rather than a role name.
+// A control the payload does not permit is removed, not merely greyed out.
+function applyCapabilities(can) {
+  if (!can) return;
+  const show = (id, allowed) => { const el = $(id); if (el) el.hidden = !allowed; };
+  show("#bulkApprove", can.approve);
+  show("#release", can.release);
+  const note = $("#actionsNote");
+  if (note) {
+    note.textContent = can.approve
+      ? "Nothing reaches a member until it is approved here and released."
+      : can.release
+        ? "This worklist is no longer open for approval. Approved actions can still be released."
+        : "This worklist is read-only for your account.";
+  }
+}
+
 async function loadWorklist() {
   M.data = await api(`/api/runs/${M.runId}/worklist`);
   const d = M.data, s = d.summary;
+  applyCapabilities(d.can);
   $("#runSelect").title = `${d.run.run_id} · model ${d.run.model_run_id || "–"} · LLM ${d.run.llm_mode || "–"}`;
   const dec = s.decisions || {};
   const total = s.selected || 1;
@@ -550,13 +568,41 @@ function renderQueues() {
         <div class="line">${decided} decided — ${q.approved} approved · ${q.edited} changed · ${q.rejected} rejected · ${q.pending} pending${q.released ? ` · <b>${q.released} sent</b>` : ""}</div>
         ${q.completion_simulated != null ? `<div class="line">Simulated day: <b>${fmt.pct(q.completion_simulated, 0)}</b> of this queue finishes in the shift</div>` : ""}
         <div class="chips-row">${Object.entries(q.actions).map(([a, n]) => `<span>${esc(a)} ${n}</span>`).join("")}</div>
-        ${q.tasks ? `<div><button class="btn small" data-c="${esc(q.collector_id)}">Review ${esc(auto ? "texts" : "this queue")} →</button></div>` : ""}
+        ${q.tasks ? `<div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn small" data-c="${esc(q.collector_id)}">Review ${esc(auto ? "texts" : "this queue")} →</button>${!auto && M.data.run.status === "awaiting_approval" ? `<button class="btn small" data-rank="${esc(q.collector_id)}">Re-rank queue</button>` : ""}</div>` : ""}
       </article>`; }).join("")}</div>
     ${total ? "" : `<div class="empty">No tasks were planned.</div>`}`;
   $$("#tab-queues [data-c]").forEach((b) => b.onclick = () => { $("#fCollector").value = b.dataset.c; showTab("worklist"); renderWorklist(); });
+  $$("#tab-queues [data-rank]").forEach((b) => b.onclick = () => openQueueRank(b.dataset.rank));
+}
+
+function openQueueRank(collectorId) {
+  const queue = M.data.queues.find((q) => q.collector_id === collectorId);
+  M.rankCollector = collectorId;
+  M.rankItems = M.data.items.filter((item) => item.collector_id === collectorId)
+    .sort((a, b) => (a.queue_position || a.rank) - (b.queue_position || b.rank));
+  $("#rankTitle").textContent = queue ? queue.name : collectorId;
+  $("#rankDrawer").classList.add("open");
+  renderQueueRank();
+}
+
+function renderQueueRank() {
+  const items = M.rankItems;
+  $("#rankBody").innerHTML = `<p class="note">Change the working order for this collector. This changes priority only; the manager still approves actions and the policy rules remain in force.</p>
+    <div class="list">${items.map((item, index) => `<div class="row" style="display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)">
+      <b class="mono">${index + 1}</b><div><b>${esc(item.account_token)}</b><div class="muted" style="font-size:12px">${esc(item.action)} · ${fmt.money(item.action_value)} · ${fmt.int(item.minutes)} min</div></div>
+      <div style="display:flex;gap:5px"><button class="btn small" data-rank-move="up" data-i="${index}" ${index ? "" : "disabled"}>↑</button><button class="btn small" data-rank-move="down" data-i="${index}" ${index < items.length - 1 ? "" : "disabled"}>↓</button></div>
+    </div>`).join("")}</div><div style="margin-top:14px"><button class="btn primary" id="rankSave">Save order</button></div>`;
+  $$("[data-rank-move]").forEach((button) => button.onclick = () => { const at = Number(button.dataset.i), other = button.dataset.rankMove === "up" ? at - 1 : at + 1; [M.rankItems[at], M.rankItems[other]] = [M.rankItems[other], M.rankItems[at]]; renderQueueRank(); });
+  $("#rankSave").onclick = saveQueueRank;
+}
+
+async function saveQueueRank() {
+  try { await api(`/api/runs/${M.runId}/queues/${encodeURIComponent(M.rankCollector)}/order`, {method:"PUT", body:JSON.stringify({account_tokens:M.rankItems.map((item) => item.account_token)})}); toast("Queue order saved"); $("#rankDrawer").classList.remove("open"); await loadWorklist(); }
+  catch (e) { toast(e.message, "bad"); }
 }
 
 $("#closeTeam").onclick = () => $("#teamDrawer").classList.remove("open");
+$("#closeRank").onclick = () => $("#rankDrawer").classList.remove("open");
 
 $$("#tabs .tab").forEach((b) => b.onclick = () => showTab(b.dataset.tab));
 ["#fSearch", "#fCollector", "#fAction", "#fSegment", "#fDecision", "#fEsc"].forEach((s) => $(s).addEventListener("input", renderWorklist));
@@ -576,9 +622,6 @@ $("#release").onclick = async () => {
 
 Shell.mount({ page: "manager", title: "Today" })
   .then(() => {
-    if (Shell.user && Shell.user.role === "guest") {
-      $("#actionsNote").textContent = "Signed in as guest: you can read everything. Approving, releasing and closing the day need a manager account.";
-    }
     return loadDay();
   })
   .then(() => loadRuns(new URLSearchParams(location.search).get("run")))

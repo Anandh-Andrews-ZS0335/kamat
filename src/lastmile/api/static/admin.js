@@ -128,7 +128,7 @@ async function loadLlmCalls() {
   const calls = await api(`/api/runs/${S.runId}/llm-calls`).catch(() => []);
   $("#llmCount").textContent = `${calls.length} call(s)`;
   if (!calls.length) {
-    $("#llmList").innerHTML = `<div class="empty">No LLM calls in this run${S.run && S.run.llm_mode && !S.run.llm_mode.startsWith("gemini") ? ` — it used ${esc(S.run.llm_mode)}` : ""}.</div>`;
+    $("#llmList").innerHTML = `<div class="empty">No LLM calls in this run${S.run && S.run.llm_mode && S.run.llm_mode.startsWith("template") ? ` — it used ${esc(S.run.llm_mode)}` : ""}.</div>`;
     $("#llmDetail").innerHTML = "";
     return;
   }
@@ -223,14 +223,10 @@ function renderAgentCalls() {
 }
 
 $("#runSelect").onchange = (e) => e.target.value && selectRun(e.target.value);
-$("#startRun").onclick = async () => {
-  $("#startRun").disabled = true;
-  try { const r = await api("/api/runs", { method: "POST" }); toast(`Started ${r.run_id}`); await loadRuns(r.run_id); }
-  catch (e) { toast(e.message, "bad"); }
-  finally { $("#startRun").disabled = false; }
-};
+// No "start a run" here on purpose: a run begins on the Manager console, after today's team is
+// confirmed. A second entry point would let a run start without a roster behind it.
 
-Shell.mount({ page: "admin", title: "Runs & agents" }).then(() => {
+Shell.mount({ page: "admin", title: "Runs & pipeline" }).then(() => {
   loadAgents();
   loadRuns(new URLSearchParams(location.search).get("run"));
 });

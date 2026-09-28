@@ -18,16 +18,16 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from lastmile.agents import crew, provenance
 from lastmile.agents.llm.factory import get_llm
 from lastmile.agents.tools import build_registry
 from lastmile.agents.trace import Tracer
-from lastmile.api import auth, config_editor, daily, kpis, onboarding, services
+from lastmile.api import auth, config_editor, daily, kpis, onboarding, services, users
 from lastmile.config.resolve import resolve
 from lastmile.config.settings import ROOT
-from lastmile.governance import approvals, audit, policy, release
+from lastmile.governance import approvals, audit, outcomes, policy, release
 from lastmile.ingest.bank_client import BankApiError
 from lastmile.pipeline import run as pipeline
 from lastmile.store import artifacts, db, llm_calls
@@ -67,6 +67,7 @@ app.include_router(daily.router)
 app.include_router(config_editor.router)
 app.include_router(onboarding.router)
 app.include_router(kpis.router)
+app.include_router(users.router)
 db.init()
 
 
@@ -101,6 +102,16 @@ def admin_page():
 @app.get("/manager", include_in_schema=False)
 def manager_page():
     return page("manager.html")
+
+
+@app.get("/agent", include_in_schema=False)
+def agent_page():
+    return page("agent.html")
+
+
+@app.get("/admin/users", include_in_schema=False)
+def users_page():
+    return page("users.html")
 
 
 @app.get("/report", include_in_schema=False)
@@ -223,7 +234,7 @@ def run_config(run_id: str):
 
 # -------------------------------------------------------------------- manager: worklist
 @app.get("/api/runs/{run_id}/worklist")
-def worklist(run_id: str):
+def worklist(run_id: str, request: Request):
     run = services.get_run(run_id)
     items = services.worklist(run_id)
     dec = artifacts.load_json(run_id, "decision") if (artifacts.run_dir(run_id) / "decision.json").exists() else {}
@@ -231,6 +242,7 @@ def worklist(run_id: str):
     cfg = pipeline.run_config(run_id)
     return {"run": {k: run[k] for k in ("run_id", "status", "as_of_date", "llm_mode", "model_run_id", "config_hash",
                                         "parent_run_id", "superseded_by")},
+            "can": services.capabilities(request.state.user.role, run["status"], own_queue_only=False),
             "day_closed": services.closure(run["as_of_date"]) is not None if run["as_of_date"] else False,
             "roster": cfg.team.model_dump(), "queues": services.queues(run_id, items),
             "summary": {"selected": len(items), "est_value": sum(i["action_value"] for i in items),
@@ -240,6 +252,153 @@ def worklist(run_id: str):
                         "released": sum(1 for i in items if i["released"]),
                         "mc": dec.get("mc", {}).get("optimised")},
             "reason_codes": cfg.institution.approval.reason_codes, "items": items}
+
+
+class QueueOrder(BaseModel):
+    account_tokens: list[str] = Field(min_length=1, max_length=2000)
+
+
+def _bank_today() -> str:
+    try:
+        return services.bank().health()["as_of"]
+    except BankApiError as e:
+        raise HTTPException(502, f"cannot read today's date from the bank: {e}") from e
+
+
+def _scoped_run(request: Request, run: str | None, collector: str | None) -> tuple[dict, str | None, bool]:
+    """Resolve whose worklist this is from the session, never from the query string.
+
+    A collection agent always gets their own queue: a collector= parameter supplied by the browser
+    is discarded rather than honoured, so there is exactly one place this can be got wrong.
+    """
+    user = request.state.user
+    own_queue_only = user.role == "collector"
+    if own_queue_only:
+        if not user.collector_id:
+            raise HTTPException(403, "this account is not linked to a roster collector, so it has no queue")
+        collector = services.resolve_collector(user.role, user.collector_id, collector)
+        row = services.live_run_for(_bank_today(), include_running=True)
+        if not row or row["status"] not in ("awaiting_approval", "released"):
+            raise HTTPException(404, "there is no active worklist for your business day")
+        return row, collector, True
+    row = services.get_run(run) if run else services.live_run_for(_bank_today(), include_running=True)
+    if not row:
+        raise HTTPException(404, "no live worklist for today")
+    return row, collector, False
+
+
+@app.get("/api/worklist")
+def scoped_worklist(request: Request, run: str | None = None, collector: str | None = None):
+    """One worklist for every role. The session decides the rows; the scope decides the fields."""
+    row, collector, own_queue_only = _scoped_run(request, run, collector)
+    can = services.capabilities(request.state.user.role, row["status"], own_queue_only)
+    detail = "full" if can["see_money"] else "execution"
+    everything = services.worklist(row["run_id"])
+    items = everything
+    if collector:
+        items = sorted((i for i in everything if i["collector_id"] == collector),
+                       key=lambda i: (i["queue_position"] is None, i["queue_position"] or i["rank"]))
+    queues = services.queues(row["run_id"], everything)
+    mine = next((q for q in queues if q["collector_id"] == collector), None) if collector else None
+    summary = {"assigned": len(items), "pending": sum(i["decision"] == "pending" for i in items),
+               "released": sum(bool(i["released"]) for i in items)}
+    # The words are rendered only once the action has actually gone out, the same gate that lets an
+    # outcome be recorded. Before release there is nothing to say to the member, so there is no script.
+    scripts = services.collector_scripts(row["run_id"], [i for i in items if i["released"]]) if detail == "execution" else None
+    if can["see_money"]:
+        summary["est_value"] = sum(i["action_value"] for i in items)
+    return {
+        "run": {k: row[k] for k in ("run_id", "as_of_date", "status")},
+        "scope": {"kind": "collector" if collector else "all", "collector_id": collector,
+                  "display": (mine or {}).get("name") or collector, "detail": detail},
+        "can": can,
+        "items": services.project_items(items, detail, scripts),
+        "queue": services.project_queue(mine, detail),
+        "queues": queues if can["see_all_queues"] else None,
+        "summary": summary,
+    }
+
+
+class AttemptIn(BaseModel):
+    account_token: str
+    disposition: str
+    comment: str | None = Field(default=None, max_length=2000)
+    promise_date: str | None = None
+    promise_amount: float | None = None
+    spent_minutes: int | None = Field(default=None, ge=0, le=600)
+
+
+@app.get("/api/agent/dispositions")
+def agent_dispositions():
+    """The vocabulary the queue page offers, so the form and the server can never disagree."""
+    return {"dispositions": [{"id": k, "label": v} for k, v in outcomes.DISPOSITIONS.items()],
+            "needs_promise": outcomes.NEEDS_PROMISE}
+
+
+@app.post("/api/agent/today/outcome")
+def record_attempt(body: AttemptIn, request: Request):
+    """What the collector found. Only on their own accounts, and only once an action has gone out."""
+    run, collector_id, _ = _scoped_run(request, None, None)
+    item = next((i for i in services.worklist(run["run_id"])
+                 if i["account_token"] == body.account_token and i["collector_id"] == collector_id), None)
+    if item is None:
+        raise HTTPException(404, "that account is not in your queue today")
+    if not item["released"]:
+        raise HTTPException(409, "this action has not been released yet, so there is nothing to report on")
+    try:
+        res = outcomes.record(run["run_id"], body.account_token, collector_id, body.disposition, body.comment,
+                              body.promise_date, body.promise_amount, auth.actor(request),
+                              spent_minutes=body.spent_minutes)
+    except outcomes.OutcomeError as e:
+        raise HTTPException(422, str(e)) from e
+    return res
+
+
+@app.get("/api/agent/today/outcome/{account_token}")
+def attempt_history(account_token: str, request: Request):
+    """Every version of what was reported, so an edited comment does not erase the first one."""
+    run, collector_id, _ = _scoped_run(request, None, None)
+    item = next((i for i in services.worklist(run["run_id"])
+                 if i["account_token"] == account_token and i["collector_id"] == collector_id), None)
+    if item is None:
+        raise HTTPException(404, "that account is not in your queue today")
+    return {"history": outcomes.history(run["run_id"], account_token)}
+
+
+@app.put("/api/agent/today/queue")
+def reorder_agent_queue(body: QueueOrder, request: Request):
+    run, collector_id, _ = _scoped_run(request, None, None)
+    if run["status"] != "awaiting_approval":
+        raise HTTPException(409, "the queue is locked after actions have been released")
+    items = [item for item in services.worklist(run["run_id"]) if item["collector_id"] == collector_id]
+    expected, received = {item["account_token"] for item in items}, set(body.account_tokens)
+    if expected != received or len(body.account_tokens) != len(received):
+        raise HTTPException(422, "the reordered list must contain every assigned account exactly once")
+    with db.connect() as con:
+        con.executemany("UPDATE recommendations SET queue_position = ? WHERE run_id = ? AND account_token = ? AND collector_id = ?",
+                        [(position, run["run_id"], token, collector_id) for position, token in enumerate(body.account_tokens, 1)])
+    audit.append(run["run_id"], "queue.reordered", auth.actor(request), {"collector_id": collector_id,
+                                                                             "accounts": len(body.account_tokens)})
+    return {"saved": True, "queue_position": body.account_tokens}
+
+
+@app.put("/api/runs/{run_id}/queues/{collector_id}/order")
+def reorder_manager_queue(run_id: str, collector_id: str, body: QueueOrder, request: Request):
+    if request.state.user.role not in ("admin", "manager"):
+        raise HTTPException(403, "only a manager can re-rank a team queue")
+    run = services.get_run(run_id)
+    if run["status"] != "awaiting_approval":
+        raise HTTPException(409, "the queue is locked after actions have been released")
+    items = [item for item in services.worklist(run_id) if item["collector_id"] == collector_id]
+    expected, received = {item["account_token"] for item in items}, set(body.account_tokens)
+    if expected != received or len(body.account_tokens) != len(received):
+        raise HTTPException(422, "the reordered list must contain every assigned account exactly once")
+    with db.connect() as con:
+        con.executemany("UPDATE recommendations SET queue_position = ? WHERE run_id = ? AND account_token = ? AND collector_id = ?",
+                        [(position, run_id, token, collector_id) for position, token in enumerate(body.account_tokens, 1)])
+    audit.append(run_id, "queue.reordered", auth.actor(request), {"collector_id": collector_id,
+                                                                    "accounts": len(body.account_tokens)})
+    return {"saved": True, "queue_position": body.account_tokens}
 
 
 @app.get("/api/runs/{run_id}/accounts/{token}")
