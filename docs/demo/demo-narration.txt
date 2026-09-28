@@ -1,6 +1,6 @@
 LAST MILE — DEMO NARRATION
-Read at a normal pace, roughly 145 words a minute. Pause where marked; the pauses are
-where the screen does the work. Total ≈ 4 minutes 40 seconds of speech.
+Read at a normal pace, about 150 words a minute. Pause where marked — the pauses are
+where the screen does the work. ≈ 820 spoken words, ≈ 5 minutes 30 seconds.
 
 Timecodes match docs/demo/demo-shot-list.md.
 
@@ -25,146 +25,145 @@ business date.
 [pause]
 
 
-[0:25 — confirm today's team]
+[0:28 — confirm today's team]
 
 It starts with the one constraint that is always true — how many people are on the floor,
 and for how long. I'm putting one collector on a short shift today.
 
-That number is not decoration. It becomes a hard constraint in the optimiser, and you will
-see it come back in a moment.
+That number is not decoration. It becomes a hard constraint in the optimiser, and you'll see
+it come back in a moment.
 
 [pause]
 
 
-[0:48 — start the run]
+[0:50 — start the run]
 
 Now the run. Eight agents, in a fixed order.
 
-They pull six feeds from the bank, run thirteen quality checks, and move every name and
-phone number into a vault that the models never see. They recalibrate the bank's own risk
-score onto a common scale — this bank sends letter grades, another one we support sends a
-180-day probability, and the engine does not care which.
+They pull six feeds from the bank, run thirteen quality checks, and move every name and phone
+number into a vault the models never see. They recalibrate the bank's own risk score onto a
+common scale — this bank sends letter grades, another one we support sends a 180-day
+probability, and the engine doesn't care which.
+
+[pause]
 
 Then the part that matters. A causal model estimates, for every account and every possible
 action, how much that action would change the chance of the customer catching up. Not how
 risky they are — how much difference a phone call would make. Those are different questions,
 and only the second one tells you where to spend an hour.
 
-The whole thing takes about twenty seconds.
-
 [pause]
 
-Every step you just watched is recorded — which agent ran, which tool it called, how long it
-took. An agent can only call the tools it owns; if it reaches for another one, it is refused
-and the refusal is logged.
+Every step is recorded: which agent ran, which tool it called, how long it took. An agent can
+only call the tools it owns.
 
 [pause]
 
 
-[1:30 — team queues]
+[1:45 — team queues]
 
-And here is that short shift coming back. This isn't one long list to work down. It is one
-queue per person, each one packed to fit the hours that person is actually working. The
-collector I cut to a half day has a shorter queue — not a truncated one, a re-planned one.
-
-[pause]
-
-
-[1:58 — one account]
-
-Let me open a single account, because this is where a recommendation either holds up or
-falls apart.
-
-The system is recommending one specific action, and it is telling me what that is worth in
-pounds and pence, not in probability.
-
-Every figure on this screen carries its source. Hover any of them and it tells you which
-field in which feed it came from, and which run produced it. Nothing here is a number
-somebody's model made up.
-
-[pause]
-
-This is the script the collector will actually read. And this is every option that was
-considered for this account — including the ones that were blocked, and why. This customer
-isn't eligible for a payment plan yet, so that action doesn't exist for them, whatever it
-might have been worth.
-
-[pause]
-
-And then the question a manager always asks. Why this account, and not another one?
-
-The system answers it by re-solving the whole day with this account forced out, and telling
-you what the plan would have been worth without it. That is a real counterfactual, not a
-sentence generated after the fact to sound convincing.
+And here's that short shift coming back. This isn't one long list to work down. It's one queue
+per person, each packed to fit the hours that person is actually working. The collector I cut
+to a half day has a shorter queue — not a truncated one, a re-planned one.
 
 [pause]
 
 
-[3:00 — sort vs optimised]
+[2:07 — one account]
 
-Here is the same day planned three ways — sorted by risk, sorted by expected loss, and
-optimised. The gap on screen is the difference between a sorted list and actual prescriptive
-work. The solver will skip an expensive high-risk account in favour of two cheaper ones,
-because that is what recovers more money from the same hours.
+Let me open a single account, because this is where a recommendation either holds up or falls
+apart.
+
+The system recommends one specific action, and tells me what it's worth in money, not in
+probability.
+
+[pause]
+
+Every figure on this screen carries its source. Hover any of them and it says which field, in
+which feed, from which run.
+
+[pause]
+
+This is the script the collector will actually read. And this is every option considered for
+this account — including the ones that were blocked, and why. This customer isn't eligible for
+a payment plan yet, so that action doesn't exist for them, whatever it might have been worth.
+
+[pause]
+
+Then the question a manager always asks. Why this account, and not another one?
+
+It answers by re-solving the whole day with this account forced out, and showing what the plan
+would have been worth without it. A real counterfactual — not a sentence written afterwards to
+sound convincing.
 
 [pause]
 
 
-[3:25 — approve and release]
+[3:17 — sort vs optimised]
 
-Nothing you have seen so far has contacted anybody.
-
-I approve the ones I'm happy with. Bulk approval deliberately leaves the escalated ones
-behind — hardship referrals are never approved in a batch, because that is a judgement about
-someone's circumstances.
-
-And then I release. That is the first moment anything leaves this system.
+Here's the same day planned three ways: sorted by risk, sorted by expected loss, and optimised.
+The gap on screen is the difference between a sorted list and actual prescriptive work. The
+solver will skip an expensive high-risk account in favour of two cheaper ones, because that
+recovers more from the same hours.
 
 [pause]
 
 
-[3:45 — the collector's queue]
+[3:42 — approve and release]
 
-This is the same system, signed in as one of the collectors.
+Nothing so far has contacted anybody.
+
+I approve the ones I'm happy with. Bulk approval deliberately leaves the escalated ones behind
+— hardship referrals are never approved in a batch, because that's a judgement about someone's
+circumstances.
+
+Then I release. That's the first moment anything leaves this system.
+
+[pause]
+
+
+[4:07 — the collector's queue]
+
+Same system, signed in as one of the collectors.
 
 She sees the accounts assigned to her, in the order the optimiser chose, and she can re-order
-them — she is the one on the phone and she knows things the model doesn't.
-
-What she does not see is any of the money. No expected value, no uplift, no risk grade, and
-no segment label. That is deliberate. Telling somebody that the person they are about to ring
-is a low-value lost cause changes how that conversation goes. Those fields are not hidden on
-this page — they are never sent to it.
+them — she's the one on the phone, and she knows things the model doesn't.
 
 [pause]
 
-After the call, she records what happened. A promise to pay, with the date. That goes back
-into tomorrow's plan: contact history, how long calls really take, and any hard stop like a
-wrong number. Corrections are appended, never overwritten, so the note she made at the time
-survives.
+What she does not see is any of the money. No expected value, no uplift, no risk grade, no
+segment label. That's deliberate. Telling somebody the person they're about to ring is a
+low-value lost cause changes how that conversation goes. Those fields aren't hidden on this
+page — they're never sent to it.
+
+[pause]
+
+After the call she records what happened. A promise to pay, with the date. That goes back into
+tomorrow's plan: contact history, how long calls really take, and any hard stop like a wrong
+number.
 
 [pause]
 
 
-[4:20 — governance]
+[4:55 — governance]
 
 Every call to a language model is stored — the prompt, the reply, and whether the validator
 accepted it. The model is used in exactly two places in this system: writing the wording of a
-reason, and reading an unfamiliar bank's column names when we onboard one. It never produces
-a number, never chooses an action, and never sees customer data.
+reason, and reading an unfamiliar bank's column names when we onboard one. It never produces a
+number and never chooses an action.
 
 Everything else — the uplift model, the value, the solver, the simulation, the rules — is
-deterministic code. Same inputs, same outputs, every time. And every decision is in a
-hash-chained audit that verifies on read.
+deterministic code. And every decision sits in a hash-chained audit that verifies on read.
 
 [pause]
 
 
-[4:35 — close]
+[5:20 — close]
 
 A prediction became a decision, a person approved it, and what happened next comes back to
 train the next one.
 
-That is the last mile.
+That's the last mile.
 
 [end]
 
@@ -172,15 +171,16 @@ That is the last mile.
 ---------------------------------------------------------------------------
 NOTES FOR THE RECORDING
 
-• Do not read any dollar figure aloud. The narration refers to what is on screen
-  generically, so it stays true whatever the run produces on the day.
+Do not read any money figure aloud. The narration refers to what's on screen generically, so
+it stays true whatever the run produces on the day.
 
-• The two longest pauses are at 1:12 (the run finishing) and 2:35 (the counterfactual
-  re-solving). If your recording runs faster than the screen, stretch those two.
+The two longest pauses are at 1:35 (the run finishing) and 2:55 (the counterfactual
+re-solving). If your recording runs faster than the screen, stretch those two first.
 
-• If you cut to three minutes: drop the paragraphs at 0:00, the second half of 0:48
-  ("Every step you just watched…"), all of 3:00, and all of 4:20. The account walkthrough
-  at 1:58 is the one section that must survive.
+One line to land cleanly, because it is the judging criterion: "The model is used in exactly
+two places in this system." Slow down there.
 
-• One line worth landing cleanly, because it is the judging criterion: "The model is used in
-  exactly two places in this system." Slow down there.
+For a 3-minute cut, drop these whole blocks: 0:00, the third paragraph of 0:50 ("Every step is
+recorded…"), 3:17, and 4:55. The account walkthrough at 2:07 is the one section that must
+survive — it is the only place the system proves it is prescriptive rather than a sorted list
+with narration.
